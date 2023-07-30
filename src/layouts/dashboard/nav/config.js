@@ -36,6 +36,11 @@ const navConfig = [
     path: '/404',
     icon: icon('ic_disabled'),
   },
+  {
+    title: '휴일 관리',
+    path: '/dashboard/holiday',
+    icon: icon('ic_blog'),
+  },
 ];
 
 export default navConfig;
