@@ -37,7 +37,7 @@ export default function HolidayPage() {
   const [newHoliday, setNewHoliday] = useState({ date: '', name: '', payType: '유급' });
 
   const getHolidayData = async () => {
-    const response = await axios.get(`${SERVER_URL}/api/holiday`);
+    const response = await axios.get(`${SERVER_URL}/api/holidays`);
     const processedHolidays = {};
 
     response.data.forEach((holiday) => {
@@ -72,14 +72,14 @@ export default function HolidayPage() {
   };
 
   const handleAddHoliday = async () => {
-    await axios.post(`${SERVER_URL}/api/holiday`, newHoliday);
+    await axios.post(`${SERVER_URL}/api/holidays`, newHoliday);
     setNewHoliday({ date: '', name: '', payType: '유급' });
     handleClose();
     getHolidayData();
   };
 
   const handleDeleteHoliday = async (holidayId) => {
-    await axios.delete(`${SERVER_URL}/api/holiday/${holidayId}`);
+    await axios.delete(`${SERVER_URL}/api/holidays/${holidayId}`);
     getHolidayData();
   };
 
