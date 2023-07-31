@@ -34,6 +34,7 @@ export default function UserListHead({
   numSelected,
   onRequestSort,
   onSelectAllClick,
+  disableCheckbox,
 }) {
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
@@ -43,11 +44,14 @@ export default function UserListHead({
     <TableHead>
       <TableRow>
         <TableCell padding="checkbox">
-          <Checkbox
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-          />
+         {/* disableCheckbox prop에 따라 체크박스를 비활성화합니다. */}
+         {!disableCheckbox && (
+            <Checkbox
+              indeterminate={numSelected > 0 && numSelected < rowCount}
+              checked={rowCount > 0 && numSelected === rowCount}
+              onChange={onSelectAllClick}
+            />
+          )}
         </TableCell>
         {headLabel.map((headCell) => (
           <TableCell
