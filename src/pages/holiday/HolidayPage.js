@@ -78,11 +78,9 @@ export default function HolidayPage() {
     getHolidayData();
   };
 
-  const handleDeleteHoliday = (holidayToDelete) => {
-    setHolidays({
-      ...holidays,
-      [year]: holidays[year].filter((holiday) => holiday !== holidayToDelete),
-    });
+  const handleDeleteHoliday = async (holidayId) => {
+    await axios.delete(`${SERVER_URL}/api/holiday/${holidayId}`);
+    getHolidayData();
   };
 
   const moveYear = (direction) => {
@@ -139,13 +137,13 @@ export default function HolidayPage() {
                     )}
                   </TableCell>
                 </TableRow>
-                {holidays[year]?.map((holiday, index) => (
-                  <TableRow key={index}>
+                {holidays[year]?.map((holiday) => (
+                  <TableRow key={holiday.holidayId}>
                     <TableCell>{holiday.name}</TableCell>
                     <TableCell>{holiday.date}</TableCell>
                     <TableCell>{holiday.payType}</TableCell>
                     <TableCell align="right">
-                      <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteHoliday(holiday)}>
+                      <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteHoliday(holiday.holidayId)}>
                         <DeleteIcon />
                       </IconButton>
                     </TableCell>
