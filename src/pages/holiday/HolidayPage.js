@@ -25,6 +25,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import axios from 'axios';
+import Iconify from '../../components/iconify';
 
 const SERVER_URL = 'http://localhost:8080';
 
@@ -59,6 +60,7 @@ export default function HolidayPage() {
   };
 
   const handleClose = () => {
+    setNewHoliday({ date: '', name: '', payType: '유급' });
     setOpen(false);
   };
 
@@ -69,13 +71,11 @@ export default function HolidayPage() {
     });
   };
 
-  const handleAddHoliday = () => {
-    setHolidays({
-      ...holidays,
-      [year]: [...holidays[year], newHoliday],
-    });
+  const handleAddHoliday = async () => {
+    await axios.post(`${SERVER_URL}/api/holiday`, newHoliday);
     setNewHoliday({ date: '', name: '', payType: '유급' });
     handleClose();
+    getHolidayData();
   };
 
   const handleDeleteHoliday = (holidayToDelete) => {
@@ -106,8 +106,8 @@ export default function HolidayPage() {
           <Typography variant="h4" gutterBottom>
             휴일 관리
           </Typography>
-          <Button variant="contained" onClick={handleOpen}>
-            휴일 추가
+          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />} onClick={handleOpen}>
+            새 휴일 추가
           </Button>
         </Stack>
 
