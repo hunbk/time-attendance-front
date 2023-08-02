@@ -1,14 +1,14 @@
 import PropTypes from 'prop-types';
 // @mui
 import { styled, alpha } from '@mui/material/styles';
-import { Toolbar, Tooltip, IconButton, Typography, OutlinedInput, InputAdornment } from '@mui/material';
+import { Toolbar, Tooltip, IconButton, Typography, OutlinedInput, InputAdornment, Button } from '@mui/material';
 // component
 import Iconify from '../../../components/iconify';
 
 // ----------------------------------------------------------------------
 
 const StyledRoot = styled(Toolbar)(({ theme }) => ({
-  height: 96,
+  height: 80,
   display: 'flex',
   justifyContent: 'space-between',
   padding: theme.spacing(0, 1, 0, 3),
@@ -32,13 +32,25 @@ const StyledSearch = styled(OutlinedInput)(({ theme }) => ({
 
 // ----------------------------------------------------------------------
 
-UserListToolbar.propTypes = {
+SettleListToolbar.propTypes = {
   numSelected: PropTypes.number,
   filterName: PropTypes.string,
   onFilterName: PropTypes.func,
+  onSearch: PropTypes.func,
 };
 
-export default function UserListToolbar({ numSelected, filterName, onFilterName }) {
+export default function SettleListToolbar({ numSelected, filterName, onFilterName, onSearch }) {
+
+  // 엔터 키를 눌렀을 때 검색을 처리하는 함수
+  const handleSearchKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      // 엔터 키를 누르면, onSearch 함수를 호출하여 현재 검색어 값을 전달합니다.
+      if (filterName.trim() !== '') {
+        onSearch(filterName);
+      }
+    }
+  };
+
   return (
     <StyledRoot
       sx={{
@@ -53,19 +65,20 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName 
           {numSelected} 명이 선택되었습니다.
         </Typography>
       ) : (
-        <StyledSearch
-          value={filterName}
-          onChange={onFilterName}
-          placeholder="사원 ID를 적어주세요."
-          startAdornment={
-            <InputAdornment position="start">
-              <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
-            </InputAdornment>
-          }
-        />
+        <>
+          <StyledSearch
+            value={filterName}
+            onChange={onFilterName}
+            onKeyDown={handleSearchKeyPress}
+            placeholder="사원 ID를 적어주세요."
+            startAdornment={
+              <InputAdornment position="start">
+                <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
+              </InputAdornment>
+            }
+          />
+        </>
       )}
-
-    
     </StyledRoot>
   );
 }
