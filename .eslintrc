@@ -6,29 +6,33 @@
   },
   "extends": [
     "airbnb",
+    "airbnb-typescript",
     "plugin:jsx-a11y/recommended",
     "plugin:react-hooks/recommended",
+    "plugin:@typescript-eslint/recommended",
     "prettier"
   ],
-  "plugins": [
-    "react",
-    "react-hooks",
-    "prettier"
-  ],
-  "parser": "@babel/eslint-parser",
+  "plugins": ["@typescript-eslint", "react", "react-hooks", "prettier"],
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 8,
     "requireConfigFile": false,
     "ecmaFeatures": {
       "experimentalObjectRestSpread": true,
       "impliedStrict": true
-    }
+    },
+    "project": "./tsconfig.json"
   },
   "rules": {
+    "import/order": 0,
+    "@typescript-eslint/no-shadow": 0,
+    "@typescript-eslint/no-use-before-define": 0,
+    "no-undef": 0,
     "no-new": 0,
     "no-alert": 0,
     "no-shadow": 0,
     "no-console": 0,
+    "no-lonely-if": 1,
     "react/jsx-key": 1,
     "import/no-cycle": 0,
     "arrow-body-style": 1,
