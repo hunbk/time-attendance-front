@@ -24,6 +24,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import { SnackbarProvider, enqueueSnackbar } from 'notistack';
 import axios from 'axios';
 import Iconify from '../../components/iconify';
 
@@ -71,11 +72,24 @@ export default function HolidayPage() {
     });
   };
 
-  const handleAddHoliday = async () => {
-    await axios.post(`${SERVER_URL}/api/holidays`, newHoliday);
-    setNewHoliday({ date: '', name: '', payType: '유급' });
-    handleClose();
-    getHolidayData();
+  const handleAddHoliday = () => {
+    axios
+      .post(`${SERVER_URL}/api/holidays`, newHoliday)
+      .then((response) => {
+        if (response.status === 201) {
+          setNewHoliday({ date: '', name: '', payType: '유급' });
+          handleClose();
+          getHolidayData();
+          enqueueSnackbar('새 휴일이 등록되었습니다.', { variant: 'success' });
+        }
+      })
+      .catch((error) => {
+        if (error.response) {
+          // TODO: 유효성 검증, 서버 예외 메시지 출력
+          console.log(error.response.data);
+          enqueueSnackbar('휴일 등록에 실패했습니다.', { variant: 'error' }); // 스낵바 표시
+        }
+      });
   };
 
   const handleDeleteHoliday = async (holidayId) => {
@@ -199,6 +213,14 @@ export default function HolidayPage() {
             </DialogActions>
           </Dialog>
         </Card>
+
+        {/* 스낵바 UI */}
+        <SnackbarProvider
+          maxSnack={1}
+          autoHideDuration={3000}
+          // 생성위치를 하단, 오른쪽으로 설정
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        />
       </Container>
     </>
   );
