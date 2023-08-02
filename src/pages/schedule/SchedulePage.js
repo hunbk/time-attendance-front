@@ -93,7 +93,9 @@ export default function SchedulePage() {
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const [filteredUsers, setFilteredUsers] = useState(applySortFilter(USERLIST, getComparator(order, orderBy), filterName));
+  const [filteredUsers, setFilteredUsers] = useState(
+    applySortFilter(USERLIST, getComparator(order, orderBy), filterName)
+  );
 
   const [isSearched, setIsSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
 
