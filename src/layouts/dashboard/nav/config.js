@@ -31,6 +31,11 @@ const navConfig = [
     icon: icon('ic_blog'),
   },
   {
+    title: 'workgroup',
+    path: '/dashboard/workgroups',
+    icon: icon('ic_workgroup'),
+  },
+  {
     title: 'login',
     path: '/login',
     icon: icon('ic_lock'),

@@ -2,7 +2,9 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "jsx": "preserve",
+    "esModuleInterop": true,
   },
   "include": [
     "src/**/*"
