@@ -85,9 +85,25 @@ function applySortFilter(array, comparator, query) {
     if (order !== 0) return order;
     return a[1] - b[1];
   });
+
   if (query) {
-    return filter(array, (_user) => _user.name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+    // 콤마(,)로 구분된 id들을 배열로 변환
+    const queryIds = query.split(',').map((id) => id.trim());
+
+    // 필터링된 사용자 목록을 저장할 배열
+    const filteredUsers = [];
+
+    // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
+    queryIds.forEach((queryId) => {
+      const filteredUser = array.find((_user) => _user.id.toString() === queryId);
+      if (filteredUser) {
+        filteredUsers.push(filteredUser);
+      }
+    });
+
+    return filteredUsers;
   }
+
   return stabilizedThis.map((el) => el[0]);
 }
 
@@ -122,7 +138,6 @@ export default function PrivilegePage() {
     resetFilterAndSelection(); // 팝업창 열릴 때 검색어와 선택된 사용자 초기화
     setIsNewUserDialogOpen(true);
   };
-  
 
   // "취소" 버튼 클릭 시 실행되는 함수
   const handleCloseNewUserDialog = () => {
@@ -176,6 +191,21 @@ export default function PrivilegePage() {
     setSelected(newSelected);
   };
 
+  const handleModalClick = (event, name) => {
+    const selectedIndex = modalSelected.indexOf(name);
+    let newSelected = [];
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(modalSelected, name);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(modalSelected.slice(1));
+    } else if (selectedIndex === modalSelected.length - 1) {
+      newSelected = newSelected.concat(modalSelected.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(modalSelected.slice(0, selectedIndex), modalSelected.slice(selectedIndex + 1));
+    }
+    setModalSelected(newSelected);
+  };
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -222,7 +252,6 @@ export default function PrivilegePage() {
     setModalFilterName(''); // 팝업창의 검색어 초기화
     setModalSelected([]); // 팝업창의 선택된 사용자들 초기화
   };
-  
 
   const emptyAdminRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredAdminUsers.length) : 0;
   const emptyModalRows =
@@ -248,7 +277,7 @@ export default function PrivilegePage() {
           <Typography variant="h4" gutterBottom>
             관리자 목록
           </Typography>
-          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />} onClick={handleOpenNewUserDialog}>
+          <Button variant="outlined" startIcon={<Iconify icon="eva:plus-fill" />} onClick={handleOpenNewUserDialog}>
             관리자 추가
           </Button>
         </Stack>
@@ -332,7 +361,7 @@ export default function PrivilegePage() {
                 {isNotFound && (
                   <TableBody>
                     <TableRow>
-                      <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
+                      <TableCell align="left" colSpan={6} sx={{ py: 3 }}>
                         <Paper sx={{ textAlign: 'center' }}>
                           <Typography variant="h6" paragraph>
                             검색결과가 없습니다.
@@ -360,7 +389,7 @@ export default function PrivilegePage() {
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage="페이지당 목록 갯수 :"
+            labelRowsPerPage="페이지당 사원 수 :"
             labelDisplayedRows={({ count }) =>
               `현재 페이지: ${page + 1} / 전체 페이지: ${Math.ceil(count / rowsPerPage)}`
             }
@@ -396,6 +425,7 @@ export default function PrivilegePage() {
           삭제
         </MenuItem>
       </Popover>
+
       {/* 새로운 사용자 목록 팝업 */}
       <Modal
         open={isNewUserDialogOpen}
@@ -404,21 +434,18 @@ export default function PrivilegePage() {
         contentLabel="새로운 사용자 목록 팝업"
       >
         {/* Scrollbar 대신 MUI의 Dialog 컴포넌트 사용 */}
-        <Dialog
-          open={isNewUserDialogOpen}
-          onClose={handleCloseNewUserDialog}
-          scroll="paper" // 스크롤 방향 지정 ("paper"는 상하 스크롤)
-          maxWidth="lg" // 팝업창의 최대 넓이 설정 (필요에 따라 변경 가능)
-        >
+        <Dialog open={isNewUserDialogOpen} onClose={handleCloseNewUserDialog} maxWidth="md" maxHeight="lg">
           <DialogTitle>관리자 추가</DialogTitle>
-          <DialogContent>
+          <DialogContent dividers>
             <UserListToolbar
               numSelected={modalSelected.length}
               filterName={modalFilterName}
               onFilterName={handleModalFilterByName}
             />
-            <TableContainer sx={{ width: '100%' }}>
-              <Table>
+            <TableContainer>
+              <Table
+                sx={{ minWidth: 500, minHeight: 400, display: 'block', alignItems: 'start', justifyContent: 'start' }}
+              >
                 <UserListHead
                   order={order}
                   orderBy={orderBy}
@@ -430,7 +457,7 @@ export default function PrivilegePage() {
                 />
                 <TableBody>
                   {filteredModalUsers
-                    .filter((user) => user.AccessLevel === '사원') // '관리자'인 사용자만 필터링
+                    .filter((user) => user.AccessLevel === '사원') // '사원'인 사용자만 필터링
                     .slice(modalPage * rowsModalPerPage, modalPage * rowsModalPerPage + rowsModalPerPage)
                     .map((row) => {
                       const { name, depart, rank, id, date, AccessLevel } = row;
@@ -440,7 +467,7 @@ export default function PrivilegePage() {
                       return (
                         <TableRow key={name}>
                           <TableCell align="left">
-                            <Checkbox checked={selectedModalUser} onChange={(event) => handleClick(event, name)} />
+                            <Checkbox checked={selectedModalUser} onChange={(event) => handleModalClick(event, name)} />
                           </TableCell>
 
                           <TableCell component="th" scope="row" padding="none">
@@ -472,12 +499,6 @@ export default function PrivilegePage() {
                               </Stack>
                             )}
                           </TableCell>
-
-                          <TableCell align="right">
-                            <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
-                              <Iconify icon={'eva:more-vertical-fill'} />
-                            </IconButton>
-                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -492,7 +513,7 @@ export default function PrivilegePage() {
                   <TableBody>
                     <TableRow>
                       <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
-                        <Paper sx={{ textAlign: 'center' }}>
+                        <Paper sx={{ textAlign: 'center', minWidth: 478 }}>
                           <Typography variant="h6" paragraph>
                             검색결과가 없습니다.
                           </Typography>
@@ -527,7 +548,7 @@ export default function PrivilegePage() {
             page={modalPage}
             onPageChange={handleModalChangePage}
             onRowsPerPageChange={handleChangeModalRowsPerPage}
-            labelRowsPerPage="페이지당 목록 갯수 :"
+            labelRowsPerPage="페이지당 사원 수 :"
             labelDisplayedRows={({ count }) =>
               `현재 페이지: ${modalPage + 1} / 전체 페이지: ${Math.ceil(count / rowsModalPerPage)}`
             }
