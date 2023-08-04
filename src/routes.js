@@ -5,7 +5,7 @@ import SimpleLayout from './layouts/simple';
 //
 import BlogPage from './pages/BlogPage';
 import UserPage from './pages/UserPage';
-import LoginPage from './pages/LoginPage';
+
 import Page404 from './pages/Page404';
 import ProductsPage from './pages/ProductsPage';
 import DashboardAppPage from './pages/DashboardAppPage';
@@ -13,6 +13,7 @@ import HolidayPage from './pages/holiday/HolidayPage';
 import IndexPage from './pages/WorkGroup/IndexPage';
 import PrivilegePage from './pages/privilege/PrivilegePage';
 import SchedulePage from './pages/schedule/SchedulePage';
+import LoginPage from './pages/login/LoginPage';
 
 // ----------------------------------------------------------------------
 
