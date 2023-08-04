@@ -1,8 +1,9 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Container, Typography, Card, Box, Grid, Link } from '@mui/material';
+import { Container, Typography, Card, Box } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
 import SignupForm from './SignupForm';
+import SignHeader from '../../components/sign/SignHeader';
 
 export default function SignupPage() {
   return (
@@ -11,26 +12,22 @@ export default function SignupPage() {
         <title> 회원가입 </title>
       </Helmet>
 
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh" // 화면 정가운데 배치
-      >
+      <SignHeader />
+
+      <Box display="flex" justifyContent="center" alignItems="center" p={8}>
         <Container maxWidth="xs">
           <Card>
             <Box sx={{ p: 3 }}>
-              <Typography component="h1" variant="h3  " align="center">
+              <Typography variant="h3" align="center">
                 회원가입
               </Typography>
+              <Typography variant="body1" align="center">
+                효율적인 근무를 위한 첫 걸음,
+              </Typography>
+              <Typography variant="body1" align="center">
+                이제 근무시간을 체계적으로 관리해보세요.
+              </Typography>
               <SignupForm />
-              <Grid container justifyContent="flex-end">
-                <Grid item>
-                  <Link href="/login" variant="body2">
-                    로그인으로 이동
-                  </Link>
-                </Grid>
-              </Grid>
             </Box>
           </Card>
         </Container>
@@ -39,9 +36,9 @@ export default function SignupPage() {
       {/* 스낵바 UI */}
       <SnackbarProvider
         maxSnack={1}
-        autoHideDuration={3000}
+        autoHideDuration={2000}
         // 생성위치를 하단, 오른쪽으로 설정
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </>
   );

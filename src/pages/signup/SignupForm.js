@@ -30,31 +30,42 @@ export default function SignupForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    console.log(newUser);
+    // TODO: 입력값 유효성 검증
+    // TODO: 비밀번호 확인 검증
 
     // ====== 회원가입 요청 ======
-    // const response = await axios
-    //   .post('http://localhost:8080/api/users/signup', newUser)
-    //   .then((response) => {
-    //     if (response.status === 201) {
-    //       enqueueSnackbar('회원가입 완료!', { variant: 'success' });
-    //       setTimeout(() => {
-    //         navigate('/login');
-    //       }, 100); // 잠시 대기한 후 페이지 이동
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     if (error.response) {
-    //       // TODO: 유효성 검증, 서버 예외 메시지 출력
-    //       console.log(error.response.data);
-    //       enqueueSnackbar('회원가입 실패!', { variant: 'error' });
-    //     }
-    //   });
-    // console.log(response.data);
+    const response = await axios
+      .post('http://localhost:8080/api/users/signup', newUser)
+      .then((response) => {
+        if (response.status === 201) {
+          enqueueSnackbar('회원가입 완료!', { variant: 'success', autoHideDuration: 1000 });
+          // 회원가입 성공 시, 잠시 대기한 후 페이지 이동.
+          // 스낵바를 외부로 빼서 로그인 창에서 호출한다면 대기할 필요 없음.
+          setTimeout(() => {
+            navigate('/login');
+          }, 1000);
+        }
+      })
+      .catch((error) => {
+        if (error.response) {
+          // TODO: 예외 처리 방법이 이상함. 개선할 것.
+          if (Object.keys(error.response.data.errors).length !== 0) {
+            enqueueSnackbar(error.response.data.errors[Object.keys(error.response.data.errors)[0]], {
+              variant: 'error',
+            });
+          } else if (error.response.data.message === '이미 가입된 이메일입니다.') {
+            enqueueSnackbar(error.response.data.message, { variant: 'error' });
+          } else if (error.response.data.message === '유효하지 않은 회사 인증 코드입니다.') {
+            enqueueSnackbar(error.response.data.message, { variant: 'error' });
+          }
+          console.log(error.response.data);
+        }
+      });
+    console.log(response.data);
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+    <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 2 }}>
       <TextField
         margin="dense"
         size="small"
