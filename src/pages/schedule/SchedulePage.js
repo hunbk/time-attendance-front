@@ -22,12 +22,14 @@ import {
   TableContainer,
   TablePagination,
 } from '@mui/material';
+import DatePicker from 'react-datepicker';
 // components
 import Label from '../../components/label';
 import Iconify from '../../components/iconify';
 import Scrollbar from '../../components/scrollbar';
 // sections
 import { SettleListHead, SettleListToolbar } from '../../sections/@dashboard/settlement';
+import Calendar from './Calendar';
 // mock
 import USERLIST from '../../_mock/privilege';
 
@@ -73,7 +75,20 @@ function applySortFilter(array, comparator, query) {
     return a[1] - b[1];
   });
   if (query) {
-    return filter(array, (_user) => _user.name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+    // 콤마(,)로 구분된 id들을 배열로 변환
+    const queryIds = query.split(',').map((id) => id.trim());
+
+    // 필터링된 사용자 목록을 저장할 배열
+    const filteredUsers = [];
+    // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
+    queryIds.forEach((queryId) => {
+      const filteredUser = array.find((_user) => _user.id.toString() === queryId);
+      if (filteredUser) {
+        filteredUsers.push(filteredUser);
+      }
+    });
+
+    return filteredUsers;
   }
   return stabilizedThis.map((el) => el[0]);
 }
@@ -96,6 +111,9 @@ export default function SchedulePage() {
   const [filteredUsers, setFilteredUsers] = useState(
     applySortFilter(USERLIST, getComparator(order, orderBy), filterName)
   );
+
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
 
   const [isSearched, setIsSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
 
@@ -209,7 +227,14 @@ export default function SchedulePage() {
             filterName={filterName}
             onFilterName={handleFilterByName}
             onSearch={handleSearch}
+            startDate={startDate} // Calendar 컴포넌트로부터 받아온 startDate를 전달합니다.
+            endDate={endDate} // Calendar 컴포넌트로부터 받아온 endDate를 전달합니다.
+            setStartDate={setStartDate} // Calendar 컴포넌트로부터 받아온 setStartDate를 전달합니다.
+            setEndDate={setEndDate} // Calendar 컴포넌트로부터 받아온 setEndDate를 전달합니다.
           />
+          {console.log(`시작일자 + ${startDate}`)}
+          {console.log(`종료일자' + ${endDate}`)}
+          
           <Scrollbar>
             <TableContainer>
               <Table>
@@ -226,7 +251,7 @@ export default function SchedulePage() {
                 <TableBody>
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
                     const { date, id, name, depart, rank, workType, workStart, workEnd, workHour, workState } = row;
-                    const selectedUser = selected.indexOf(name) !== -1;
+                    // const selectedUser = selected.indexOf(name) !== -1;
 
                     return (
                       <TableRow hover key={id}>
@@ -330,12 +355,12 @@ export default function SchedulePage() {
       >
         <MenuItem>
           <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
-          Edit
+          수정
         </MenuItem>
 
         <MenuItem sx={{ color: 'error.main' }}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
-          Delete
+          삭제
         </MenuItem>
       </Popover>
     </>

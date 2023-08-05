@@ -36,9 +36,20 @@ UserListToolbar.propTypes = {
   numSelected: PropTypes.number,
   filterName: PropTypes.string,
   onFilterName: PropTypes.func,
+  onSearch: PropTypes.func,
 };
 
-export default function UserListToolbar({ numSelected, filterName, onFilterName }) {
+export default function UserListToolbar({ numSelected, filterName, onFilterName, onSearch }) {
+   // 엔터 키를 눌렀을 때 검색을 처리하는 함수
+   const handleSearchKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      // 엔터 키를 누르면, onSearch 함수를 호출하여 현재 검색어 값을 전달합니다.
+      if (filterName.trim() !== '') {
+        onSearch(filterName);
+      }
+    }
+  };
+
   return (
     <StyledRoot
       sx={{
@@ -56,6 +67,7 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName 
         <StyledSearch
           value={filterName}
           onChange={onFilterName}
+          onKeyDown={handleSearchKeyPress}
           placeholder="사원 ID를 적어주세요."
           startAdornment={
             <InputAdornment position="start">

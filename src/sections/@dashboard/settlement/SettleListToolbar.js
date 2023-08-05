@@ -4,11 +4,13 @@ import { styled, alpha } from '@mui/material/styles';
 import { Toolbar, Tooltip, IconButton, Typography, OutlinedInput, InputAdornment, Button } from '@mui/material';
 // component
 import Iconify from '../../../components/iconify';
+import Calendar from '../../../pages/schedule/Calendar';
+import { now } from 'lodash';
 
 // ----------------------------------------------------------------------
 
 const StyledRoot = styled(Toolbar)(({ theme }) => ({
-  height: 80,
+  height: 96,
   display: 'flex',
   justifyContent: 'space-between',
   padding: theme.spacing(0, 1, 0, 3),
@@ -37,9 +39,14 @@ SettleListToolbar.propTypes = {
   filterName: PropTypes.string,
   onFilterName: PropTypes.func,
   onSearch: PropTypes.func,
+  startDate: PropTypes.any,
+  endDate: PropTypes.any,
+  setStartDate: PropTypes.func,
+  setEndDate: PropTypes.func,
+
 };
 
-export default function SettleListToolbar({ numSelected, filterName, onFilterName, onSearch }) {
+export default function SettleListToolbar({ numSelected, filterName, onFilterName, onSearch, startDate, endDate, setStartDate, setEndDate }) {
 
   // 엔터 키를 눌렀을 때 검색을 처리하는 함수
   const handleSearchKeyPress = (event) => {
@@ -66,6 +73,12 @@ export default function SettleListToolbar({ numSelected, filterName, onFilterNam
         </Typography>
       ) : (
         <>
+         <Calendar // Calendar 컴포넌트를 추가합니다.
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+          />
           <StyledSearch
             value={filterName}
             onChange={onFilterName}
