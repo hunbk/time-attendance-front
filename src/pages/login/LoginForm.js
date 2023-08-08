@@ -30,15 +30,12 @@ export default function LoginForm() {
     try {
       const response = await axios.post('http://localhost:8080/api/auth/login', data);
       if (response.status === 200) {
-        enqueueSnackbar('로그인 성공', { variant: 'success' });
-
         // localStorage에 토큰 저장
         localStorage.setItem('accessToken', response.data.accessToken);
 
         // 사용자 정보 가져오기
         const userInfoResponse = await loginAxios.get('http://localhost:8080/api/users/me');
         const userInfo = JSON.stringify(userInfoResponse.data);
-        console.log(userInfo);
         localStorage.setItem('userInfo', userInfo);
 
         // AuthContext의 상태 업데이트
