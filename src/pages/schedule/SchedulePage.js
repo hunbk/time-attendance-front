@@ -21,8 +21,9 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
+  Snackbar,
+  Alert,
 } from '@mui/material';
-import DatePicker from 'react-datepicker';
 // components
 import Label from '../../components/label';
 import Iconify from '../../components/iconify';
@@ -107,6 +108,8 @@ export default function SchedulePage() {
   const [filterName, setFilterName] = useState('');
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const [deleteSnackbar, setDeleteSnackbar] = useState(false);
 
   const [filteredUsers, setFilteredUsers] = useState(
     applySortFilter(USERLIST, getComparator(order, orderBy), filterName)
@@ -208,6 +211,16 @@ export default function SchedulePage() {
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
+  // Snackbar 열기 함수
+  const handleOpenSnackbar = () => {
+    setDeleteSnackbar(true);
+  };
+
+  // Snackbar 닫기 함수
+  const handleCloseSnackbar = () => {
+    setDeleteSnackbar(false);
+  };
+
   return (
     <>
       <Helmet>
@@ -234,7 +247,7 @@ export default function SchedulePage() {
           />
           {console.log(`시작일자 + ${startDate}`)}
           {console.log(`종료일자' + ${endDate}`)}
-          
+
           <Scrollbar>
             <TableContainer>
               <Table>
@@ -242,7 +255,7 @@ export default function SchedulePage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={USERLIST.length}
+                  rowCount={filteredUsers.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
@@ -275,7 +288,17 @@ export default function SchedulePage() {
 
                         <TableCell align="left">{workHour}</TableCell>
 
-                        <TableCell align="left">{workState}</TableCell>
+                        <TableCell align="left">
+                          {workState === '정상처리' ? (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Label color="info">정상처리</Label>
+                            </Stack>
+                          ) : (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Label color="default">미처리</Label>
+                            </Stack>
+                          )}
+                        </TableCell>
 
                         <TableCell align="right">
                           <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
@@ -358,11 +381,32 @@ export default function SchedulePage() {
           수정
         </MenuItem>
 
-        <MenuItem sx={{ color: 'error.main' }}>
+        <MenuItem
+          onClick={() => {
+            handleOpenSnackbar();
+            handleCloseMenu();
+          }}
+          sx={{ color: 'error.main' }}
+        >
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           삭제
         </MenuItem>
       </Popover>
+
+      <Snackbar
+        open={deleteSnackbar}
+        autoHideDuration={2000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        sx={{ width: 400 }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+          삭제되었습니다!
+        </Alert>
+      </Snackbar>
     </>
   );
 }

@@ -232,6 +232,14 @@ export default function PrivilegePage() {
     setFilteredAdminUsers(searchResult);
   };
 
+  const handleOpenMenu = (event) => {
+    setOpen(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setOpen(null);
+  };
+
   const emptyAdminRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredAdminUsers.length) : 0;
   const isNotFound = !filteredAdminUsers.length && !!filterName;
 
@@ -322,11 +330,10 @@ export default function PrivilegePage() {
                             )}
                           </TableCell>
 
-                          <TableCell align="left">
-                            <Button sx={{ color: 'error.main' }} onClick={handleOpenSnackbar}>
-                              <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
-                              삭제
-                            </Button>
+                          <TableCell align="right">
+                            <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                              <Iconify icon={'eva:more-vertical-fill'} />
+                            </IconButton>
                           </TableCell>
                         </TableRow>
                       );
@@ -377,7 +384,7 @@ export default function PrivilegePage() {
         </Card>
       </Container>
 
-      {/* <Popover
+      <Popover
         open={Boolean(open)}
         anchorEl={open}
         onClose={handleCloseMenu}
@@ -394,7 +401,13 @@ export default function PrivilegePage() {
             },
           },
         }}
-      > */}
+      >
+
+        <MenuItem onClick={handleOpenSnackbar} sx={{ color: 'error.main' }}>
+          <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
+          삭제
+        </MenuItem>
+      </Popover>
 
       <Snackbar
         open={deleteSnackbar}
@@ -410,7 +423,6 @@ export default function PrivilegePage() {
           삭제되었습니다!
         </Alert>
       </Snackbar>
-      {/* </Popover> */}
     </>
   );
 }

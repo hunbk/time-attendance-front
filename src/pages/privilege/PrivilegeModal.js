@@ -40,61 +40,61 @@ import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
 import USERLIST from '../../_mock/privilege';
 // ----------------------------------------------------------------------
 
-  const MODAL_HEAD = [
-    { id: 'name', label: '이름', alignRight: false },
-    { id: 'depart', label: '부서', alignRight: false },
-    { id: 'rank', label: '직급', alignRight: false },
-    { id: 'id', label: '사원번호', alignRight: false },
-    { id: 'date', label: '입사일', alignRight: false },
-    { id: 'AccessLevel', label: '권한', alignRight: false },
-    { id: '' },
-  ];
-  
-  // ----------------------------------------------------------------------
-  function descendingComparator(a, b, orderBy) {
-    if (b[orderBy] < a[orderBy]) {
-      return -1;
-    }
-    if (b[orderBy] > a[orderBy]) {
-      return 1;
-    }
-    return 0;
+const MODAL_HEAD = [
+  { id: 'name', label: '이름', alignRight: false },
+  { id: 'depart', label: '부서', alignRight: false },
+  { id: 'rank', label: '직급', alignRight: false },
+  { id: 'id', label: '사원번호', alignRight: false },
+  { id: 'date', label: '입사일', alignRight: false },
+  { id: 'AccessLevel', label: '권한', alignRight: false },
+  { id: '' },
+];
+
+// ----------------------------------------------------------------------
+function descendingComparator(a, b, orderBy) {
+  if (b[orderBy] < a[orderBy]) {
+    return -1;
   }
-  
-  function getComparator(order, orderBy) {
-    return order === 'desc'
-      ? (a, b) => descendingComparator(a, b, orderBy)
-      : (a, b) => -descendingComparator(a, b, orderBy);
+  if (b[orderBy] > a[orderBy]) {
+    return 1;
   }
-  
-  function applySortFilter(array, comparator, query) {
-    const stabilizedThis = array.map((el, index) => [el, index]);
-    stabilizedThis.sort((a, b) => {
-      const order = comparator(a[0], b[0]);
-      if (order !== 0) return order;
-      return a[1] - b[1];
+  return 0;
+}
+
+function getComparator(order, orderBy) {
+  return order === 'desc'
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy);
+}
+
+function applySortFilter(array, comparator, query) {
+  const stabilizedThis = array.map((el, index) => [el, index]);
+  stabilizedThis.sort((a, b) => {
+    const order = comparator(a[0], b[0]);
+    if (order !== 0) return order;
+    return a[1] - b[1];
+  });
+
+  if (query) {
+    // 콤마(,)로 구분된 id들을 배열로 변환
+    const queryIds = query.split(',').map((id) => id.trim());
+
+    // 필터링된 사용자 목록을 저장할 배열
+    const filteredUsers = [];
+
+    // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
+    queryIds.forEach((queryId) => {
+      const filteredUser = array.find((_user) => _user.id.toString() === queryId);
+      if (filteredUser) {
+        filteredUsers.push(filteredUser);
+      }
     });
-  
-    if (query) {
-      // 콤마(,)로 구분된 id들을 배열로 변환
-      const queryIds = query.split(',').map((id) => id.trim());
-  
-      // 필터링된 사용자 목록을 저장할 배열
-      const filteredUsers = [];
-  
-      // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
-      queryIds.forEach((queryId) => {
-        const filteredUser = array.find((_user) => _user.id.toString() === queryId);
-        if (filteredUser) {
-          filteredUsers.push(filteredUser);
-        }
-      });
-  
-      return filteredUsers;
-    }
-  
-    return stabilizedThis.map((el) => el[0]);
+
+    return filteredUsers;
   }
+
+  return stabilizedThis.map((el) => el[0]);
+}
 
 const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
   const [modalPage, setModalPage] = useState(0);
@@ -130,7 +130,6 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
     setOrderBy(property);
   };
 
-
   const handleModalSelectAllClick = (event) => {
     if (event.target.checked) {
       const newSelecteds = filteredModalUsers.map((n) => n.name);
@@ -154,7 +153,6 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
     }
     setModalSelected(newSelected);
   };
-
 
   const handleModalChangePage = (event, newPage) => {
     setModalPage(newPage);
@@ -192,10 +190,10 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
     setSaveSnackbar(false);
   };
 
-  const handleSaveButtonClick = () => {
+  const handleOpenSaveSnackbar = () => {
     onSaveSnackbar();
     setSaveSnackbar(true);
-  }
+  };
 
   const handleModalSearch = (search) => {
     setIsModalSearched(true);
@@ -223,10 +221,6 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
   };
   // ... (필요한 함수들과 상태들을 PrivilegeModal 컴포넌트로 옮길 수 있습니다)
 
-  const handleOpenSaveSnackbar = () => {
-    setSaveSnackbar(true);
-  };
-
   return (
     <Modal
       open={open}
@@ -234,7 +228,14 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
       style={modalStyle} // 스크롤 적용 스타일 적용
     >
       {/* Scrollbar 대신 MUI의 Dialog 컴포넌트 사용 */}
-      <Dialog open={open} onClose={resetFilterAndSelection} maxWidth="md">
+      <Dialog
+        open={open}
+        onClose={() => {
+          resetFilterAndSelection();
+          handleCloseSaveSnackbar();
+        }}
+        maxWidth="md"
+      >
         <DialogTitle>관리자 추가</DialogTitle>
         <DialogContent dividers>
           <UserListToolbar
@@ -333,10 +334,16 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
           </TableContainer>
         </DialogContent>
         <DialogActions>
-          <Button onClick={resetFilterAndSelection} color="primary">
+          <Button
+            onClick={() => {
+              resetFilterAndSelection();
+              handleCloseSaveSnackbar();
+            }}
+            color="primary"
+          >
             취소
           </Button>
-          <Button onClick={handleSaveButtonClick} color="primary">
+          <Button onClick={handleOpenSaveSnackbar} color="primary">
             저장
           </Button>
           <Snackbar

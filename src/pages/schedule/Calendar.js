@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import 'react-datepicker/dist/react-datepicker.css';
 import styled from 'styled-components';
-import { ko } from 'date-fns/esm/locale';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { Button } from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import koLocale from 'date-fns/locale/ko';
 
 const DateBox1 = styled.div`
   display: flex;
@@ -18,29 +19,22 @@ const DateBox2 = styled.div`
   align-items: center;
 `;
 
-const Blank = styled.div`
-  margin: 3px;
-  display: flex;
-  align-items: center;
-`;
-
 const Dash = styled.div`
   margin: 8px;
   font-size: 25px;
 `;
 
 const StyledDatePicker = styled(DatePicker)`
-  width: 100%;
-  height: 10px;
+  width: 180px;
+  height: 39px;
   border-radius: 8px;
   font-weight: 400;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 100%;
-  padding: 5px;
   background-color: transparent;
   color: #707070;
-  top: -28px;
   text-align: center;
+  top: -8px;
 `;
 
 const modal = {
@@ -96,6 +90,7 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate }) => {
 
   const handleStartDateChange = (date) => {
     if (date <= endDate) {
+      setShowModal(false);
       setStartDate(date);
     } else {
       setShowModal(true);
@@ -104,38 +99,42 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate }) => {
 
   const handleEndDateChange = (date) => {
     if (date >= startDate) {
+      setShowModal(false);
       setEndDate(date);
     } else {
       setShowModal(true);
     }
   };
-
-
+  
   return (
-    <div style={{ display: 'flex' }}>
-      <DateBox1>
-        <DatePicker
-          locale={ko}
-          shouldCloseOnSelect
-          dateFormat="yyyy.MM.dd"
-          selectedDate={startDate}
-          closeOnScroll
-          onChange={handleStartDateChange}
-        />
-      </DateBox1>
-      <Dash> ~ </Dash>
-      <DateBox2>
-        <DatePicker
-          locale={ko}
-          shouldCloseOnSelect
-          dateFormat="yyyy.MM.dd"
-          selectedDate={endDate}
-          closeOnScroll
-          onChange={handleEndDateChange}
-        />
-      </DateBox2>
-      {showModal && <BasicModal onClose={handleCloseModal} />}
-    </div>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={koLocale}>
+      <div style={{ display: 'flex' }}>
+        <DateBox1>
+          <StyledDatePicker
+            shouldCloseOnSelect
+            label="시작 기간 선택"
+            format="yyyy.MM.dd"
+            value={startDate}
+            closeOnScroll
+            onChange={handleStartDateChange}
+            maxDate={endDate}
+          />
+        </DateBox1>
+        <Dash> ~ </Dash>
+        <DateBox2>
+          <StyledDatePicker
+            shouldCloseOnSelect
+            label="종료 기간 선택"
+            format="yyyy.MM.dd"
+            value={endDate}
+            closeOnScroll
+            onChange={handleEndDateChange}
+            minDate={startDate}
+          />
+        </DateBox2>
+        {showModal && <BasicModal onClose={handleCloseModal} />}
+      </div>
+    </LocalizationProvider>
   );
 };
 
