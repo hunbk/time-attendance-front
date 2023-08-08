@@ -15,14 +15,22 @@ import PrivilegePage from './pages/privilege/PrivilegePage';
 import SchedulePage from './pages/schedule/SchedulePage';
 import SignupPage from './pages/signup/SignupPage';
 import LoginPage from './pages/login/LoginPage';
+import { useAuthState } from './context/AuthProvider';
 
 // ----------------------------------------------------------------------
 
 export default function Router() {
+  // 로그인 여부
+  const { authenticated } = useAuthState();
+
   const routes = useRoutes([
     {
+      path: '/',
+      element: authenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" replace />,
+    },
+    {
       path: '/dashboard',
-      element: <DashboardLayout />,
+      element: authenticated ? <DashboardLayout /> : <Navigate to="/login" replace />,
       children: [
         { element: <Navigate to="/dashboard/app" />, index: true },
         { path: 'app', element: <DashboardAppPage /> },
@@ -36,11 +44,11 @@ export default function Router() {
       ],
     },
     {
-      path: 'login',
+      path: '/login',
       element: <LoginPage />,
     },
     {
-      path: 'signup',
+      path: '/signup',
       element: <SignupPage />,
     },
     {

@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 // @mui
 import { styled, alpha } from '@mui/material/styles';
-import { Box, Link, Button, Drawer, Typography, Avatar, Stack } from '@mui/material';
+import { Box, Link, Button, Drawer, Typography, Avatar } from '@mui/material';
 // mock
 import account from '../../../_mock/account';
 // hooks
@@ -14,6 +14,7 @@ import Scrollbar from '../../../components/scrollbar';
 import NavSection from '../../../components/nav-section';
 //
 import navConfig from './config';
+import { useAuthState, useAuthDispatch } from '../../../context/AuthProvider';
 
 // ----------------------------------------------------------------------
 
@@ -36,6 +37,8 @@ Nav.propTypes = {
 
 export default function Nav({ openNav, onCloseNav }) {
   const { pathname } = useLocation();
+  const authState = useAuthState();
+  const authDispatch = useAuthDispatch();
 
   const isDesktop = useResponsive('up', 'lg');
 
@@ -54,7 +57,7 @@ export default function Nav({ openNav, onCloseNav }) {
       }}
     >
       <Box sx={{ px: 2.5, py: 3, display: 'inline-flex' }}>
-        <Logo />
+        <Logo /> {/* 여기에 회사 로고 설정 */}
       </Box>
 
       <Box sx={{ mb: 5, mx: 2.5 }}>
@@ -64,15 +67,28 @@ export default function Nav({ openNav, onCloseNav }) {
 
             <Box sx={{ ml: 2 }}>
               <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
-                {account.displayName}
+                {/* 사용자 이름 */}
+                {authState.user.name}
               </Typography>
 
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {account.role}
+                {/* 사용자 권한 */}
+                {authState.user.role}
               </Typography>
             </Box>
           </StyledAccount>
         </Link>
+        <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => {
+              authDispatch('LOGOUT');
+            }}
+          >
+            로그아웃
+          </Button>
+        </Box>
       </Box>
 
       <NavSection data={navConfig} />

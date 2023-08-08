@@ -1,6 +1,10 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Container, Typography, Card, Box } from '@mui/material';
+import { SnackbarProvider } from 'notistack';
+
+import SignHeader from '../../components/sign/SignHeader';
+import SignFooter from '../../components/sign/SignFooter';
 import LoginForm from './LoginForm';
 
 export default function LoginPage() {
@@ -10,23 +14,31 @@ export default function LoginPage() {
         <title> 로그인 </title>
       </Helmet>
 
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh" // 화면 정가운데 배치
-      >
-        <Container maxWidth="xs">
-          <Card>
-            <Box sx={{ p: 3 }}>
-              <Typography component="h1" variant="h3  " align="center">
-                로그인
-              </Typography>
-              <LoginForm />
-            </Box>
-          </Card>
-        </Container>
+      <Box minHeight="100vh" display="flex" flexDirection="column">
+        <SignHeader />
+
+        <Box component="main" flex="1" p={20}>
+          <Container maxWidth="xs">
+            <Card>
+              <Box sx={{ p: 3 }}>
+                <Typography component="h1" variant="h3" align="center">
+                  로그인
+                </Typography>
+                <LoginForm />
+              </Box>
+            </Card>
+          </Container>
+        </Box>
+
+        <SignFooter />
       </Box>
+
+      {/* 스낵바 UI */}
+      <SnackbarProvider
+        maxSnack={1}
+        autoHideDuration={2000}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </>
   );
 }

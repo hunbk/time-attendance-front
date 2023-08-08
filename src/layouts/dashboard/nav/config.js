@@ -36,16 +36,6 @@ const navConfig = [
     icon: icon('ic_workgroup'),
   },
   {
-    title: 'login',
-    path: '/login',
-    icon: icon('ic_lock'),
-  },
-  {
-    title: '회원가입',
-    path: '/signup',
-    icon: icon('ic_lock'),
-  },
-  {
     title: 'Not found',
     path: '/404',
     icon: icon('ic_disabled'),
