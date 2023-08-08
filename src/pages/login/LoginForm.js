@@ -12,8 +12,8 @@ import axios from 'axios';
 export default function LoginForm() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('test@test.com'); // 로그인 TEST용 email(나중에 삭제 해야함)
+  const [password, setPassword] = useState('test1234'); // 로그인 TEST용 password(나중에 삭제 해야함)
   const [showPassword, setShowPassword] = useState(false);
 
   // 로그인 상태 변경을 위한 AuthDispatch 가져오기
