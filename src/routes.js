@@ -13,6 +13,7 @@ import HolidayPage from './pages/holiday/HolidayPage';
 import IndexPage from './pages/WorkGroup/IndexPage';
 import PrivilegePage from './pages/privilege/PrivilegePage';
 import SchedulePage from './pages/schedule/SchedulePage';
+import SignupPage from './pages/signup/SignupPage';
 
 // ----------------------------------------------------------------------
 
@@ -36,6 +37,10 @@ export default function Router() {
     {
       path: 'login',
       element: <LoginPage />,
+    },
+    {
+      path: 'signup',
+      element: <SignupPage />,
     },
     {
       element: <SimpleLayout />,
