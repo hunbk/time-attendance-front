@@ -9,19 +9,23 @@ import ThemeProvider from './theme';
 // components
 import { StyledChart } from './components/chart';
 import ScrollToTop from './components/scroll-to-top';
+// 로그인 인증 컨텍스트
+import { AuthProvider } from './context/AuthProvider';
 // ----------------------------------------------------------------------
 
 export default function App() {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <HelmetProvider>
-        <BrowserRouter>
-          <ThemeProvider>
-            <ScrollToTop />
-            <StyledChart />
-            <Router />
-          </ThemeProvider>
-        </BrowserRouter>
+        <AuthProvider>
+          <BrowserRouter>
+            <ThemeProvider>
+              <ScrollToTop />
+              <StyledChart />
+              <Router />
+            </ThemeProvider>
+          </BrowserRouter>
+        </AuthProvider>
       </HelmetProvider>
     </LocalizationProvider>
   );
