@@ -22,7 +22,7 @@ export default function NavWork() {
     const currentDate = dayjs().format('YYYY-MM-DD');
 
     await loginAxios
-      .get('/api/time-record', {
+      .get('/api/time-records/me', {
         params: { date: currentDate },
       })
       .then((response) => {
@@ -53,7 +53,7 @@ export default function NavWork() {
   }, [isWorked, isLeave, workStartTime, stateWorkEndTime]);
 
   const handleWorkStart = () => {
-    loginAxios.post('/api/time-record/work').then((response) => {
+    loginAxios.post('/api/time-records/work').then((response) => {
       if (response.status === 201) {
         console.log(response);
         setIsWorked(true);
@@ -63,7 +63,7 @@ export default function NavWork() {
   };
 
   const handleWorkEnd = () => {
-    loginAxios.post('/api/time-record/leave').then((response) => {
+    loginAxios.post('/api/time-records/leave').then((response) => {
       if (response.status === 200) {
         setIsLeave(true);
         setStateWorkEndTime(dayjs()); // useEffect에서 퇴근 시간 리렌더링을 위한 상태 변경
