@@ -55,7 +55,6 @@ export default function NavWork() {
   const handleWorkStart = () => {
     loginAxios.post('/api/time-records/work').then((response) => {
       if (response.status === 201) {
-        console.log(response);
         setIsWorked(true);
         alert('출근');
       }
