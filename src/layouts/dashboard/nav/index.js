@@ -15,6 +15,7 @@ import NavSection from '../../../components/nav-section';
 //
 import navConfig from './config';
 import { useAuthState, useAuthDispatch } from '../../../context/AuthProvider';
+import NavWork from '../../../components/nav-work/NavWork';
 
 // ----------------------------------------------------------------------
 
@@ -89,8 +90,12 @@ export default function Nav({ openNav, onCloseNav }) {
             로그아웃
           </Button>
         </Box>
+
+        {/* 출퇴근 버튼 */}
+        <NavWork />
       </Box>
 
+      {/* 페이지 목록 */}
       <NavSection data={navConfig} />
 
       <Box sx={{ flexGrow: 1 }} />
