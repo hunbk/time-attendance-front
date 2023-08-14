@@ -27,9 +27,9 @@ export default function NavWork() {
       })
       .then((response) => {
         if (response.status === 200) {
-          if (response.data.work) {
+          if (response.data.startWork) {
             setIsWorked(true);
-            setWorkStartTime(response.data.work);
+            setWorkStartTime(response.data.startWork);
           }
           if (response.data.leaveWork) {
             setWorkEndTime(response.data.leaveWork);
