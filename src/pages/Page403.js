@@ -18,25 +18,24 @@ const StyledContent = styled('div')(({ theme }) => ({
 
 // ----------------------------------------------------------------------
 
-export default function Page404() {
+export default function Page403() {
   return (
     <>
       <Helmet>
-        <title> 404 Not Found </title>
+        <title> 403 Forbidden </title>
       </Helmet>
 
       <Container>
         <StyledContent sx={{ textAlign: 'center', alignItems: 'center' }}>
           <Typography variant="h3" paragraph>
-            Not Found
+            Forbidden
           </Typography>
 
-          <Typography sx={{ color: 'text.secondary' }}>죄송합니다. 해당 페이지를 찾을 수 없습니다.</Typography>
-          {/* TODO: 다른 페이지 추천 링크 */}
+          <Typography sx={{ color: 'text.secondary' }}>죄송합니다. 잘못된 경로로 접근하셨습니다.</Typography>
 
           <Box
             component="img"
-            src="/assets/illustrations/illustration_404.svg"
+            src="/assets/illustrations/illustration_403.svg"
             sx={{ height: 260, mx: 'auto', my: { xs: 5, sm: 10 } }}
           />
 

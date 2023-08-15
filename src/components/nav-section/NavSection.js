@@ -4,20 +4,21 @@ import { NavLink as RouterLink } from 'react-router-dom';
 import { Box, List, ListItemText } from '@mui/material';
 //
 import { StyledNavItem, StyledNavItemIcon } from './styles';
+import { checkPermission } from '../../utils/checkPermission';
 
 // ----------------------------------------------------------------------
 
 NavSection.propTypes = {
   data: PropTypes.array,
+  userRole: PropTypes.string,
 };
 
-export default function NavSection({ data = [], ...other }) {
+export default function NavSection({ data = [], userRole, ...other }) {
   return (
     <Box {...other}>
       <List disablePadding sx={{ p: 1 }}>
-        {data.map((item) => (
-          <NavItem key={item.title} item={item} />
-        ))}
+        {/* 권한 있는 페이지만 표시 */}
+        {data.map((item) => checkPermission(userRole, item.roles) && <NavItem key={item.title} item={item} />)}
       </List>
     </Box>
   );
