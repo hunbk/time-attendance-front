@@ -22,19 +22,17 @@ export default function Page404() {
   return (
     <>
       <Helmet>
-        <title> 404 Page Not Found | Minimal UI </title>
+        <title> 404 Not Found </title>
       </Helmet>
 
       <Container>
         <StyledContent sx={{ textAlign: 'center', alignItems: 'center' }}>
           <Typography variant="h3" paragraph>
-            Sorry, page not found!
+            Not Found
           </Typography>
 
-          <Typography sx={{ color: 'text.secondary' }}>
-            Sorry, we couldn’t find the page you’re looking for. Perhaps you’ve mistyped the URL? Be sure to check your
-            spelling.
-          </Typography>
+          <Typography sx={{ color: 'text.secondary' }}>죄송합니다. 해당 페이지를 찾을 수 없습니다.</Typography>
+          {/* TODO: 다른 페이지 추천 링크 */}
 
           <Box
             component="img"
