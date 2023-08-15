@@ -38,7 +38,7 @@ Nav.propTypes = {
 
 export default function Nav({ openNav, onCloseNav }) {
   const { pathname } = useLocation();
-  const authState = useAuthState();
+  const { user } = useAuthState();
   const authDispatch = useAuthDispatch();
 
   const isDesktop = useResponsive('up', 'lg');
@@ -69,12 +69,12 @@ export default function Nav({ openNav, onCloseNav }) {
             <Box sx={{ ml: 2 }}>
               <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
                 {/* 사용자 이름 */}
-                {authState.user.name}
+                {user.name}
               </Typography>
 
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {/* 사용자 권한 */}
-                {authState.user.role}
+                {user.role}
               </Typography>
             </Box>
           </StyledAccount>
@@ -96,7 +96,7 @@ export default function Nav({ openNav, onCloseNav }) {
       </Box>
 
       {/* 페이지 목록 */}
-      <NavSection data={navConfig} />
+      <NavSection data={navConfig} userRole={user.role} />
 
       <Box sx={{ flexGrow: 1 }} />
     </Scrollbar>
