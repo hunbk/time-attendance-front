@@ -10,7 +10,7 @@ import Page404 from './pages/Page404';
 import ProductsPage from './pages/ProductsPage';
 import DashboardAppPage from './pages/DashboardAppPage';
 import HolidayPage from './pages/holiday/HolidayPage';
-import IndexPage from './pages/WorkGroup/IndexPage';
+import WorkGroupIndexPage from './pages/workgroup/WorkGroupIndexPage';
 import PrivilegePage from './pages/privilege/PrivilegePage';
 import SchedulePage from './pages/schedule/SchedulePage';
 
@@ -28,7 +28,7 @@ export default function Router() {
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
         { path: 'holiday', element: <HolidayPage /> },
-        { path: 'workgroups', element: <IndexPage /> },
+        { path: 'workgroups', element: <WorkGroupIndexPage /> },
         { path: 'privilege', element: <PrivilegePage /> },
         { path: 'schedule', element: <SchedulePage /> },
       ],
