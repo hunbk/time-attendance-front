@@ -1,17 +1,13 @@
 import { Helmet } from 'react-helmet-async';
-import { filter } from 'lodash';
-import { sentenceCase } from 'change-case';
-import { useState } from 'react';
+import { useState} from 'react';
 // @mui
 import {
   Card,
   Table,
   Stack,
   Paper,
-  Avatar,
   Button,
   Popover,
-  Checkbox,
   TableRow,
   MenuItem,
   TableBody,
@@ -21,6 +17,12 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
 } from '@mui/material';
 // components
 import Label from '../../components/label';
@@ -28,6 +30,7 @@ import Iconify from '../../components/iconify';
 import Scrollbar from '../../components/scrollbar';
 // sections
 import { SettleListHead, SettleListToolbar } from '../../sections/@dashboard/settlement';
+import ScheduleModal from './ScheduleModal';
 // mock
 import USERLIST from '../../_mock/privilege';
 
@@ -73,7 +76,20 @@ function applySortFilter(array, comparator, query) {
     return a[1] - b[1];
   });
   if (query) {
-    return filter(array, (_user) => _user.name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+    // 콤마(,)로 구분된 id들을 배열로 변환
+    const queryIds = query.split(',').map((id) => id.trim());
+
+    // 필터링된 사용자 목록을 저장할 배열
+    const filteredUsers = [];
+    // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
+    queryIds.forEach((queryId) => {
+      const filteredUser = array.find((_user) => _user.id.toString() === queryId);
+      if (filteredUser) {
+        filteredUsers.push(filteredUser);
+      }
+    });
+
+    return filteredUsers;
   }
   return stabilizedThis.map((el) => el[0]);
 }
@@ -93,14 +109,39 @@ export default function SchedulePage() {
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const [filteredUsers, setFilteredUsers] = useState(
-    applySortFilter(USERLIST, getComparator(order, orderBy), filterName)
-  );
+  const [deleteSnackbar, setDeleteSnackbar] = useState(false);
 
+  const [filteredUsers, setFilteredUsers] = useState(USERLIST);
+
+  // 기본적으로 Calendar 숨기고 open하면 Date에 new Date() 설정함
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [isSearched, setIsSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
 
-  const handleOpenMenu = (event) => {
+  // 수정 대상 회원의 id를 저장
+  const [editUserId, setEditUserId] = useState(null);
+
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  const handleDeleteConfirmOpen = () => {
+    setDeleteConfirmOpen(true);
+    handleCloseMenu();
+  };
+
+  const handleDeleteConfirmClose = () => {
+    setDeleteConfirmOpen(false);
+  };
+
+  const handleDelete = () => {
+    handleOpenSnackbar();
+    handleDeleteConfirmClose();
+  };
+
+  const handleOpenMenu = (event, row) => {
     setOpen(event.currentTarget);
+    setEditUserId(row.id);
   };
 
   const handleCloseMenu = () => {
@@ -120,21 +161,6 @@ export default function SchedulePage() {
       return;
     }
     setSelected([]);
-  };
-
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(selected.slice(0, selectedIndex), selected.slice(selectedIndex + 1));
-    }
-    setSelected(newSelected);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -186,9 +212,28 @@ export default function SchedulePage() {
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
 
-  // const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
-
   const isNotFound = !filteredUsers.length && !!filterName;
+
+  const filterUser = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
+
+  // Snackbar 열기 함수
+  const handleOpenSnackbar = () => {
+    setDeleteSnackbar(true);
+  };
+
+  // Snackbar 닫기 함수
+  const handleCloseSnackbar = () => {
+    setDeleteSnackbar(false);
+  };
+
+  const handleOpenModal = () => {
+    setScheduleModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setScheduleModalOpen(false);
+    handleCloseMenu();
+  };
 
   return (
     <>
@@ -209,7 +254,14 @@ export default function SchedulePage() {
             filterName={filterName}
             onFilterName={handleFilterByName}
             onSearch={handleSearch}
+            startDate={startDate} // Calendar 컴포넌트로부터 받아온 startDate를 전달합니다.
+            endDate={endDate} // Calendar 컴포넌트로부터 받아온 endDate를 전달합니다.
+            setStartDate={setStartDate} // Calendar 컴포넌트로부터 받아온 setStartDate를 전달합니다.
+            setEndDate={setEndDate} // Calendar 컴포넌트로부터 받아온 setEndDate를 전달합니다.
           />
+          {console.log(`시작일자 + ${startDate}`)}
+          {console.log(`종료일자' + ${endDate}`)}
+
           <Scrollbar>
             <TableContainer>
               <Table>
@@ -217,16 +269,15 @@ export default function SchedulePage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={USERLIST.length}
+                  rowCount={filteredUsers.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                   disableCheckbox
                 />
                 <TableBody>
-                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                  {filterUser.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
                     const { date, id, name, depart, rank, workType, workStart, workEnd, workHour, workState } = row;
-                    const selectedUser = selected.indexOf(name) !== -1;
 
                     return (
                       <TableRow hover key={id}>
@@ -250,10 +301,28 @@ export default function SchedulePage() {
 
                         <TableCell align="left">{workHour}</TableCell>
 
-                        <TableCell align="left">{workState}</TableCell>
+                        <TableCell align="left">
+                          {workState === '정상처리' ? (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Label color="info">정상처리</Label>
+                            </Stack>
+                          ) : (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Label color="default">미처리</Label>
+                            </Stack>
+                          )}
+                        </TableCell>
 
                         <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                          <IconButton
+                            size="large"
+                            color="inherit"
+                            onClick={(event) => {
+                              handleOpenMenu(event, row);
+                            }}
+                          >
+                            {console.log(row.id)}
+                            {console.log(editUserId)}
                             <Iconify icon={'eva:more-vertical-fill'} />
                           </IconButton>
                         </TableCell>
@@ -328,16 +397,47 @@ export default function SchedulePage() {
           },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={handleOpenModal}>
           <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
-          Edit
+          수정
         </MenuItem>
 
-        <MenuItem sx={{ color: 'error.main' }}>
+        <ScheduleModal open={scheduleModalOpen} onClose={handleCloseModal} editUserId={editUserId} />
+
+        <MenuItem onClick={handleDeleteConfirmOpen} sx={{ color: 'error.main' }}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
-          Delete
+          삭제
         </MenuItem>
       </Popover>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog open={deleteConfirmOpen} onClose={handleDeleteConfirmClose}>
+        <DialogTitle>삭제 확인</DialogTitle>
+        <DialogContent>선택한 항목을 정말 삭제하시겠습니까?</DialogContent>
+        <DialogActions>
+          <Button onClick={handleDelete} color="error">
+            삭제
+          </Button>
+          <Button onClick={handleDeleteConfirmClose} color="primary">
+            취소
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={deleteSnackbar}
+        autoHideDuration={2000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+        sx={{ width: 400 }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+          삭제되었습니다!
+        </Alert>
+      </Snackbar>
     </>
   );
 }
