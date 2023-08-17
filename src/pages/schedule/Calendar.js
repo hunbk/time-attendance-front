@@ -81,42 +81,43 @@ const BasicModal = ({ onClose }) => {
   );
 };
 
-const Calendar = ({ startDate, endDate, setStartDate, setEndDate }) => {
+const Calendar = ({ startDate, endDate, setStartDate, setEndDate}) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleCloseModal = () => {
     setShowModal(false);
   };
 
-  const handleStartDateChange = (date) => {
-    if (date <= endDate) {
-      setShowModal(false);
-      setStartDate(date);
-    } else {
-      setShowModal(true);
-    }
-  };
+  // const handleStartDateChange = (date) => {
+  //   if (date <= endDate) {
+  //     setShowModal(false);
+  //     setStartDate(date);
+  //   } else {
+  //     setShowModal(true);
+  //   }
+  // };
 
-  const handleEndDateChange = (date) => {
-    if (date >= startDate) {
-      setShowModal(false);
-      setEndDate(date);
-    } else {
-      setShowModal(true);
-    }
-  };
+  // const handleEndDateChange = (date) => {
+  //   if (date >= startDate) {
+  //     setShowModal(false);
+  //     setEndDate(date);
+  //   } else {
+  //     setShowModal(true);
+  //   }
+  // };
   
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={koLocale}>
-      <div style={{ display: 'flex' }}>
+      <div style={{ display: 'flex'}}>
         <DateBox1>
           <StyledDatePicker
             shouldCloseOnSelect
             label="시작 기간 선택"
             format="yyyy.MM.dd"
             value={startDate}
+            onChange={setStartDate}
             closeOnScroll
-            onChange={handleStartDateChange}
+            // onChange={handleStartDateChange}
             maxDate={endDate}
           />
         </DateBox1>
@@ -127,8 +128,9 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate }) => {
             label="종료 기간 선택"
             format="yyyy.MM.dd"
             value={endDate}
+            onChange={setEndDate}
             closeOnScroll
-            onChange={handleEndDateChange}
+            // onChange={handleEndDateChange}
             minDate={startDate}
           />
         </DateBox2>

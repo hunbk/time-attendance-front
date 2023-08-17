@@ -1,23 +1,15 @@
-import { Helmet } from 'react-helmet-async';
-import { filter } from 'lodash';
 import { useState } from 'react';
 // @mui
 import {
-  Card,
   Table,
   Stack,
   Paper,
-  Avatar,
   Button,
-  Popover,
   Checkbox,
   TableRow,
-  MenuItem,
   TableBody,
   TableCell,
-  Container,
   Typography,
-  IconButton,
   TableContainer,
   TablePagination,
   Modal,
@@ -32,8 +24,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Label from '../../components/label';
-import Iconify from '../../components/iconify';
-import Scrollbar from '../../components/scrollbar';
 // sections
 import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
 // mock
@@ -101,8 +91,8 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
   const [rowsModalPerPage, setRowsModalPerPage] = useState(5);
   const [modalFilterName, setModalFilterName] = useState('');
   const [modalSelected, setModalSelected] = useState([]);
-  const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
   const [saveSnackbar, setSaveSnackbar] = useState(false);
+  const [nullSnackbar, setNullSnackbar] = useState(false);
 
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('name');
@@ -110,12 +100,10 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
 
   const [isModalSearched, setIsModalSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
 
+  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+
   const [filteredModalUsers, setFilteredModalUsers] = useState(
-    applySortFilter(
-      USERLIST.filter((user) => user.AccessLevel === '사원'), // '사원'인 사용자만 필터링
-      getComparator(order, orderBy),
-      modalFilterName
-    )
+    USERLIST.filter((user) => user.AccessLevel === '사원') // '사원'인 사용자만 필터링
   );
 
   const filterUser = applySortFilter(
@@ -195,6 +183,14 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
     setSaveSnackbar(true);
   };
 
+  const handleOpenNullSnackbar = () => {
+    setNullSnackbar(true);
+  };
+
+  const handleCloseNullSnackbar = () => {
+    setNullSnackbar(false);
+  };
+
   const handleModalSearch = (search) => {
     setIsModalSearched(true);
     const searchResult = applySortFilter(
@@ -206,6 +202,18 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
     setModalPage(0);
     setRowsModalPerPage(5);
     setFilteredModalUsers(searchResult);
+  };
+
+  const handleSaveConfirmOpen = () => {
+    setSaveConfirmOpen(true);
+  };
+
+  const handleSaveConfirmClose = () => {
+    // 여기에 삭제 로직을 구현하세요.
+    // 예를 들어, 선택된 사용자를 삭제하고 관련 상태를 업데이트하는 등의 작업을 수행할 수 있습니다.
+
+    // 삭제 완료 후 삭제 확인 창을 닫습니다.
+    setSaveConfirmOpen(false);
   };
 
   const emptyModalRows =
@@ -258,8 +266,7 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
                 onSelectAllClick={handleModalSelectAllClick}
               />
               <TableBody>
-                {filteredModalUsers
-                  .filter((user) => user.AccessLevel === '사원') // '사원'인 사용자만 필터링
+                {filterUser
                   .slice(modalPage * rowsModalPerPage, modalPage * rowsModalPerPage + rowsModalPerPage)
                   .map((row) => {
                     const { name, depart, rank, id, date, AccessLevel } = row;
@@ -334,18 +341,19 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
           </TableContainer>
         </DialogContent>
         <DialogActions>
+          <Button onClick={handleSaveConfirmOpen} variant="contained">
+            추가
+          </Button>
           <Button
             onClick={() => {
               resetFilterAndSelection();
               handleCloseSaveSnackbar();
             }}
-            color="primary"
+            variant="outlined"
           >
             취소
           </Button>
-          <Button onClick={handleOpenSaveSnackbar} color="primary">
-            저장
-          </Button>
+
           <Snackbar
             open={saveSnackbar}
             autoHideDuration={2000}
@@ -360,7 +368,51 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
               관리자로 전환되었습니다!
             </Alert>
           </Snackbar>
+
+          <Snackbar
+            open={nullSnackbar}
+            autoHideDuration={2000}
+            onClose={handleCloseNullSnackbar}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'center',
+            }}
+            sx={{ width: 400 }}
+          >
+            <Alert onClose={handleCloseNullSnackbar} severity="error" sx={{ width: '100%' }}>
+              선택한 사용자가 없습니다!
+            </Alert>
+          </Snackbar>
         </DialogActions>
+
+        <Dialog open={saveConfirmOpen} onClose={() => setSaveConfirmOpen(false)}>
+          <DialogTitle>관리자 전환 확인</DialogTitle>
+          <DialogContent>
+            <Typography>선택한 사원을 관리자로 추가하시겠습니까?</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                if (modalSelected !== null && modalSelected.length !== 0) {
+                  handleSaveConfirmClose();
+                  handleOpenSaveSnackbar();
+                  setModalSelected([]);
+                } else {
+                  // modalSelected가 null일 때 경고창 띄우기
+                  handleOpenNullSnackbar();
+                  handleSaveConfirmClose();
+                  setModalSelected([]);
+                }
+              }}
+              variant="contained"
+            >
+              추가
+            </Button>
+            <Button onClick={() => setSaveConfirmOpen(false)} variant="outlined">
+              취소
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* 페이징 기능 추가 */}
         <TablePagination

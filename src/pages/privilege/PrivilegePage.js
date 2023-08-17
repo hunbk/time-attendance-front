@@ -1,16 +1,18 @@
 import { Helmet } from 'react-helmet-async';
-import { filter } from 'lodash';
 import { useState } from 'react';
 // @mui
 import {
   Card,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
   Table,
   Stack,
   Paper,
   Avatar,
   Button,
   Popover,
-  Checkbox,
   TableRow,
   MenuItem,
   TableBody,
@@ -20,7 +22,6 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
-  Modal,
   Snackbar,
   Alert,
 } from '@mui/material';
@@ -109,12 +110,11 @@ export default function PrivilegePage() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   // 선택된 사용자들을 관리하는 상태와 함수들을 새로운 상태와 함수들로 분리
   const [isSearched, setIsSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const [filteredAdminUsers, setFilteredAdminUsers] = useState(
-    applySortFilter(
-      USERLIST.filter((user) => user.AccessLevel === '관리자'), // '관리자'인 사용자만 필터링
-      getComparator(order, orderBy),
-      filterName
-    )
+    USERLIST.filter((user) => user.AccessLevel === '관리자')
   );
 
   const filterAdmin = applySortFilter(
@@ -152,20 +152,6 @@ export default function PrivilegePage() {
     setSelected([]);
   };
 
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(selected.slice(0, selectedIndex), selected.slice(selectedIndex + 1));
-    }
-    setSelected(newSelected);
-  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -196,8 +182,6 @@ export default function PrivilegePage() {
   const resetFilterAndSelection = () => {
     setFilterName(''); // 검색어 초기화
     setSelected([]); // 선택된 사용자들 초기화
-    // setModalFilterName(''); // 팝업창의 검색어 초기화
-    // setModalSelected([]); // 팝업창의 선택된 사용자들 초기화
   };
 
   // Snackbar 열기 함수
@@ -212,10 +196,6 @@ export default function PrivilegePage() {
 
   const handleOpenSaveSnackbar = () => {
     setSaveSnackbar(true);
-  };
-
-  const handleCloseSaveSnackbar = () => {
-    setSaveSnackbar(false);
   };
 
   const handleSearch = (search) => {
@@ -238,6 +218,18 @@ export default function PrivilegePage() {
 
   const handleCloseMenu = () => {
     setOpen(null);
+  };
+
+  const handleConfirmDeleteOpen = () => {
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDeleteClose = () => {
+    // 여기에 삭제 로직을 구현하세요.
+    // 예를 들어, 선택된 사용자를 삭제하고 관련 상태를 업데이트하는 등의 작업을 수행할 수 있습니다.
+
+    // 삭제 완료 후 삭제 확인 창을 닫습니다.
+    setDeleteConfirmOpen(false);
   };
 
   const emptyAdminRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredAdminUsers.length) : 0;
@@ -285,59 +277,56 @@ export default function PrivilegePage() {
                   disableCheckbox
                 />
                 <TableBody>
-                  {filteredAdminUsers
-                    .filter((user) => user.AccessLevel === '관리자') // '관리자'인 사용자만 필터링
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row) => {
-                      const { name, depart, rank, phone, id, date, AccessLevel } = row;
+                  {filterAdmin.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                    const { name, depart, rank, phone, id, date, AccessLevel } = row;
 
-                      return (
-                        <TableRow key={name}>
-                          <TableCell align="left">
-                            {/* <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} /> */}
-                          </TableCell>
+                    return (
+                      <TableRow key={name}>
+                        <TableCell align="left">
+                          {/* <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} /> */}
+                        </TableCell>
 
-                          <TableCell component="th" scope="row" padding="none">
-                            <Stack direction="row" alignItems="center" spacing={2}>
-                              <Avatar alt={name} />
-                              <Typography variant="subtitle2" noWrap>
-                                {name}
-                              </Typography>
+                        <TableCell component="th" scope="row" padding="none">
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Avatar alt={name} />
+                            <Typography variant="subtitle2" noWrap>
+                              {name}
+                            </Typography>
+                          </Stack>
+                        </TableCell>
+
+                        <TableCell align="left">{depart}</TableCell>
+
+                        <TableCell align="left">{rank}</TableCell>
+
+                        <TableCell align="left">{phone}</TableCell>
+
+                        <TableCell align="left">{id}</TableCell>
+
+                        <TableCell align="left">{date}</TableCell>
+
+                        <TableCell align="left">
+                          {AccessLevel === '관리자' ? (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <SupervisorAccountIcon sx={{ fontSize: 18 }} />
+                              <Label color="success">관리자</Label>
                             </Stack>
-                          </TableCell>
+                          ) : (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <PersonIcon sx={{ fontSize: 18 }} />
+                              <Label color="default">사원</Label>
+                            </Stack>
+                          )}
+                        </TableCell>
 
-                          <TableCell align="left">{depart}</TableCell>
-
-                          <TableCell align="left">{rank}</TableCell>
-
-                          <TableCell align="left">{phone}</TableCell>
-
-                          <TableCell align="left">{id}</TableCell>
-
-                          <TableCell align="left">{date}</TableCell>
-
-                          <TableCell align="left">
-                            {AccessLevel === '관리자' ? (
-                              <Stack direction="row" alignItems="center" spacing={1}>
-                                <SupervisorAccountIcon sx={{ fontSize: 18 }} />
-                                <Label color="success">관리자</Label>
-                              </Stack>
-                            ) : (
-                              <Stack direction="row" alignItems="center" spacing={1}>
-                                <PersonIcon sx={{ fontSize: 18 }} />
-                                <Label color="default">사원</Label>
-                              </Stack>
-                            )}
-                          </TableCell>
-
-                          <TableCell align="right">
-                            <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
-                              <Iconify icon={'eva:more-vertical-fill'} />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                        <TableCell align="right">
+                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                            <Iconify icon={'eva:more-vertical-fill'} />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {emptyAdminRows > 0 && (
                     <TableRow style={{ height: 53 * emptyAdminRows }}>
                       <TableCell colSpan={6} />
@@ -402,20 +391,46 @@ export default function PrivilegePage() {
           },
         }}
       >
-
-        <MenuItem onClick={handleOpenSnackbar} sx={{ color: 'error.main' }}>
+        <MenuItem onClick={handleConfirmDeleteOpen} sx={{ color: 'error.main' }}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           삭제
         </MenuItem>
       </Popover>
+
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>삭제 확인</DialogTitle>
+        <DialogContent>
+          <Typography>해당 사원을 관리자에서 삭제하시겠습니까?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              handleConfirmDeleteClose();
+              handleOpenSnackbar();
+              handleCloseMenu();
+            }}
+            color="error"
+          >
+            삭제
+          </Button>
+          <Button
+            onClick={() => {
+              setDeleteConfirmOpen(false);
+              handleCloseMenu();
+            }}
+          >
+            취소
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={deleteSnackbar}
         autoHideDuration={2000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
+          vertical: 'top',
+          horizontal: 'center',
         }}
         sx={{ width: 400 }}
       >
