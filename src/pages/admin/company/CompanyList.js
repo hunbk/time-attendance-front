@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   Table,
   TableBody,
@@ -13,30 +14,21 @@ import {
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Scrollbar from '../../../components/scrollbar/Scrollbar';
-import loginAxios from '../../../api/loginAxios';
 import CompanyListSearchbar from './CompanyListSearchbar';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { enqueueSnackbar } from 'notistack';
 
-export default function CompanyList() {
-  // 회사 목록
-  const [companies, setCompanies] = useState([]);
+CompanyList.propTypes = {
+  companies: PropTypes.array,
+};
 
+export default function CompanyList({ companies }) {
   // 페이징
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // 검색어
   const [filterName, setFilterName] = useState('');
-
-  const getCompanyList = async () => {
-    const res = await loginAxios.get('/api/companies');
-    setCompanies(res.data);
-  };
-
-  useEffect(() => {
-    getCompanyList();
-  }, []);
 
   const handleClickCopyButton = () => {
     enqueueSnackbar('클립보드에 복사되었습니다!', { variant: 'success' });

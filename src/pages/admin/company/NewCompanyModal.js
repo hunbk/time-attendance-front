@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 import PropTypes from 'prop-types';
 import loginAxios from '../../../api/loginAxios';
+import { enqueueSnackbar } from 'notistack';
 
 NewCompanyModal.propTypes = {
   open: PropTypes.bool,
   onClose: PropTypes.func,
+  getCompanyList: PropTypes.func,
 };
 
-export default function NewCompanyModal({ open, onClose }) {
+export default function NewCompanyModal({ open, onClose, getCompanyList }) {
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState(false);
   const [nameHelperText, setNameHelperText] = useState('');
@@ -18,16 +20,17 @@ export default function NewCompanyModal({ open, onClose }) {
     onClose();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const data = {
       name,
     };
 
-    loginAxios
+    await loginAxios
       .post('/api/companies', data)
       .then((response) => {
         if (response.status === 201) {
-          alert('생성 완료');
+          enqueueSnackbar('등록되었습니다!', { variant: 'success' });
+          getCompanyList(); // 회사 목록 업데이트
           onClose(); // 성공시 모달 창 닫기
         }
       })
@@ -37,6 +40,7 @@ export default function NewCompanyModal({ open, onClose }) {
           setNameHelperText('이미 존재하는 회사 이름입니다.');
         }
       });
+    setName(''); // 이름 필드 초기화
   };
 
   return (
