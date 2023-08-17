@@ -1,14 +1,17 @@
 import PropTypes from 'prop-types';
+import { useState } from 'react';
 // @mui
 import { styled, alpha } from '@mui/material/styles';
-import { Toolbar, Tooltip, IconButton, Typography, OutlinedInput, InputAdornment, Button } from '@mui/material';
+import { Toolbar, Typography, OutlinedInput, InputAdornment, Button } from '@mui/material';
 // component
 import Iconify from '../../../components/iconify';
+import Calendar from '../../../pages/schedule/Calendar';
+
 
 // ----------------------------------------------------------------------
 
 const StyledRoot = styled(Toolbar)(({ theme }) => ({
-  height: 80,
+  height: 96,
   display: 'flex',
   justifyContent: 'space-between',
   padding: theme.spacing(0, 1, 0, 3),
@@ -37,9 +40,30 @@ SettleListToolbar.propTypes = {
   filterName: PropTypes.string,
   onFilterName: PropTypes.func,
   onSearch: PropTypes.func,
+  startDate: PropTypes.instanceOf(Date),
+  endDate: PropTypes.instanceOf(Date),
+  setStartDate: PropTypes.func,
+  setEndDate: PropTypes.func,
 };
 
-export default function SettleListToolbar({ numSelected, filterName, onFilterName, onSearch }) {
+export default function SettleListToolbar({
+  numSelected,
+  filterName,
+  onFilterName,
+  onSearch,
+  startDate,
+  endDate,
+  setStartDate,
+  setEndDate,
+}) {
+  const [selectedStartDate, setSelectedStartDate] = useState(startDate);
+  const [selectedEndDate, setSelectedEndDate] = useState(endDate);
+
+  const handleApplyDate = () => {
+    setStartDate(selectedStartDate);
+    setEndDate(selectedEndDate);
+    // 추가적인 로직이 필요하다면 여기에 추가할 수 있습니다.
+  };
 
   // 엔터 키를 눌렀을 때 검색을 처리하는 함수
   const handleSearchKeyPress = (event) => {
@@ -66,6 +90,19 @@ export default function SettleListToolbar({ numSelected, filterName, onFilterNam
         </Typography>
       ) : (
         <>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Calendar
+              startDate={selectedStartDate} // 수정된 부분
+              endDate={selectedEndDate} // 수정된 부분
+              setStartDate={setSelectedStartDate} // 수정된 부분
+              setEndDate={setSelectedEndDate} // 수정된 부분
+            />
+
+            <Button onClick={handleApplyDate} variant="outlined" sx={{ height: 40, width: 70, marginLeft: 2 }}>
+              적용
+            </Button>
+          </div>
+
           <StyledSearch
             value={filterName}
             onChange={onFilterName}
