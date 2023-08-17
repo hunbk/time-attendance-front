@@ -46,21 +46,15 @@ const navConfig = [
     roles: ['ADMIN'],
   },
   {
-    title: 'Not found',
-    path: '/404',
-    icon: icon('ic_disabled'),
-    roles: ['USER', 'ADMIN'],
-  },
-  {
     title: '휴일 관리',
     path: '/dashboard/holiday',
     icon: icon('ic_blog'),
     roles: ['ADMIN'],
   },
   {
-    title: '관리자 페이지',
-    path: '/admin/company',
-    icon: icon('ic_blog'),
+    title: '서비스 관리자 설정',
+    path: '/admin',
+    icon: icon('ic_setting'),
     roles: ['SUPERADMIN'],
   },
 ];

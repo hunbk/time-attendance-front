@@ -18,6 +18,8 @@ import LoginPage from './pages/login/LoginPage';
 import { useAuthState } from './context/AuthProvider';
 import Page403 from './pages/Page403';
 import { checkPermission } from './utils/checkPermission';
+import CompanyPage from './pages/admin/company/CompanyPage';
+import AdminPage from './pages/admin/AdminPage';
 
 // ----------------------------------------------------------------------
 
@@ -62,9 +64,10 @@ export default function Router() {
       path: '/admin', // 서비스 관리자 페이지. 서비스 최고 관리자(SUPERADMIN)만 접근 가능한 경로
       element: checkPermission(userRole, ['SUPERADMIN']) ? <DashboardLayout /> : <Navigate to="/403" />,
       children: [
+        { path: '/admin', element: <AdminPage /> },
         {
           path: 'company',
-          element: checkPermission(userRole, ['SUPERADMIN']) ? <HolidayPage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['SUPERADMIN']) ? <CompanyPage /> : <Navigate to="/403" />,
         },
       ],
     },
