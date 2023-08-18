@@ -1,13 +1,10 @@
 import { Navigate, useRoutes } from 'react-router-dom';
+
 // layouts
 import DashboardLayout from './layouts/dashboard';
 import SimpleLayout from './layouts/simple';
-//
-import BlogPage from './pages/BlogPage';
-import UserPage from './pages/UserPage';
 
-import Page404 from './pages/Page404';
-import ProductsPage from './pages/ProductsPage';
+// 사용자 페이지
 import DashboardAppPage from './pages/DashboardAppPage';
 import HolidayPage from './pages/holiday/HolidayPage';
 import IndexPage from './pages/WorkGroup/IndexPage';
@@ -15,11 +12,20 @@ import PrivilegePage from './pages/privilege/PrivilegePage';
 import SchedulePage from './pages/schedule/SchedulePage';
 import SignupPage from './pages/signup/SignupPage';
 import LoginPage from './pages/login/LoginPage';
-import { useAuthState } from './context/AuthProvider';
-import Page403 from './pages/Page403';
-import { checkPermission } from './utils/checkPermission';
-import CompanyPage from './pages/admin/company/CompanyPage';
+
+// 서비스 관리자 페이지
 import AdminPage from './pages/admin/AdminPage';
+import CompanyPage from './pages/admin/company/CompanyPage';
+
+// 에러 페이지
+import Page404 from './pages/Page404';
+import Page403 from './pages/Page403';
+
+// context
+import { useAuthState } from './context/AuthProvider';
+
+// util
+import { checkPermission } from './utils/checkPermission';
 
 // ----------------------------------------------------------------------
 
@@ -38,30 +44,30 @@ export default function Router() {
       element: authenticated ? <DashboardLayout /> : <Navigate to="/login" replace />,
       children: [
         { element: <Navigate to="/dashboard/app" />, index: true },
+        // 메인 페이지
         { path: 'app', element: <DashboardAppPage /> },
-        { path: 'user', element: <UserPage /> },
-        { path: 'products', element: <ProductsPage /> },
-        { path: 'blog', element: <BlogPage /> },
+        // HR 권한 페이지
         {
           path: 'holiday',
-          element: checkPermission(userRole, ['ADMIN']) ? <HolidayPage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['HR', 'ADMIN']) ? <HolidayPage /> : <Navigate to="/403" />,
         },
         {
           path: 'workgroups',
-          element: checkPermission(userRole, ['ADMIN']) ? <IndexPage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['HR', 'ADMIN']) ? <IndexPage /> : <Navigate to="/403" />,
         },
         {
           path: 'privilege',
-          element: checkPermission(userRole, ['ADMIN']) ? <PrivilegePage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['HR', 'ADMIN']) ? <PrivilegePage /> : <Navigate to="/403" />,
         },
+        // FO 권한 페이지
         {
           path: 'schedule',
-          element: checkPermission(userRole, ['ADMIN']) ? <SchedulePage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['FO', 'ADMIN']) ? <SchedulePage /> : <Navigate to="/403" />,
         },
       ],
     },
     {
-      path: '/admin', // 서비스 관리자 페이지. 서비스 최고 관리자(SUPERADMIN)만 접근 가능한 경로
+      path: '/admin', // 서비스 관리자 페이지. 서비스 관리자(SUPERADMIN)만 접근 가능한 경로
       element: checkPermission(userRole, ['SUPERADMIN']) ? <DashboardLayout /> : <Navigate to="/403" />,
       children: [
         { path: '/admin', element: <AdminPage /> },
