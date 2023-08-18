@@ -17,7 +17,14 @@ export default function LoginPage() {
       <Box minHeight="100vh" display="flex" flexDirection="column">
         <SignHeader />
 
-        <Box component="main" flex="1" p={20}>
+        <Box
+          component="main"
+          flex="1"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center" // 중앙 정렬을 위한 속성
+          p={8}
+        >
           <Container maxWidth="xs">
             <Card>
               <Box sx={{ p: 3 }}>
@@ -29,7 +36,6 @@ export default function LoginPage() {
             </Card>
           </Container>
         </Box>
-
         <SignFooter />
       </Box>
 
