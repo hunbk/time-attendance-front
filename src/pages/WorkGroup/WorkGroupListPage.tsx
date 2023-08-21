@@ -5,6 +5,7 @@ import { DataType } from "./WorkGroupEnrollmentPage";
 import { DataToBeModifiedType } from "./WorkGroupIndexPage";
 import WorkGroupCardList from "src/components/workGroup/WorkGroupCardList";
 import Grid from '@mui/material/Grid';
+// import { useAuthState } from '../../context/AuthProvider';
 
 type WorkGroupListPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -25,8 +26,10 @@ export type WorkGroupResponseDtoType = {
 };
 
 const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidden, setDataToBeModified }) => {
+  // const { user } = useAuthState();
   const [workGroupResponseDtoList, setWorkGroupResponseDtoList] = useState<WorkGroupResponseDtoType[]>([]);
   const getData = async () => {
+    // const url = `http://localhost:8080/api/workgroups/${user.companyId}`;
     const url = `http://localhost:8080/api/workgroups`;
 
     const response = await fetch(url, {
