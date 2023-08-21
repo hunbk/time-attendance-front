@@ -5,6 +5,7 @@ import { styled } from '@mui/material/styles';
 import Logo from '../../components/logo';
 
 // ----------------------------------------------------------------------
+// const url = `${process.env.PUBLIC_URL}/assets/logo2.svg`;
 
 const StyledHeader = styled('header')(({ theme }) => ({
   top: 0,

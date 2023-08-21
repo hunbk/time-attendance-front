@@ -4,8 +4,6 @@ import { useLocation } from 'react-router-dom';
 // @mui
 import { styled, alpha } from '@mui/material/styles';
 import { Box, Link, Button, Drawer, Typography, Avatar } from '@mui/material';
-// mock
-import account from '../../../_mock/account';
 // hooks
 import useResponsive from '../../../hooks/useResponsive';
 // components
@@ -18,6 +16,8 @@ import { useAuthState } from '../../../context/AuthProvider';
 import NavWork from '../../../components/nav-work/NavWork';
 
 // ----------------------------------------------------------------------
+
+const url = `${process.env.PUBLIC_URL}/assets/logo2.svg`;
 
 const NAV_WIDTH = 280;
 
@@ -57,13 +57,14 @@ export default function Nav({ openNav, onCloseNav }) {
       }}
     >
       <Box sx={{ px: 2.5, py: 3, display: 'inline-flex' }}>
-        <Logo /> {/* 여기에 회사 로고 설정 */}
+        {/* 회사 로고 설정 */}
+        <Logo imageUrl={user.companyLogoUrl} />
       </Box>
 
       <Box sx={{ mb: 5, mx: 2.5 }}>
         <Link underline="none">
           <StyledAccount>
-            <Avatar src={account.photoURL} alt="photoURL" />
+            <Avatar />
 
             <Box sx={{ ml: 2 }}>
               <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
