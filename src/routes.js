@@ -7,7 +7,7 @@ import SimpleLayout from './layouts/simple';
 // 사용자 페이지
 import DashboardAppPage from './pages/DashboardAppPage';
 import HolidayPage from './pages/holiday/HolidayPage';
-import IndexPage from './pages/WorkGroup/IndexPage';
+import WorkGroupIndexPage from './pages/workgroup/WorkGroupIndexPage';
 import PrivilegePage from './pages/privilege/PrivilegePage';
 import SchedulePage from './pages/schedule/SchedulePage';
 import SignupPage from './pages/signup/SignupPage';
@@ -53,7 +53,7 @@ export default function Router() {
         },
         {
           path: 'workgroups',
-          element: checkPermission(userRole, ['HR', 'ADMIN']) ? <IndexPage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['HR', 'ADMIN']) ? <WorkGroupIndexPage /> : <Navigate to="/403" />,
         },
         {
           path: 'privilege',
