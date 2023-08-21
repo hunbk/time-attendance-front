@@ -1,7 +1,6 @@
 import Form from "react-bootstrap/Form";
 import _ from "lodash";
-import { ChangeEvent, useState } from "react";
-import * as React from 'react'
+import { ChangeEvent, useState, FC } from "react";
 
 type FormLabelControlProps = {
     label: string;
@@ -9,13 +8,14 @@ type FormLabelControlProps = {
     onChange?: (event: ChangeEvent) => void;
 }
 
-const FormLabelControl: React.FC<FormLabelControlProps> = ({ label, type, onChange }) => {
+const FormLabelControl: FC<FormLabelControlProps> = ({ label, type, onChange }) => {
     const [controlValue, setControlValue] = useState<string>("");
 
-    function handleChange(event: ChangeEvent) {
-        const { value } = event.target as HTMLInputElement;
+    function handleChange(event: ChangeEvent<HTMLInputElement>) {
+        const { value } = event.target;
 
         setControlValue(value);
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         onChange && onChange(event);
     }
 
@@ -26,6 +26,7 @@ const FormLabelControl: React.FC<FormLabelControlProps> = ({ label, type, onChan
                 name={label === "Phone" ? "phoneNumber" : _.lowerCase(label)}
                 type={type === "password" ? "password" : "text"}
                 placeholder={label}
+                // eslint-disable-next-line react/jsx-no-bind
                 onChange={handleChange}
                 value={controlValue}
                 required

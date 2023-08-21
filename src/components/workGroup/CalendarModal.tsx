@@ -1,9 +1,8 @@
 import { useState } from "react";
 import * as React from 'react'
-import { Box, Button, Modal } from "@mui/material";
+import { Box, Button, Modal, Typography } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import Calendar from "./Calendar";
-
 
 const style = {
   position: "absolute" as const,
@@ -23,15 +22,11 @@ const CalendarModal = ({ groupName, workHourPerDay, convertedWorkDays }) => {
   const handleClose = () => setOpen(false);
 
   return (
-    <Box>
-      <Button onClick={handleOpen}>
-        <CalendarMonthIcon />
-      </Button>
+    <Typography>
+      <CalendarMonthIcon fontSize="small" onClick={handleOpen} />
       <Modal
         open={open}
         onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
           <Calendar
@@ -41,7 +36,7 @@ const CalendarModal = ({ groupName, workHourPerDay, convertedWorkDays }) => {
           />
         </Box>
       </Modal>
-    </Box>
+    </Typography>
   );
 };
 
