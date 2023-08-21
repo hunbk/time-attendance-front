@@ -32,7 +32,7 @@ const DistributionIndexPage: FC = () => {
         setCurrentTabIndex(newValue);
     };
     const getWorkGroupSimpleData = async () => {
-        const url = `http://localhost:8080/api/getWorkGroupSimpleInfo`;
+        const url = `http://localhost:8080/api/workgroups-simple`;
 
         const response = await fetch(url, {
             method: "GET",

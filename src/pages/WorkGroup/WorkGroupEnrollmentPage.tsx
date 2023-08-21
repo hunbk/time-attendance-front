@@ -103,8 +103,8 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
   const [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
     timeInputDivSet("compulsory")
   ]);
-  const [alignments, setAlignments] = useState<string[]>(dataToBeModified.alignments);
-  const [dayHolidays, setDayHolidays] = useState<string[]>(DAYS.filter(day => !dataToBeModified.alignments.includes(day)));
+  const [alignments, setAlignments] = useState<string[]>(dataToBeModified?dataToBeModified.alignments.work:[]);
+  const [dayHolidays, setDayHolidays] = useState<string[]>(dataToBeModified?DAYS.filter(day => !dataToBeModified.alignments.work.includes(day)):[]);
   const [holidayOnOff, setHolidayOnOff] = useState<"on" | "off">("on");
   const [data, setData] = useImmer<DataType>({
     name: "",
@@ -214,21 +214,23 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.approved.start] };
     dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.approved.end] };
 
-    fetch('http://localhost:8080/api/newGroup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dataToBeSent),
-    })
-      .then((response) => response.text())
-      .then((data) => {
-        alert(data);
-        window.location.href = "http://localhost:3000/dashboard/workgroups";
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    console.log(dataToBeSent);
+
+    // fetch('http://localhost:8080/api/workgroups', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(dataToBeSent),
+    // })
+    //   .then((response) => response.text())
+    //   .then((data) => {
+    //     alert(data);
+    //     window.location.href = "http://localhost:3000/dashboard/workgroups";
+    //   })
+    //   .catch((error) => {
+    //     console.error(error);
+    //   });
   };
 
   return (
@@ -346,7 +348,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
               </RadioGroup>
             </FormControl>
             {holidayOnOff === "on" ? dayHolidays.map((dayHoliday, index) =>
-              <HolidayPayLeave key={dayHoliday + index} dayHoliday={dayHoliday} defaultPayLeave={false} updateDayHoliday={updateDayHoliday} />
+              <HolidayPayLeave key={dayHoliday + index} dayHoliday={dayHoliday} defaultPayLeave={dataToBeModified?dataToBeModified.alignments.payLeave.includes(dayHoliday):false} updateDayHoliday={updateDayHoliday} />
             ) : <></>}
           </Grid>
           {/* <Grid xs={3}> </Grid>

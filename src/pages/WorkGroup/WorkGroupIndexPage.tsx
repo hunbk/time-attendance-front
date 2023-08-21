@@ -10,7 +10,11 @@ import CustomTabPanel from 'src/components/workGroup/CustomTabPanel';
 export type DataToBeModifiedType = {
     id: number;
     contents: DataType;
-    alignments: string[]
+    alignments: {
+        work: string[],
+        payLeave: string[],
+        nonPayLeave: string[],
+    }
 }
 
 const WorkGroupIndexPage: FC = () => {
@@ -30,7 +34,7 @@ const WorkGroupIndexPage: FC = () => {
                 </Tabs>
             </Box>
             <CustomTabPanel value={currentTabIndex} index={0}>
-                {isWorkGroupListHidden ? <WorkGroupEnrollmentPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} dataToBeModified={dataToBeModified} setDataToBeModified={setDataToBeModified} /> : <WorkGroupListPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} setDataToBeModified={setDataToBeModified}/>}
+                {isWorkGroupListHidden ? <WorkGroupEnrollmentPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} dataToBeModified={dataToBeModified} setDataToBeModified={setDataToBeModified} /> : <WorkGroupListPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} setDataToBeModified={setDataToBeModified} />}
             </CustomTabPanel>
             <CustomTabPanel value={currentTabIndex} index={1}>
                 <DistributionIndexPage />
