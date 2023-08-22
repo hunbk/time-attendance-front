@@ -26,6 +26,7 @@ import { useAuthState } from './context/AuthProvider';
 
 // util
 import { checkPermission } from './utils/checkPermission';
+import PrivilegeAdd from './pages/privilege/PrivilegeAdd';
 
 // ----------------------------------------------------------------------
 
@@ -60,6 +61,10 @@ export default function Router() {
           element: checkPermission(userRole, ['HR', 'ADMIN']) ? <PrivilegePage /> : <Navigate to="/403" />,
         },
         // FO 권한 페이지
+        {
+          path: 'privilegeAdd',
+          element: checkPermission(userRole, ['ADMIN']) ? <PrivilegeAdd /> : <Navigate to="/403" />,
+        },
         {
           path: 'schedule',
           element: checkPermission(userRole, ['FO', 'ADMIN']) ? <SchedulePage /> : <Navigate to="/403" />,

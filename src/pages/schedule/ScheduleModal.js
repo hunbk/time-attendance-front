@@ -1,16 +1,6 @@
 import { useState } from 'react';
 // @mui
-import {
-  Table,
-  Button,
-  MenuItem,
-  TableBody,
-  Modal,
-  TextField,
-  Snackbar,
-  Alert,
-
-} from '@mui/material';
+import { Table, Button, MenuItem, TableBody, Modal, TextField, Snackbar, Alert, TableContainer } from '@mui/material';
 // components
 
 import Dialog from '@mui/material/Dialog';
@@ -22,9 +12,9 @@ import DialogActions from '@mui/material/DialogActions';
 import USERLIST from '../../_mock/privilege';
 
 const ScheduleModal = ({ open, onClose, editUserId }) => {
-  const initialUserData = USERLIST.find((user) => user.id === editUserId);
+  const userData = USERLIST.find((user) => user.id === editUserId);
 
-  const [editedUserData, setEditedUserData] = useState(initialUserData);
+  const [editedUserData, setEditedUserData] = useState(userData);
   const [startTime, setStartTime] = useState(editedUserData.workStart);
   const [endTime, setEndTime] = useState(editedUserData.workEnd);
   const [workType, setWorkType] = useState(editedUserData.workType);
@@ -86,167 +76,210 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
 
   return (
     <Modal open={open} onClose={handleClose} style={modalStyle}>
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
+        sx={{
+          width: '100%', // 원하는 모달 너비 값으로 조절
+          '& .MuiDialog-paper': {
+            width: '25%', // 모달 내용이 모달 창 내에서 최대 너비를 가지도록 설정
+          },
+        }}
+      >
         <DialogTitle>사용자 정보 수정</DialogTitle>
-
-        <Table sx={{ minWidth: 500, minHeight: 400, display: 'block', alignItems: 'start', justifyContent: 'start' }}>
-          <TableBody>
-            <TextField
-              name="date"
-              label="근무일자"
-              fullWidth
-              value={editedUserData.date}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-
-            <TextField
-              name="id"
-              label="사원번호"
-              fullWidth
-              value={editedUserData.id}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-
-            <TextField
-              name="name"
-              label="이름"
-              fullWidth
-              value={editedUserData.name}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-
-            <TextField
-              name="depart"
-              label="부서"
-              fullWidth
-              value={editedUserData.depart}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-
-            <TextField
-              name="rank"
-              label="직급"
-              fullWidth
-              value={editedUserData.rank}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-
-            <TextField
-              name="workType"
-              label="근로제 유형"
-              select
-              fullWidth
-              value={workType}
-              onChange={handleWorkType}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+        <DialogContent dividers>
+          <TableContainer>
+            <Table
+              sx={{minHeight: 400, display: 'block', alignItems: 'start', justifyContent: 'start' }}
             >
-              <MenuItem value="일반근로제">일반근로제</MenuItem>
-              <MenuItem value="시차근로제">시차근로제</MenuItem>
-            </TextField>
+              <TableBody>
+                <TextField
+                  name="date"
+                  label="근무일자"
+                  fullWidth
+                  value={editedUserData.date}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
 
-            <TextField
-              name="start"
-              label="근무시작시간"
-              select
-              fullWidth
-              value={startTime}
-              onChange={handleStartTime}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-            >
-              {Array.from({ length: 24 * 2 }).map((_, index) => {
-                const hours = Math.floor(index / 2);
-                const minutes = (index % 2) * 30;
-                const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-                return (
-                  <MenuItem key={timeString} value={timeString}>
-                    {timeString}
-                  </MenuItem>
-                );
-              })}
-            </TextField>
+                <TextField
+                  name="id"
+                  label="사원번호"
+                  fullWidth
+                  value={editedUserData.id}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
 
-            <TextField
-              name="end"
-              label="근무종료시간"
-              select
-              fullWidth
-              value={endTime}
-              onChange={handleEndTime}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-            >
-              {Array.from({ length: 24 * 2 }).map((_, index) => {
-                const hours = Math.floor(index / 2);
-                const minutes = (index % 2) * 30;
-                const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-                return (
-                  <MenuItem key={timeString} value={timeString}>
-                    {timeString}
-                  </MenuItem>
-                );
-              })}
-            </TextField>
+                <TextField
+                  name="name"
+                  label="이름"
+                  fullWidth
+                  value={editedUserData.name}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
 
-            <TextField
-              name="workHour"
-              label="소정근무시간"
-              fullWidth
-              value={editedUserData.workHour}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-              InputProps={{
-                readOnly: true,
-              }}
-            />
+                <TextField
+                  name="depart"
+                  label="부서"
+                  fullWidth
+                  value={editedUserData.depart}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
 
-            <TextField
-              name="workState"
-              label="처리상태"
-              select
-              fullWidth
-              value={workState}
-              onChange={handleWorkState}
-              margin="normal"
-              style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-            >
-              <MenuItem value="정상처리">정상처리</MenuItem>
-              <MenuItem value="미처리">미처리</MenuItem>
-              <MenuItem value="근태이상">근태이상</MenuItem>
-            </TextField>
+                <TextField
+                  name="rank"
+                  label="직급"
+                  fullWidth
+                  value={editedUserData.rank}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
 
-            {/* 필요한 다른 입력 필드들 추가 */}
-            <DialogActions>
-              <Button variant="contained" onClick={handleConfirmEditOpen}>
-                수정
-              </Button>
-              <Button variant="outlined" onClick={handleClose}>
-                취소
-              </Button>
-            </DialogActions>
-          </TableBody>
-        </Table>
+                <TextField
+                  name="workType"
+                  label="근로제 유형"
+                  select
+                  fullWidth
+                  value={workType}
+                  onChange={handleWorkType}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                >
+                  <MenuItem value="일반근로제">일반근로제</MenuItem>
+                  <MenuItem value="시차근로제">시차근로제</MenuItem>
+                </TextField>
+
+                <TextField
+                  name="start"
+                  label="근무시작시간"
+                  select
+                  fullWidth
+                  value={startTime}
+                  onChange={handleStartTime}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%'}} // 좌우 여백 설정
+                  SelectProps={{
+                    MenuProps: {
+                      getContentAnchorEl: null,
+                      anchorOrigin: {
+                        vertical: 'bottom',
+                        horizontal: 'center',
+                      },
+                      PaperProps: {
+                        style: {
+                          maxHeight: 220, // 원하는 최대 높이로 설정
+                        },
+                      },
+                    },
+                  }}
+                >
+                  {Array.from({ length: 24 * 2 }).map((_, index) => {
+                    const hours = Math.floor(index / 2);
+                    const minutes = (index % 2) * 30;
+                    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                    return (
+                      <MenuItem key={timeString} value={timeString}>
+                        {timeString}
+                      </MenuItem>
+                    );
+                  })}
+                </TextField>
+
+                <TextField
+                  name="end"
+                  label="근무종료시간"
+                  select
+                  fullWidth
+                  value={endTime}
+                  onChange={handleEndTime}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  SelectProps={{
+                    MenuProps: {
+                      getContentAnchorEl: null,
+                      anchorOrigin: {
+                        vertical: 'bottom',
+                        horizontal: 'center',
+                      },
+                      PaperProps: {
+                        style: {
+                          maxHeight: 220, // 원하는 최대 높이로 설정
+                        },
+                      },
+                    },
+                  }}
+                >
+                  {Array.from({ length: 24 * 2 }).map((_, index) => {
+                    const hours = Math.floor(index / 2);
+                    const minutes = (index % 2) * 30;
+                    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                    return (
+                      <MenuItem key={timeString} value={timeString}>
+                        {timeString}
+                      </MenuItem>
+                    );
+                  })}
+                </TextField>
+
+                <TextField
+                  name="workHour"
+                  label="소정근무시간"
+                  fullWidth
+                  value={editedUserData.workHour}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+
+                <TextField
+                  name="workState"
+                  label="처리상태"
+                  select
+                  fullWidth
+                  value={workState}
+                  onChange={handleWorkState}
+                  margin="normal"
+                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                >
+                  <MenuItem value="정상처리">정상처리</MenuItem>
+                  <MenuItem value="미처리">미처리</MenuItem>
+                  <MenuItem value="근태이상">근태이상</MenuItem>
+                </TextField>
+
+                {/* 필요한 다른 입력 필드들 추가 */}
+                <DialogActions>
+                  <Button variant="contained" onClick={handleConfirmEditOpen}>
+                    수정
+                  </Button>
+                  <Button variant="outlined" onClick={handleClose}>
+                    취소
+                  </Button>
+                </DialogActions>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
 
         {/* 수정 확인 다이얼로그 */}
         <Dialog open={confirmEditOpen} onClose={handleConfirmEditClose}>
