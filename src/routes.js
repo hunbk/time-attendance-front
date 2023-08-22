@@ -18,6 +18,7 @@ import LoginPage from './pages/login/LoginPage';
 import { useAuthState } from './context/AuthProvider';
 import Page403 from './pages/Page403';
 import { checkPermission } from './utils/checkPermission';
+import PrivilegeAdd from './pages/privilege/PrivilegeAdd';
 
 // ----------------------------------------------------------------------
 
@@ -51,6 +52,10 @@ export default function Router() {
         {
           path: 'privilege',
           element: checkPermission(userRole, ['ADMIN']) ? <PrivilegePage /> : <Navigate to="/403" />,
+        },
+        {
+          path: 'privilegeAdd',
+          element: checkPermission(userRole, ['ADMIN']) ? <PrivilegeAdd /> : <Navigate to="/403" />,
         },
         {
           path: 'schedule',

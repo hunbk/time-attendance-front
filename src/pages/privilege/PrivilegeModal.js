@@ -2,224 +2,66 @@ import { useState } from 'react';
 // @mui
 import {
   Table,
-  Stack,
-  Paper,
   Button,
-  Checkbox,
-  TableRow,
+  MenuItem,
   TableBody,
-  TableCell,
-  Typography,
   TableContainer,
-  TablePagination,
   Modal,
+  TextField,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from '@mui/material';
 // components
-import PersonIcon from '@mui/icons-material/Person';
-import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Label from '../../components/label';
-// sections
-import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
+
 // mock
 import USERLIST from '../../_mock/privilege';
 // ----------------------------------------------------------------------
 
-const MODAL_HEAD = [
-  { id: 'name', label: '이름', alignRight: false },
-  { id: 'depart', label: '부서', alignRight: false },
-  { id: 'rank', label: '직급', alignRight: false },
-  { id: 'id', label: '사원번호', alignRight: false },
-  { id: 'date', label: '입사일', alignRight: false },
-  { id: 'AccessLevel', label: '권한', alignRight: false },
-  { id: '' },
-];
+const PrivilegeModal = ({ open, onClose, editUserId }) => {
+  const findUserData = USERLIST.find((user) => user.id === editUserId);
+  const [userData, setUserData] = useState(findUserData);
 
-// ----------------------------------------------------------------------
-function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0;
-}
+  const [accessLevel, setAccessLevel] = useState(userData.AccessLevel);
 
-function getComparator(order, orderBy) {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
+  const [confirmEditOpen, setConfirmEditOpen] = useState(false);
 
-function applySortFilter(array, comparator, query) {
-  const stabilizedThis = array.map((el, index) => [el, index]);
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
-  });
+  const [editSnackbar, setEditSnackbar] = useState(false);
 
-  if (query) {
-    // 콤마(,)로 구분된 id들을 배열로 변환
-    const queryIds = query.split(',').map((id) => id.trim());
-
-    // 필터링된 사용자 목록을 저장할 배열
-    const filteredUsers = [];
-
-    // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
-    queryIds.forEach((queryId) => {
-      const filteredUser = array.find((_user) => _user.id.toString() === queryId);
-      if (filteredUser) {
-        filteredUsers.push(filteredUser);
-      }
-    });
-
-    return filteredUsers;
-  }
-
-  return stabilizedThis.map((el) => el[0]);
-}
-
-const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
-  const [modalPage, setModalPage] = useState(0);
-  const [rowsModalPerPage, setRowsModalPerPage] = useState(5);
-  const [modalFilterName, setModalFilterName] = useState('');
-  const [modalSelected, setModalSelected] = useState([]);
-  const [saveSnackbar, setSaveSnackbar] = useState(false);
-  const [nullSnackbar, setNullSnackbar] = useState(false);
-
-  const [order, setOrder] = useState('asc');
-  const [orderBy, setOrderBy] = useState('name');
-  // 선택된 사용자들을 관리하는 상태와 함수들을 새로운 상태와 함수들로 분리
-
-  const [isModalSearched, setIsModalSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
-
-  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
-
-  const [filteredModalUsers, setFilteredModalUsers] = useState(
-    USERLIST.filter((user) => user.AccessLevel === '사원') // '사원'인 사용자만 필터링
-  );
-
-  const filterUser = applySortFilter(
-    USERLIST.filter((user) => user.AccessLevel === '사원'), // '사원'인 사용자만 필터링
-    getComparator(order, orderBy),
-    modalFilterName
-  );
-
-  const handleRequestSort = (event, property) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(property);
+  // Snackbar 열기 함수
+  const handleOpenSnackbar = () => {
+    setEditSnackbar(true);
   };
 
-  const handleModalSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = filteredModalUsers.map((n) => n.name);
-      setModalSelected(newSelecteds);
-      return;
-    }
-    setModalSelected([]);
+  // Snackbar 닫기 함수
+  const handleCloseSnackbar = () => {
+    setEditSnackbar(false);
   };
 
-  const handleModalClick = (event, name) => {
-    const selectedIndex = modalSelected.indexOf(name);
-    let newSelected = [];
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(modalSelected, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(modalSelected.slice(1));
-    } else if (selectedIndex === modalSelected.length - 1) {
-      newSelected = newSelected.concat(modalSelected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(modalSelected.slice(0, selectedIndex), modalSelected.slice(selectedIndex + 1));
-    }
-    setModalSelected(newSelected);
+  const handleConfirmEditOpen = () => {
+    setConfirmEditOpen(true);
   };
 
-  const handleModalChangePage = (event, newPage) => {
-    setModalPage(newPage);
+  const handleConfirmEditClose = () => {
+    setConfirmEditOpen(false);
   };
 
-  const handleChangeModalRowsPerPage = (event) => {
-    setModalPage(0);
-    setRowsModalPerPage(parseInt(event.target.value, 10));
+  const handleConfirmEdit = () => {
+    handleOpenSnackbar();
+    handleConfirmEditClose();
   };
 
-  const handleModalFilterByName = (event) => {
-    const searchQuery = event.target.value;
-    setModalFilterName(searchQuery);
-    setModalPage(0);
-    setRowsModalPerPage(5);
-
-    // 검색창에 아무것도 입력하지 않았을 때,
-    if (!searchQuery) {
-      setIsModalSearched(false);
-      setFilteredModalUsers(USERLIST.filter((user) => user.AccessLevel === '사원'));
-    } else {
-      if (isModalSearched) {
-        setFilteredModalUsers(filterUser);
-      }
-    }
+  const handleAccessLevel = (event) => {
+    setAccessLevel(event.target.value);
   };
 
-  const resetFilterAndSelection = () => {
-    setModalFilterName(''); // 팝업창의 검색어 초기화
-    setModalSelected([]); // 팝업창의 선택된 사용자들 초기화
+  const handleClose = () => {
     onClose();
   };
-
-  const handleCloseSaveSnackbar = () => {
-    setSaveSnackbar(false);
-  };
-
-  const handleOpenSaveSnackbar = () => {
-    onSaveSnackbar();
-    setSaveSnackbar(true);
-  };
-
-  const handleOpenNullSnackbar = () => {
-    setNullSnackbar(true);
-  };
-
-  const handleCloseNullSnackbar = () => {
-    setNullSnackbar(false);
-  };
-
-  const handleModalSearch = (search) => {
-    setIsModalSearched(true);
-    const searchResult = applySortFilter(
-      USERLIST.filter((user) => user.AccessLevel === '사원'),
-      getComparator(order, orderBy),
-      search
-    );
-    setModalFilterName(search);
-    setModalPage(0);
-    setRowsModalPerPage(5);
-    setFilteredModalUsers(searchResult);
-  };
-
-  const handleSaveConfirmOpen = () => {
-    setSaveConfirmOpen(true);
-  };
-
-  const handleSaveConfirmClose = () => {
-    // 여기에 삭제 로직을 구현하세요.
-    // 예를 들어, 선택된 사용자를 삭제하고 관련 상태를 업데이트하는 등의 작업을 수행할 수 있습니다.
-
-    // 삭제 완료 후 삭제 확인 창을 닫습니다.
-    setSaveConfirmOpen(false);
-  };
-
-  const emptyModalRows =
-    modalPage > 0 ? Math.max(0, (1 + modalPage) * rowsModalPerPage - filteredModalUsers.length) : 0;
-
-  const isModalNotFound = !filteredModalUsers.length && !!modalFilterName;
 
   const modalStyle = {
     // 팝업창의 넓이를 원하는 값으로 지정합니다. 필요에 따라 변경할 수 있습니다.
@@ -227,207 +69,146 @@ const PrivilegeModal = ({ open, onClose, onSaveSnackbar }) => {
     alignItems: 'center',
     justifyContent: 'center',
   };
+
+  const textFieldStyle = {
+    width: '100%', // 원하는 너비 값으로 조절
+  };
   // ... (필요한 함수들과 상태들을 PrivilegeModal 컴포넌트로 옮길 수 있습니다)
 
   return (
-    <Modal
-      open={open}
-      onClose={resetFilterAndSelection}
-      style={modalStyle} // 스크롤 적용 스타일 적용
-    >
+    <Modal open={open} onClose={handleClose} style={modalStyle}>
       {/* Scrollbar 대신 MUI의 Dialog 컴포넌트 사용 */}
       <Dialog
         open={open}
-        onClose={() => {
-          resetFilterAndSelection();
-          handleCloseSaveSnackbar();
-        }}
+        onClose={handleClose}
         maxWidth="md"
+        sx={{
+          width: '100%', // 원하는 모달 너비 값으로 조절
+          '& .MuiDialog-paper': {
+            width: '25%', // 모달 내용이 모달 창 내에서 최대 너비를 가지도록 설정
+          },
+        }}
       >
-        <DialogTitle>관리자 추가</DialogTitle>
+        <DialogTitle>권한 수정</DialogTitle>
         <DialogContent dividers>
-          <UserListToolbar
-            numSelected={modalSelected.length}
-            filterName={modalFilterName}
-            onFilterName={handleModalFilterByName}
-            onSearch={handleModalSearch}
-          />
           <TableContainer>
-            <Table
-              sx={{ minWidth: 500, minHeight: 400, display: 'block', alignItems: 'start', justifyContent: 'start' }}
-            >
-              <UserListHead
-                order={order}
-                orderBy={orderBy}
-                headLabel={MODAL_HEAD}
-                rowCount={filteredModalUsers.length}
-                numSelected={modalSelected.length}
-                onRequestSort={handleRequestSort}
-                onSelectAllClick={handleModalSelectAllClick}
-              />
+            <Table sx={{ minHeight: 400, display: 'block', alignItems: 'start', justifyContent: 'start' }}>
+              {/* 이름, 부서, 직급, 사원번호, 권한 */}
               <TableBody>
-                {filterUser
-                  .slice(modalPage * rowsModalPerPage, modalPage * rowsModalPerPage + rowsModalPerPage)
-                  .map((row) => {
-                    const { name, depart, rank, id, date, AccessLevel } = row;
+                <TextField
+                  name="name"
+                  label="이름"
+                  fullWidth
+                  value={userData.name}
+                  margin="normal"
+                  style={textFieldStyle} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
 
-                    const selectedModalUser = modalSelected.indexOf(name) !== -1;
+                <TextField
+                  name="depart"
+                  label="부서"
+                  fullWidth
+                  value={userData.depart}
+                  margin="normal"
+                  style={textFieldStyle} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
 
-                    return (
-                      <TableRow key={name}>
-                        <TableCell align="left">
-                          <Checkbox checked={selectedModalUser} onChange={(event) => handleModalClick(event, name)} />
-                        </TableCell>
+                <TextField
+                  name="rank"
+                  label="직급"
+                  fullWidth
+                  value={userData.rank}
+                  margin="normal"
+                  style={textFieldStyle} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
 
-                        <TableCell component="th" scope="row" padding="none">
-                          <Stack direction="row" alignItems="center" spacing={2}>
-                            <Typography variant="subtitle2" noWrap>
-                              {name}
-                            </Typography>
-                          </Stack>
-                        </TableCell>
+                <TextField
+                  name="id"
+                  label="사원번호"
+                  fullWidth
+                  value={userData.id}
+                  margin="normal"
+                  style={textFieldStyle} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
 
-                        <TableCell align="left">{depart}</TableCell>
+                <TextField
+                  name="accessLevel"
+                  label="권한 등급"
+                  select
+                  fullWidth
+                  value={accessLevel}
+                  onChange={handleAccessLevel}
+                  margin="normal"
+                  style={textFieldStyle} // 좌우 여백 설정
+                 
+                >
+                  <MenuItem value="인사 관리" >
+                    인사 관리
+                  </MenuItem>
+                  <MenuItem value="재무 관리" >
+                    재무 관리
+                  </MenuItem>
+                  <MenuItem value="사원" >
+                    사원
+                  </MenuItem>
+                </TextField>
 
-                        <TableCell align="left">{rank}</TableCell>
-
-                        <TableCell align="left">{id}</TableCell>
-
-                        <TableCell align="left">{date}</TableCell>
-
-                        <TableCell align="left">
-                          {AccessLevel === '관리자' ? (
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              <SupervisorAccountIcon sx={{ fontSize: 18 }} />
-                              <Label color="success">관리자</Label>
-                            </Stack>
-                          ) : (
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              <PersonIcon sx={{ fontSize: 18 }} />
-                              <Label color="default">사원</Label>
-                            </Stack>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                {emptyModalRows > 0 && (
-                  <TableRow style={{ height: 53 * emptyModalRows }}>
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
+                <DialogActions>
+                  <Button variant="contained" onClick={handleConfirmEditOpen}>
+                    수정
+                  </Button>
+                  <Button variant="outlined" onClick={handleClose}>
+                    취소
+                  </Button>
+                </DialogActions>
               </TableBody>
-
-              {isModalNotFound && (
-                <TableBody>
-                  <TableRow>
-                    <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
-                      <Paper sx={{ textAlign: 'center', minWidth: 478 }}>
-                        <Typography variant="h6" paragraph>
-                          검색결과가 없습니다.
-                        </Typography>
-
-                        <Typography variant="body2">
-                          다음 검색에 대한 결과를 찾을 수 없습니다.&nbsp;
-                          <strong>&quot;{modalFilterName}&quot;</strong>.
-                          <br /> 사용자의 이름을 다시 한번 확인해주세요.
-                        </Typography>
-                      </Paper>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              )}
             </Table>
           </TableContainer>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSaveConfirmOpen} variant="contained">
-            추가
-          </Button>
-          <Button
-            onClick={() => {
-              resetFilterAndSelection();
-              handleCloseSaveSnackbar();
-            }}
-            variant="outlined"
-          >
-            취소
-          </Button>
 
-          <Snackbar
-            open={saveSnackbar}
-            autoHideDuration={2000}
-            onClose={handleCloseSaveSnackbar}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'center',
-            }}
-            sx={{ width: 400 }}
-          >
-            <Alert onClose={handleCloseSaveSnackbar} severity="success" sx={{ width: '100%' }}>
-              관리자로 전환되었습니다!
-            </Alert>
-          </Snackbar>
-
-          <Snackbar
-            open={nullSnackbar}
-            autoHideDuration={2000}
-            onClose={handleCloseNullSnackbar}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'center',
-            }}
-            sx={{ width: 400 }}
-          >
-            <Alert onClose={handleCloseNullSnackbar} severity="error" sx={{ width: '100%' }}>
-              선택한 사용자가 없습니다!
-            </Alert>
-          </Snackbar>
-        </DialogActions>
-
-        <Dialog open={saveConfirmOpen} onClose={() => setSaveConfirmOpen(false)}>
-          <DialogTitle>관리자 전환 확인</DialogTitle>
+        {/* 수정 확인 다이얼로그 */}
+        <Dialog open={confirmEditOpen} onClose={handleConfirmEditClose}>
+          <DialogTitle>권한 변경 확인</DialogTitle>
           <DialogContent>
-            <Typography>선택한 사원을 관리자로 추가하시겠습니까?</Typography>
+            {accessLevel === '인사 관리' && <DialogContentText>인사 관리로 권한을 변경하시겠습니까?</DialogContentText>}
+            {accessLevel === '재무 관리' && <DialogContentText>재무 관리로 권한을 변경하시겠습니까?</DialogContentText>}
+            {accessLevel === '사원' && <DialogContentText>사원으로 권한을 변경하시겠습니까?</DialogContentText>}
           </DialogContent>
           <DialogActions>
-            <Button
-              onClick={() => {
-                if (modalSelected !== null && modalSelected.length !== 0) {
-                  handleSaveConfirmClose();
-                  handleOpenSaveSnackbar();
-                  setModalSelected([]);
-                } else {
-                  // modalSelected가 null일 때 경고창 띄우기
-                  handleOpenNullSnackbar();
-                  handleSaveConfirmClose();
-                  setModalSelected([]);
-                }
-              }}
-              variant="contained"
-            >
-              추가
+            <Button onClick={handleConfirmEdit} variant="contained">
+              확인
             </Button>
-            <Button onClick={() => setSaveConfirmOpen(false)} variant="outlined">
+            <Button onClick={handleConfirmEditClose} variant="outlined">
               취소
             </Button>
           </DialogActions>
         </Dialog>
-
-        {/* 페이징 기능 추가 */}
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={filteredModalUsers.length}
-          rowsPerPage={rowsModalPerPage}
-          page={modalPage}
-          onPageChange={handleModalChangePage}
-          onRowsPerPageChange={handleChangeModalRowsPerPage}
-          labelRowsPerPage="페이지당 사원 수 :"
-          labelDisplayedRows={({ count }) =>
-            `현재 페이지: ${modalPage + 1} / 전체 페이지: ${Math.ceil(count / rowsModalPerPage)}`
-          }
-        />
+        <Snackbar
+          open={editSnackbar}
+          autoHideDuration={2000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'center',
+          }}
+          sx={{ width: 400 }}
+        >
+          <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+            권한이 수정되었습니다!
+          </Alert>
+        </Snackbar>
       </Dialog>
     </Modal>
   );

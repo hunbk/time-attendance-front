@@ -111,6 +111,10 @@ export default function PrivilegePage() {
   // 선택된 사용자들을 관리하는 상태와 함수들을 새로운 상태와 함수들로 분리
   const [isSearched, setIsSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
 
+  const [editUserId, setEditUserId] = useState(null);
+
+  const [privilegeModalOpen, setPrivilegeModalOpen] = useState(false);
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const [filteredAdminUsers, setFilteredAdminUsers] = useState(
@@ -122,6 +126,15 @@ export default function PrivilegePage() {
     getComparator(order, orderBy),
     filterName
   );
+
+  const handleOpenModal = () => {
+    setPrivilegeModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setPrivilegeModalOpen(false);
+    handleCloseMenu();
+  };
 
   // "관리자 추가" 버튼 클릭 시 실행되는 함수
   const handleOpenNewUserDialog = () => {
@@ -151,7 +164,6 @@ export default function PrivilegePage() {
     }
     setSelected([]);
   };
-
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -212,8 +224,9 @@ export default function PrivilegePage() {
     setFilteredAdminUsers(searchResult);
   };
 
-  const handleOpenMenu = (event) => {
+  const handleOpenMenu = (event, row) => {
     setOpen(event.currentTarget);
+    setEditUserId(row.id);
   };
 
   const handleCloseMenu = () => {
@@ -245,15 +258,6 @@ export default function PrivilegePage() {
           <Typography variant="h4" gutterBottom>
             관리자 목록
           </Typography>
-          <Button variant="outlined" startIcon={<Iconify icon="eva:plus-fill" />} onClick={handleOpenNewUserDialog}>
-            관리자 추가
-          </Button>
-          {/* 새로운 사용자 목록 팝업 */}
-          <PrivilegeModal
-            open={isNewUserDialogOpen}
-            onClose={handleCloseNewUserDialog}
-            onSaveSnackbar={handleOpenSaveSnackbar}
-          />
         </Stack>
 
         <Card>
@@ -274,7 +278,7 @@ export default function PrivilegePage() {
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
-                  disableCheckbox
+                  disableBox
                 />
                 <TableBody>
                   {filterAdmin.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
@@ -282,12 +286,9 @@ export default function PrivilegePage() {
 
                     return (
                       <TableRow key={name}>
-                        <TableCell align="left">
-                          {/* <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} /> */}
-                        </TableCell>
-
-                        <TableCell component="th" scope="row" padding="none">
-                          <Stack direction="row" alignItems="center" spacing={2}>
+                        {/* <TableCell>{}</TableCell> */}
+                        <TableCell component="th" scope="row" padding="none" >
+                          <Stack direction="row" alignItems="center" spacing={2} sx={{ justifyContent: 'center' }}>
                             <Avatar alt={name} />
                             <Typography variant="subtitle2" noWrap>
                               {name}
@@ -295,24 +296,24 @@ export default function PrivilegePage() {
                           </Stack>
                         </TableCell>
 
-                        <TableCell align="left">{depart}</TableCell>
+                        <TableCell align="center">{depart}</TableCell>
 
-                        <TableCell align="left">{rank}</TableCell>
+                        <TableCell align="center">{rank}</TableCell>
 
-                        <TableCell align="left">{phone}</TableCell>
+                        <TableCell align="center">{phone}</TableCell>
 
-                        <TableCell align="left">{id}</TableCell>
+                        <TableCell align="center">{id}</TableCell>
 
-                        <TableCell align="left">{date}</TableCell>
+                        <TableCell align="center">{date}</TableCell>
 
-                        <TableCell align="left">
+                        <TableCell align="center">
                           {AccessLevel === '관리자' ? (
-                            <Stack direction="row" alignItems="center" spacing={1}>
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ justifyContent: 'center' }}>
                               <SupervisorAccountIcon sx={{ fontSize: 18 }} />
                               <Label color="success">관리자</Label>
                             </Stack>
                           ) : (
-                            <Stack direction="row" alignItems="center" spacing={1}>
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ justifyContent: 'center' }}>
                               <PersonIcon sx={{ fontSize: 18 }} />
                               <Label color="default">사원</Label>
                             </Stack>
@@ -320,7 +321,13 @@ export default function PrivilegePage() {
                         </TableCell>
 
                         <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                          <IconButton
+                            size="large"
+                            color="inherit"
+                            onClick={(event) => {
+                              handleOpenMenu(event, row);
+                            }}
+                          >
                             <Iconify icon={'eva:more-vertical-fill'} />
                           </IconButton>
                         </TableCell>
@@ -391,6 +398,13 @@ export default function PrivilegePage() {
           },
         }}
       >
+        <MenuItem onClick={handleOpenModal}>
+          <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
+          수정
+        </MenuItem>
+
+        <PrivilegeModal open={privilegeModalOpen} onClose={handleCloseModal} editUserId={editUserId} />
+
         <MenuItem onClick={handleConfirmDeleteOpen} sx={{ color: 'error.main' }}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           삭제

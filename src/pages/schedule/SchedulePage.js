@@ -37,16 +37,17 @@ import USERLIST from '../../_mock/privilege';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'date', label: '근무일자', alignRight: false },
-  { id: 'id', label: '사원번호', alignRight: false },
-  { id: 'name', label: '이름', alignRight: false },
-  { id: 'depart', label: '부서', alignRight: false },
-  { id: 'rank', label: '직급', alignRight: false },
-  { id: 'workType', label: '근무제유형', alignRight: false },
-  { id: 'workStart', label: '근무시작시간', alignRight: false },
-  { id: 'workEnd', label: '근무종료시간', alignRight: false },
-  { id: 'workHour', label: '소정근무시간', alignRight: false },
-  { id: 'workState', label: '처리상태', alignRight: false },
+  { id: 'date', label: '근무일자'},
+  { id: 'id', label: '사원번호'},
+  { id: 'name', label: '이름'},
+  { id: 'depart', label: '부서'},
+  { id: 'rank', label: '직급'},
+  { id: 'workType', label: '근무제유형'},
+  { id: 'workStart', label: '근무시작시간'},
+  { id: 'workEnd', label: '근무종료시간'},
+  { id: 'workHour', label: '소정근무시간'},
+  { id: 'workHour', label: '초과근무시간'},
+  { id: 'workState', label: '처리상태'},
   { id: '' },
 ];
 
@@ -285,7 +286,7 @@ export default function SchedulePage() {
 
                         <TableCell align="left">{formatDate(date)}</TableCell>
 
-                        <TableCell align="left">{id}</TableCell>
+                        <TableCell align="center">{id}</TableCell>
 
                         <TableCell align="left">{name}</TableCell>
 
@@ -295,11 +296,13 @@ export default function SchedulePage() {
 
                         <TableCell align="left">{workType}</TableCell>
 
-                        <TableCell align="left">{workStart}</TableCell>
+                        <TableCell align="left">{workStart}(08:40)</TableCell>
 
-                        <TableCell align="left">{workEnd}</TableCell>
+                        <TableCell align="left">{workEnd}(19:30)</TableCell>
 
                         <TableCell align="left">{workHour}</TableCell>
+
+                        <TableCell align="left">02:00</TableCell>
 
                         <TableCell align="left">
                           {workState === '정상처리' ? (

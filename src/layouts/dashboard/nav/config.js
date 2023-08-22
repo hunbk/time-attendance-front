@@ -17,9 +17,15 @@ const navConfig = [
     roles: ['USER', 'ADMIN'],
   },
   {
-    title: 'privilege',
+    title: '권한 목록',
     path: '/dashboard/privilege',
     icon: icon('ic_admin'),
+    roles: ['ADMIN'],
+  },
+  {
+    title: '관리자 추가',
+    path: '/dashboard/privilegeAdd',
+    icon: icon('ic_cart'),
     roles: ['ADMIN'],
   },
   {
