@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 // @mui
 import {
@@ -26,6 +26,9 @@ import {
 // components
 import PersonIcon from '@mui/icons-material/Person';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -36,24 +39,30 @@ import Scrollbar from '../../components/scrollbar';
 import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
 // mock
 import USERLIST from '../../_mock/privilege';
+
+// LoginAxios
+import loginAxios from '../../api/loginAxios';
+
+// 유저 상태
+import { useAuthState } from '../../context/AuthProvider';
 // ----------------------------------------------------------------------
 
 const LIST_HEAD = [
   { id: 'name', label: '이름', alignRight: false },
-  { id: 'depart', label: '부서', alignRight: false },
-  { id: 'rank', label: '직급', alignRight: false },
-  { id: 'id', label: '사원번호', alignRight: false },
-  { id: 'date', label: '입사일', alignRight: false },
-  { id: 'AccessLevel', label: '권한', alignRight: false },
+  { id: 'dept', label: '부서', alignRight: false },
+  { id: 'position', label: '직급', alignRight: false },
+  { id: 'userId', label: '사원번호', alignRight: false },
+  { id: 'hireDate', label: '입사일', alignRight: false },
+  { id: 'role', label: '권한', alignRight: false },
   { id: '' },
 ];
 
 const MODAL_HEAD = [
   { id: 'name', label: '이름', alignRight: false },
-  { id: 'depart', label: '부서', alignRight: false },
-  { id: 'rank', label: '직급', alignRight: false },
-  { id: 'id', label: '사원번호', alignRight: false },
-  { id: 'AccessLevel', label: '권한', alignRight: false },
+  { id: 'dept', label: '부서', alignRight: false },
+  { id: 'position', label: '직급', alignRight: false },
+  { id: 'userId', label: '사원번호', alignRight: false },
+  { id: 'role', label: '권한', alignRight: false },
 ];
 
 // ----------------------------------------------------------------------
@@ -103,12 +112,26 @@ function applySortFilter(array, comparator, query) {
 }
 
 export default function PrivilegeAdd() {
+  const { user } = useAuthState();
+  // 회원 목록
+  const [users, setUsers] = useState([]);
+  // 회사 목록 조회 API
+  const getUserList = async () => {
+    const res = await loginAxios.get(`/api/users?companyId=${user.companyId}`); // 추후에 2는 ${user.companyId로 교체}
+    setUsers(res.data);
+  };
+
+  useEffect(() => {
+    getUserList();
+  }, []);
+
   const [modalPage, setModalPage] = useState(0);
   const [rowsModalPerPage, setRowsModalPerPage] = useState(5);
   const [modalFilterName, setModalFilterName] = useState('');
   const [modalSelected, setModalSelected] = useState([]);
   const [saveSnackbar, setSaveSnackbar] = useState(false);
   const [nullSnackbar, setNullSnackbar] = useState(false);
+  const [openAdminModal, setOpenAdminModal] = useState(false);
 
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('name');
@@ -118,17 +141,11 @@ export default function PrivilegeAdd() {
 
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
 
-  const [selectedAdminType, setSelectedAdminType] = useState('사원'); // selectedAdminType 상태 추가
+  const [selectedAdminType, setSelectedAdminType] = useState('USER'); // selectedAdminType 상태 추가
 
-  const [filteredModalUsers, setFilteredModalUsers] = useState(
-    USERLIST.filter((user) => user.AccessLevel === '사원') // '사원'인 사용자만 필터링
-  );
+  const [filteredModalUsers, setFilteredModalUsers] = useState(users);
 
-  const filterUser = applySortFilter(
-    USERLIST.filter((user) => user.AccessLevel === '사원'), // '사원'인 사용자만 필터링
-    getComparator(order, orderBy),
-    modalFilterName
-  );
+  const filterUser = applySortFilter(users, getComparator(order, orderBy), modalFilterName);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -139,14 +156,14 @@ export default function PrivilegeAdd() {
   const handleModalSelectAllClick = (event) => {
     if (isModalSearched) {
       if (event.target.checked) {
-        const newSelecteds = filteredModalUsers.map((n) => n.name);
+        const newSelecteds = filteredModalUsers.map((n) => n.userId);
         setModalSelected(newSelecteds);
       } else {
         setModalSelected([]);
       }
     } else {
       if (event.target.checked) {
-        const newSelecteds = USERLIST.filter((user) => user.AccessLevel === '사원').map((n) => n.name);
+        const newSelecteds = users.map((n) => n.userId);
         setModalSelected(newSelecteds);
       } else {
         setModalSelected([]);
@@ -187,7 +204,7 @@ export default function PrivilegeAdd() {
     // 검색창에 아무것도 입력하지 않았을 때,
     if (!searchQuery) {
       setIsModalSearched(false);
-      setFilteredModalUsers(USERLIST.filter((user) => user.AccessLevel === '사원'));
+      setFilteredModalUsers(users);
     } else {
       if (isModalSearched) {
         setFilteredModalUsers(filterUser);
@@ -219,11 +236,7 @@ export default function PrivilegeAdd() {
 
   const handleModalSearch = (search) => {
     setIsModalSearched(true);
-    const searchResult = applySortFilter(
-      USERLIST.filter((user) => user.AccessLevel === '사원'),
-      getComparator(order, orderBy),
-      search
-    );
+    const searchResult = applySortFilter(users, getComparator(order, orderBy), search);
     setModalFilterName(search);
     setModalPage(0);
     setRowsModalPerPage(5);
@@ -234,20 +247,40 @@ export default function PrivilegeAdd() {
     setSaveConfirmOpen(true);
   };
 
-  const handleSaveConfirmClose = () => {
-    // 여기에 삭제 로직을 구현하세요.
-    // 예를 들어, 선택된 사용자를 삭제하고 관련 상태를 업데이트하는 등의 작업을 수행할 수 있습니다.
-
-    // 삭제 완료 후 삭제 확인 창을 닫습니다.
-    setSaveConfirmOpen(false);
+  const handleOpenAdminModal = () => {
+    setOpenAdminModal(true);
   };
 
-  const handleSelectedAdminType = () => {
-    setSelectedAdminType('사원');
+  const handleCloseAdminModal = () => {
+    setOpenAdminModal(false);
   };
 
-  const emptyModalRows =
-    modalPage > 0 ? Math.max(0, (1 + modalPage) * rowsModalPerPage - filteredModalUsers.length) : 0;
+  const handleSaveConfirmClose = async () => {
+    if (selectedAdminType === 'ADMIN') {
+      handleOpenAdminModal();
+    } else {
+      updateAdminType();
+      setSaveConfirmOpen(false);
+    }
+  };
+
+  const updateAdminType = async () => {
+    const newArray = modalSelected.map((userId) => ({
+      userId,
+      role: selectedAdminType,
+    }));
+    await loginAxios.patch('/api/users', newArray);
+    getUserList();
+    resetSelectedAdminType();
+    setModalSelected([]);
+    handleOpenSaveSnackbar();
+  };
+
+  const resetSelectedAdminType = () => {
+    setSelectedAdminType('USER');
+  };
+
+  const emptyModalRows = modalPage > 0 ? Math.max(0, (1 + modalPage) * rowsModalPerPage - users.length) : 0;
 
   const isModalNotFound = !filteredModalUsers.length && !!modalFilterName;
 
@@ -294,14 +327,17 @@ export default function PrivilegeAdd() {
                   {filterUser
                     .slice(modalPage * rowsModalPerPage, modalPage * rowsModalPerPage + rowsModalPerPage)
                     .map((row) => {
-                      const { name, depart, rank, id, date, AccessLevel } = row;
+                      const { name, dept, position, userId, hireDate, role } = row;
 
-                      const selectedModalUser = modalSelected.indexOf(name) !== -1;
+                      const selectedModalUser = modalSelected.indexOf(userId) !== -1;
 
                       return (
                         <TableRow key={name}>
                           <TableCell align="left">
-                            <Checkbox checked={selectedModalUser} onChange={(event) => handleModalClick(event, name)} />
+                            <Checkbox
+                              checked={selectedModalUser}
+                              onChange={(event) => handleModalClick(event, userId)}
+                            />
                           </TableCell>
 
                           <TableCell component="th" scope="row" padding="none">
@@ -313,26 +349,91 @@ export default function PrivilegeAdd() {
                             </Stack>
                           </TableCell>
 
-                          <TableCell align="center">{depart}</TableCell>
+                          <TableCell align="center">{dept}</TableCell>
 
-                          <TableCell align="center">{rank}</TableCell>
+                          <TableCell align="center">{position}</TableCell>
 
-                          <TableCell align="center">{id}</TableCell>
+                          <TableCell align="center">{userId}</TableCell>
 
-                          <TableCell align="center">{date}</TableCell>
+                          <TableCell align="center">{hireDate}</TableCell>
 
                           <TableCell align="center">
-                            {AccessLevel === '관리자' ? (
-                              <Stack direction="row" alignItems="center" spacing={1} sx={{ justifyContent: 'center' }}>
-                                <SupervisorAccountIcon sx={{ fontSize: 18 }} />
-                                <Label color="success">관리자</Label>
-                              </Stack>
-                            ) : (
-                              <Stack direction="row" alignItems="center" spacing={1} sx={{ justifyContent: 'center' }}>
-                                <PersonIcon sx={{ fontSize: 18 }} />
-                                <Label color="default">사원</Label>
-                              </Stack>
-                            )}
+                            {(() => {
+                              switch (role) {
+                                case 'USER':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <PersonIcon sx={{ fontSize: 17 }} />
+                                      <Label color="default">일반 권한자</Label>
+                                    </Stack>
+                                  );
+                                case 'HR':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <SupervisorAccountIcon sx={{ fontSize: 17 }} />
+                                      <Label color="success">인사 관리자</Label>
+                                    </Stack>
+                                  );
+                                case 'FO':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <AccountBalanceIcon sx={{ fontSize: 17 }} />
+                                      <Label color="warning">재무 관리자</Label>
+                                    </Stack>
+                                  );
+                                case 'MNG':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <AccountBoxIcon sx={{ fontSize: 17 }} />
+                                      <Label color="info">총괄 책임자</Label>
+                                    </Stack>
+                                  );
+                                case 'ADMIN':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <AdminPanelSettingsIcon sx={{ fontSize: 17 }} />
+                                      <Label color="error">최고 권한자</Label>
+                                    </Stack>
+                                  );
+                                default:
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <PersonIcon sx={{ fontSize: 18 }} />
+                                      <Label color="default">일반 권한자</Label>
+                                    </Stack>
+                                  );
+                              }
+                            })()}
                           </TableCell>
                         </TableRow>
                       );
@@ -371,7 +472,7 @@ export default function PrivilegeAdd() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={filteredModalUsers.length}
+            count={users.length}
             rowsPerPage={rowsModalPerPage}
             page={modalPage}
             onPageChange={handleModalChangePage}
@@ -411,7 +512,7 @@ export default function PrivilegeAdd() {
       <DialogActions>
         <Snackbar
           open={saveSnackbar}
-          autoHideDuration={2000}
+          autoHideDuration={2500}
           onClose={handleCloseSaveSnackbar}
           anchorOrigin={{
             vertical: 'top',
@@ -420,7 +521,7 @@ export default function PrivilegeAdd() {
           sx={{ width: 400 }}
         >
           <Alert onClose={handleCloseSaveSnackbar} severity="success" sx={{ width: '100%' }}>
-            관리자로 변경되었습니다!
+            권한이 변경되었습니다!
           </Alert>
         </Snackbar>
 
@@ -440,7 +541,50 @@ export default function PrivilegeAdd() {
         </Snackbar>
       </DialogActions>
 
-      <Dialog open={saveConfirmOpen} onClose={() => setSaveConfirmOpen(false)} minWidth="sm">
+      <Dialog open={openAdminModal} onClose={handleCloseAdminModal} minWidth="sm">
+        <DialogTitle>경고</DialogTitle>
+        <DialogContent>
+          <Typography>
+            해당 권한은 신중하게 부여되어야 합니다. <br />
+            이 권한은 시스템 전체에 영향을 미치며, <br />
+            잘못 사용될 경우 심각한 보안 문제를 유발할 수 있습니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              resetSelectedAdminType();
+              setModalSelected([]);
+              updateAdminType();
+              setSaveConfirmOpen(false);
+              handleCloseAdminModal();
+            }}
+            variant="contained"
+          >
+            확인
+          </Button>
+          <Button
+            onClick={() => {
+              setSaveConfirmOpen(false);
+              resetSelectedAdminType();
+              handleCloseAdminModal();
+              handleSaveConfirmOpen();
+            }}
+            variant="outlined"
+          >
+            취소
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={saveConfirmOpen}
+        onClose={() => {
+          setSaveConfirmOpen(false);
+          resetSelectedAdminType();
+        }}
+        minWidth="sm"
+      >
         <DialogTitle>관리자 권한 부여</DialogTitle>
         <DialogContent>
           <Typography>선택한 사원들에게 어떤 권한을 부여하시겠습니까?</Typography>
@@ -452,8 +596,11 @@ export default function PrivilegeAdd() {
             fullWidth
             sx={{ mt: 2 }}
           >
-            <MenuItem value="HR">인사 관리</MenuItem>
-            <MenuItem value="FO">재무 관리</MenuItem>
+            <MenuItem value="ADMIN">최고 권한자</MenuItem>
+            <MenuItem value="MNG">총괄 책임자</MenuItem>
+            <MenuItem value="HR">인사 관리자</MenuItem>
+            <MenuItem value="FO">재무 관리자</MenuItem>
+            <MenuItem value="USER">일반 권한자</MenuItem>
           </Select>
           {modalSelected.length > 0 && (
             <TableContainer>
@@ -467,7 +614,7 @@ export default function PrivilegeAdd() {
                 />
                 <TableBody>
                   {modalSelected.map((selectedUser) => {
-                    const user = filteredModalUsers.find((u) => u.name === selectedUser);
+                    const user = users.find((u) => u.userId === selectedUser);
                     if (user) {
                       return (
                         <TableRow key={user.name}>
@@ -479,24 +626,87 @@ export default function PrivilegeAdd() {
                               </Typography>
                             </Stack>
                           </TableCell>
-                          <TableCell align="center">{user.depart}</TableCell>
-                          <TableCell align="center">{user.rank}</TableCell>
-                          <TableCell align="center">{user.id}</TableCell>
+                          <TableCell align="center">{user.dept}</TableCell>
+                          <TableCell align="center">{user.position}</TableCell>
+                          <TableCell align="center">{user.userId}</TableCell>
                           <TableCell align="center">
-                            {user.AccessLevel === '관리자' ? (
-                              <Stack direction="row" alignItems="center" spacing={1} sx={{ justifyContent: 'center' }}>
-                                <SupervisorAccountIcon sx={{ fontSize: 18 }} />
-                                <Label color="success">관리자</Label>
-                              </Stack>
-                            ) : (
-                              <Stack direction="row" alignItems="center" spacing={1} sx={{ justifyContent: 'center' }}>
-                                <PersonIcon sx={{ fontSize: 18 }} />
-                                <Label color="default">사원</Label>
-                              </Stack>
-                            )}
+                            {(() => {
+                              switch (user.role) {
+                                case 'USER':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <PersonIcon sx={{ fontSize: 17 }} />
+                                      <Label color="default">일반 권한자</Label>
+                                    </Stack>
+                                  );
+                                case 'HR':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <SupervisorAccountIcon sx={{ fontSize: 17 }} />
+                                      <Label color="success">인사 관리자</Label>
+                                    </Stack>
+                                  );
+                                case 'FO':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <AccountBalanceIcon sx={{ fontSize: 17 }} />
+                                      <Label color="warning">재무 관리자</Label>
+                                    </Stack>
+                                  );
+                                case 'MNG':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <AccountBoxIcon sx={{ fontSize: 17 }} />
+                                      <Label color="info">총괄 책임자</Label>
+                                    </Stack>
+                                  );
+                                case 'ADMIN':
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <AdminPanelSettingsIcon sx={{ fontSize: 17 }} />
+                                      <Label color="error">최고 권한자</Label>
+                                    </Stack>
+                                  );
+                                default:
+                                  return (
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={1}
+                                      sx={{ justifyContent: 'center' }}
+                                    >
+                                      <PersonIcon sx={{ fontSize: 18 }} />
+                                      <Label color="default">일반 권한자</Label>
+                                    </Stack>
+                                  );
+                              }
+                            })()}
                           </TableCell>
-
-                          {/* ... 추가 사용자 정보 열 */}
                         </TableRow>
                       );
                     }
@@ -510,16 +720,19 @@ export default function PrivilegeAdd() {
         <DialogActions>
           <Button
             onClick={() => {
-              handleOpenSaveSnackbar();
-              handleSelectedAdminType();
-              setModalSelected([]);
               handleSaveConfirmClose();
             }}
             variant="contained"
           >
             추가
           </Button>
-          <Button onClick={() => setSaveConfirmOpen(false)} variant="outlined">
+          <Button
+            onClick={() => {
+              setSaveConfirmOpen(false);
+              resetSelectedAdminType();
+            }}
+            variant="outlined"
+          >
             취소
           </Button>
         </DialogActions>
