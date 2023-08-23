@@ -37,8 +37,6 @@ import Label from '../../components/label';
 import Scrollbar from '../../components/scrollbar';
 // sections
 import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
-// mock
-import USERLIST from '../../_mock/privilege';
 
 // LoginAxios
 import loginAxios from '../../api/loginAxios';
