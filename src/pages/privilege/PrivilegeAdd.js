@@ -596,11 +596,36 @@ export default function PrivilegeAdd() {
             fullWidth
             sx={{ mt: 2 }}
           >
-            <MenuItem value="ADMIN">최고 권한자</MenuItem>
-            <MenuItem value="MNG">총괄 책임자</MenuItem>
-            <MenuItem value="HR">인사 관리자</MenuItem>
-            <MenuItem value="FO">재무 관리자</MenuItem>
-            <MenuItem value="USER">일반 권한자</MenuItem>
+            <MenuItem value="ADMIN">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <AdminPanelSettingsIcon sx={{ fontSize: 17 }} />
+                <Label color="error">최고 권한자</Label>
+              </Stack>
+            </MenuItem>
+            <MenuItem value="MNG">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <AccountBoxIcon sx={{ fontSize: 17 }} />
+                <Label color="info">총괄 책임자</Label>
+              </Stack>
+            </MenuItem>
+            <MenuItem value="HR">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <SupervisorAccountIcon sx={{ fontSize: 17 }} />
+                <Label color="success">인사 관리자</Label>
+              </Stack>
+            </MenuItem>
+            <MenuItem value="FO">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <AccountBalanceIcon sx={{ fontSize: 17 }} />
+                <Label color="warning">재무 관리자</Label>
+              </Stack>
+            </MenuItem>
+            <MenuItem value="USER">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <PersonIcon sx={{ fontSize: 17 }} />
+                <Label color="default">일반 권한자</Label>
+              </Stack>
+            </MenuItem>
           </Select>
           {modalSelected.length > 0 && (
             <TableContainer>
