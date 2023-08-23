@@ -25,7 +25,7 @@ CompanyList.propTypes = {
 export default function CompanyList({ companies }) {
   // 페이징
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // 검색어
   const [filterName, setFilterName] = useState('');
@@ -58,21 +58,36 @@ export default function CompanyList({ companies }) {
       <CompanyListSearchbar filterName={filterName} onFilterName={handleFilterByName} />
 
       <Scrollbar>
-        <TableContainer sx={{ minWidth: 800 }}>
+        <TableContainer sx={{ minWidth: 600 }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>회사 이름</TableCell>
-                <TableCell sx={{ width: '400px' }}>인증 코드</TableCell>
-                <TableCell>등록 날짜</TableCell>
-                <TableCell>최종 수정 날짜</TableCell>
+                <TableCell sx={{ width: '20px' }}>ID</TableCell>
+                <TableCell sx={{ width: '100px' }}>회사 로고</TableCell>
+                <TableCell sx={{ width: '100px' }}>회사 이름</TableCell>
+                <TableCell sx={{ width: '300px' }}>인증 코드</TableCell>
+                <TableCell sx={{ width: '100px' }}>등록 날짜</TableCell>
+                <TableCell sx={{ width: '100px' }}>최종 수정 날짜</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredCompanies.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((company) => (
                 <TableRow key={company.companyId}>
                   <TableCell>{company.companyId}</TableCell>
+                  <TableCell>
+                    {company.logoUrl ? (
+                      <div
+                        style={{
+                          width: '80px',
+                          height: '30px',
+                          background: `url(http://localhost:8080/images/${company.logoUrl}) no-repeat center center`,
+                          backgroundSize: 'contain',
+                        }}
+                      />
+                    ) : (
+                      company.logoUrl
+                    )}
+                  </TableCell>
                   <TableCell>{company.name}</TableCell>
                   <TableCell style={{ display: 'flex', justifyContent: 'space-between' }}>
                     {company.code}
@@ -116,7 +131,7 @@ export default function CompanyList({ companies }) {
       </Scrollbar>
 
       <TablePagination
-        rowsPerPageOptions={[10, 25, 50, 100]}
+        rowsPerPageOptions={[5, 10, 25, 50]}
         component="div"
         count={filteredCompanies.length}
         rowsPerPage={rowsPerPage}
