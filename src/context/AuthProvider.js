@@ -23,7 +23,7 @@ const reducer = (state, action) => {
       return {
         ...state,
         authenticated: false,
-        user: null,
+        user: undefined,
       };
     case 'STOP_LOADING':
       return {
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
   const [state, defaultDispatch] = useReducer(reducer, {
     user: userInfo || undefined, // 로컬스토리지에 사용자 정보가 있으면 저장, 없으면 undefined
-    authenticated: !!accessToken && userInfo, // 로컬스토리지에 토큰, 사용자 정보가 있으면 true, 없으면 false
+    authenticated: !!accessToken && !!userInfo, // 로컬스토리지에 토큰, 사용자 정보가 있으면 true, 없으면 false
     loading: true,
   });
 

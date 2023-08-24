@@ -14,7 +14,7 @@ import Scrollbar from '../../../components/scrollbar';
 import NavSection from '../../../components/nav-section';
 //
 import navConfig from './config';
-import { useAuthState, useAuthDispatch } from '../../../context/AuthProvider';
+import { useAuthState } from '../../../context/AuthProvider';
 import NavWork from '../../../components/nav-work/NavWork';
 
 // ----------------------------------------------------------------------
@@ -38,8 +38,7 @@ Nav.propTypes = {
 
 export default function Nav({ openNav, onCloseNav }) {
   const { pathname } = useLocation();
-  const { user }   = useAuthState();
-  const authDispatch = useAuthDispatch();
+  const { user } = useAuthState();
 
   const isDesktop = useResponsive('up', 'lg');
 
@@ -84,7 +83,11 @@ export default function Nav({ openNav, onCloseNav }) {
             size="small"
             variant="text"
             onClick={() => {
-              authDispatch('LOGOUT');
+              // authDispatch('LOGOUT');
+              // 버그발생해서 수동 로그아웃 처리함
+              localStorage.removeItem('accessToken');
+              localStorage.removeItem('userInfo');
+              window.location.href = '/login';
             }}
           >
             로그아웃
@@ -92,7 +95,7 @@ export default function Nav({ openNav, onCloseNav }) {
         </Box>
 
         {/* 출퇴근 버튼 */}
-        <NavWork />
+        {user.role !== 'SUPERADMIN' ? <NavWork /> : null}
       </Box>
 
       {/* 페이지 목록 */}
