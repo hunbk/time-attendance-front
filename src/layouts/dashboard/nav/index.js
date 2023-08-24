@@ -58,7 +58,7 @@ export default function Nav({ openNav, onCloseNav }) {
     >
       <Box sx={{ px: 2.5, py: 3, display: 'inline-flex' }}>
         {/* 회사 로고 설정 */}
-        <Logo imageUrl={user.companyLogoUrl} />
+        {user.companyLogoUrl ? <Logo imageUrl={`http://localhost:8080/images/${user.companyLogoUrl}`} /> : <Logo />}
       </Box>
 
       <Box sx={{ mb: 5, mx: 2.5 }}>
