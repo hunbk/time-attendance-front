@@ -47,7 +47,6 @@ export default function LoginForm() {
     } catch (error) {
       if (error.response) {
         // TODO: 유효성 검증, 서버 예외 메시지 출력
-        console.log(error.response.data);
         enqueueSnackbar(error.response.data.message, { variant: 'error' });
       }
     }

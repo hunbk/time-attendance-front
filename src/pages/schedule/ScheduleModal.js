@@ -1,6 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 // @mui
-import { Table, Button, MenuItem, TableBody, Modal, TextField, Snackbar, Alert, TableContainer } from '@mui/material';
+import {
+  Table,
+  Button,
+  MenuItem,
+  TableBody,
+  Modal,
+  TextField,
+  Snackbar,
+  Alert,
+  TableContainer,
+  Divider,
+} from '@mui/material';
 // components
 
 import Dialog from '@mui/material/Dialog';
@@ -11,18 +22,32 @@ import DialogActions from '@mui/material/DialogActions';
 // mock
 import USERLIST from '../../_mock/privilege';
 
-const ScheduleModal = ({ open, onClose, editUserId }) => {
-  const userData = USERLIST.find((user) => user.id === editUserId);
+// LoginAxios
+import loginAxios from '../../api/loginAxios';
 
-  const [editedUserData, setEditedUserData] = useState(userData);
-  const [startTime, setStartTime] = useState(editedUserData.workStart);
-  const [endTime, setEndTime] = useState(editedUserData.workEnd);
-  const [workType, setWorkType] = useState(editedUserData.workType);
-  const [workState, setWorkState] = useState(editedUserData.workState);
+// 유저 상태
+import { useAuthState } from '../../context/AuthProvider';
 
+const ScheduleModal = ({ open, onClose, userData }) => {
+  const formatTime = (time) => {
+    const [hours, minutes] = time.split(':');
+    return `${hours}:${minutes}`;
+  };
+
+  // 로그인 한 유저 정보
+  const { user } = useAuthState();
+
+  const [startTime, setStartTime] = useState(formatTime(userData.startTime));
+  const [endTime, setEndTime] = useState(formatTime(userData.endTime));
+  const [workingTime, setWorkingTime] = useState(formatTime(userData.workingTime));
+  const [overtime, setOvertime] = useState(formatTime(userData.overtime));
+  const [workState, setWorkState] = useState(userData.workState);
+  const [selectedStartTime, setSelectedStartTime] = useState(startTime);
   const [confirmEditOpen, setConfirmEditOpen] = useState(false);
 
   const [editSnackbar, setEditSnackbar] = useState(false);
+
+  const [warningModalOpen, setWarningModalOpen] = useState(false);
 
   // Snackbar 열기 함수
   const handleOpenSnackbar = () => {
@@ -55,8 +80,12 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
     setEndTime(event.target.value);
   };
 
-  const handleWorkType = (event) => {
-    setWorkType(event.target.value);
+  const handleWorkingTime = (event) => {
+    setWorkingTime(event.target.value);
+  };
+
+  const handleOvertime = (event) => {
+    setOvertime(event.target.value);
   };
 
   const handleWorkState = (event) => {
@@ -67,6 +96,165 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
     onClose();
   };
 
+  const selectDayType = () => {
+    if (userData.dayType === '근무') {
+      calculateWorkDayType();
+    } else if (userData.dayType === '유급') {
+      calculatePaidDayType();
+    } else {
+      calculateUnpaidDayType();
+    }
+  };
+
+  const isDutyType = () => {};
+
+  const handleWarningModalOpen = () => {
+    setWarningModalOpen(true);
+  };
+
+  const handleWarningModalClose = () => {
+    setWarningModalOpen(false);
+  };
+
+  useEffect(() => {
+    selectDayType();
+  }, [startTime, endTime]);
+
+  // 정상 근무 계산 로직
+  const calculateWorkDayType = () => {
+    // 'start'와 'end' 시간을 배열로 파싱합니다.
+    const startTimes = userData.start.split(', ').map((time) => time.split(':').map(Number));
+    const endTimes = userData.end.split(', ').map((time) => time.split(':').map(Number));
+    const timeRangeTypes = userData.timeRangeType.split(', ');
+    const start = startTime.split(':').map(Number);
+    const end = endTime.split(':').map(Number);
+
+    const breakIndexes = [];
+    const workIndexes = [];
+    const dutyIndexes = [];
+    let approvedIndex = 0;
+
+    timeRangeTypes.forEach((type, index) => {
+      if (type === '휴게') {
+        breakIndexes.push(index);
+      } else if (type === '근무') {
+        workIndexes.push(index);
+      } else if (type === '승인') {
+        approvedIndex = index;
+      } else if (type === '의무') {
+        dutyIndexes.push(index);
+      }
+    });
+
+    console.log(startTimes);
+    console.log(endTimes);
+    console.log(timeRangeTypes);
+
+    console.log(breakIndexes); // 휴게 인덱스
+    console.log(workIndexes); // 근무 인덱스
+    console.log(approvedIndex); // 승인 인덱스
+    console.log(dutyIndexes); // 의무 인덱스
+
+    const startInMinutes = start[0] * 60 + start[1];
+    const endInMinutes = end[0] * 60 + end[1];
+    const startapproved = startTimes[approvedIndex][0] * 60 + startTimes[approvedIndex][1];
+    const endapproved = endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
+
+    console.log(start);
+    console.log(end);
+
+    // 총 근무 시간을 계산하기 위한 변수를 초기화합니다.
+    let totalWorkingTimeInMinutes = endInMinutes - startInMinutes; // 소정 근무 시간
+    let totalOvertimeInMinutes = 0;
+
+    // 의무 시간 관련 로직
+    dutyIndexes.forEach((i) => {
+      const startduty = startTimes[i][0] * 60 + startTimes[i][1];
+      const endduty = endTimes[i][0] * 60 + endTimes[i][1];
+      console.log('의무 시간 검사');
+
+      if (startduty < startInMinutes || endduty > endInMinutes) {
+        console.log('의무 시간 오류');
+        handleWarningModalOpen();
+      }
+    });
+
+    // 휴게 시간 관련 로직
+    breakIndexes.forEach((i) => {
+      const startbreak = startTimes[i][0] * 60 + startTimes[i][1];
+      const endbreak = endTimes[i][0] * 60 + endTimes[i][1];
+
+      if (startbreak >= startInMinutes && endbreak <= endInMinutes) {
+        totalWorkingTimeInMinutes -= endbreak - startbreak;
+      }
+    });
+
+    // 승인 시간 관련 로직
+    workIndexes.forEach((i) => {
+      const startwork = startTimes[i][0] * 60 + startTimes[i][1];
+      const endwork = endTimes[i][0] * 60 + endTimes[i][1];
+      if (startwork === startInMinutes && endInMinutes >= startapproved && endInMinutes <= endapproved) {
+        totalOvertimeInMinutes = endInMinutes - endwork;
+        if (totalOvertimeInMinutes >= 0) {
+          totalWorkingTimeInMinutes -= totalOvertimeInMinutes;
+        } else {
+          totalOvertimeInMinutes = 0;
+        }
+      }
+    });
+
+    // 총 근무 시간을 시간과 분으로 변환하여 workingTime 상태를 업데이트합니다.
+    const workingTimeHours = Math.floor(totalWorkingTimeInMinutes / 60);
+    const workingTimeMinutes = totalWorkingTimeInMinutes % 60;
+
+    // 초과 시간을 시간과 분으로 변환하여 workingTime 상태를 업데이트합니다.
+    const overtimeHours = Math.floor(totalOvertimeInMinutes / 60);
+    const overtimeMinutes = totalOvertimeInMinutes % 60;
+
+    // workingTime 상태를 업데이트합니다.
+    setWorkingTime(`${workingTimeHours.toString().padStart(2, '0')}:${workingTimeMinutes.toString().padStart(2, '0')}`);
+    setOvertime(`${overtimeHours.toString().padStart(2, '0')}:${overtimeMinutes.toString().padStart(2, '0')}`);
+  };
+
+  // 유급 휴무 계산 로직
+  const calculatePaidDayType = () => {
+    // 소정 근무 시간은 무조건 00:00으로 설정
+    setWorkingTime('00:00');
+
+    // startTime과 endTime을 분 단위로 변환하여 계산
+    const startTimeParts = startTime.split(':').map(Number);
+    const endTimeParts = endTime.split(':').map(Number);
+
+    const startTimeInMinutes = startTimeParts[0] * 60 + startTimeParts[1];
+    const endTimeInMinutes = endTimeParts[0] * 60 + endTimeParts[1];
+
+    // 초과 근무 시간 계산
+    let overtimeInMinutes = endTimeInMinutes - startTimeInMinutes;
+
+    // endTime이 startTime보다 이전인 경우에는 하루가 더해져야 함
+    if (endTimeInMinutes < startTimeInMinutes) {
+      overtimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해줌
+    }
+
+    // 음수인 경우 계산을 조정해줌
+    if (overtimeInMinutes < 0) {
+      overtimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해주고
+      overtimeInMinutes -= 60; // 1시간에 해당하는 분을 빼줌
+    }
+
+    // 분을 시간과 분으로 변환하여 설정
+    const overtimeHours = Math.floor(overtimeInMinutes / 60);
+    const overtimeMinutes = overtimeInMinutes % 60;
+
+    setOvertime(`${overtimeHours.toString().padStart(2, '0')}:${overtimeMinutes.toString().padStart(2, '0')}`);
+  };
+
+  // 무급 휴무 정산 로직
+  const calculateUnpaidDayType = () => {
+    setWorkingTime('00:00');
+    setOvertime('00:00');
+  };
+
   const modalStyle = {
     // 팝업창의 넓이를 원하는 값으로 지정합니다. 필요에 따라 변경할 수 있습니다.
     display: 'flex',
@@ -74,33 +262,38 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
     justifyContent: 'center',
   };
 
+  const textStyle = {
+    display: 'inline-block',
+    marginLeft: '20px',
+    marginRight: '10px',
+    width: '40%',
+  };
+
   return (
     <Modal open={open} onClose={handleClose} style={modalStyle}>
       <Dialog
         open={open}
         onClose={handleClose}
-        maxWidth="md"
+        minWidth="md"
         sx={{
           width: '100%', // 원하는 모달 너비 값으로 조절
           '& .MuiDialog-paper': {
-            width: '25%', // 모달 내용이 모달 창 내에서 최대 너비를 가지도록 설정
+            width: '40%', // 모달 내용이 모달 창 내에서 최대 너비를 가지도록 설정
           },
         }}
       >
         <DialogTitle>사용자 정보 수정</DialogTitle>
         <DialogContent dividers>
           <TableContainer>
-            <Table
-              sx={{minHeight: 400, display: 'block', alignItems: 'start', justifyContent: 'start' }}
-            >
+            <Table sx={{ minHeight: 500, display: 'flex', alignItems: 'start', justifyContent: 'start' }}>
               <TableBody>
                 <TextField
                   name="date"
                   label="근무일자"
                   fullWidth
-                  value={editedUserData.date}
+                  value={userData.date}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  style={textStyle} // 좌우 여백 설정
                   InputProps={{
                     readOnly: true,
                   }}
@@ -110,9 +303,9 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                   name="id"
                   label="사원번호"
                   fullWidth
-                  value={editedUserData.id}
+                  value={userData.userId}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  style={textStyle} // 좌우 여백 설정
                   InputProps={{
                     readOnly: true,
                   }}
@@ -122,9 +315,9 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                   name="name"
                   label="이름"
                   fullWidth
-                  value={editedUserData.name}
+                  value={userData.name}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  style={textStyle} // 좌우 여백 설정
                   InputProps={{
                     readOnly: true,
                   }}
@@ -134,9 +327,9 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                   name="depart"
                   label="부서"
                   fullWidth
-                  value={editedUserData.depart}
+                  value={userData.dept}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  style={textStyle} // 좌우 여백 설정
                   InputProps={{
                     readOnly: true,
                   }}
@@ -146,9 +339,9 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                   name="rank"
                   label="직급"
                   fullWidth
-                  value={editedUserData.rank}
+                  value={userData.position}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  style={textStyle} // 좌우 여백 설정
                   InputProps={{
                     readOnly: true,
                   }}
@@ -157,16 +350,11 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                 <TextField
                   name="workType"
                   label="근로제 유형"
-                  select
                   fullWidth
-                  value={workType}
-                  onChange={handleWorkType}
+                  value={userData.workGroupType}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
-                >
-                  <MenuItem value="일반근로제">일반근로제</MenuItem>
-                  <MenuItem value="시차근로제">시차근로제</MenuItem>
-                </TextField>
+                  style={textStyle} // 좌우 여백 설정
+                />
 
                 <TextField
                   name="start"
@@ -176,8 +364,9 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                   value={startTime}
                   onChange={handleStartTime}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%'}} // 좌우 여백 설정
+                  style={textStyle} // 좌우 여백 설정
                   SelectProps={{
+                    renderValue: () => startTime, // 선택한 값을 표시하는 로직
                     MenuProps: {
                       getContentAnchorEl: null,
                       anchorOrigin: {
@@ -192,15 +381,23 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                     },
                   }}
                 >
-                  {Array.from({ length: 24 * 2 }).map((_, index) => {
-                    const hours = Math.floor(index / 2);
-                    const minutes = (index % 2) * 30;
-                    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-                    return (
-                      <MenuItem key={timeString} value={timeString}>
-                        {timeString}
-                      </MenuItem>
-                    );
+                  {/* <MenuItem key={selectedStartTime} value={selectedStartTime}>
+                    {selectedStartTime}
+                  </MenuItem> */}
+
+                  {userData.timeRangeType.split(', ').map((type, index) => {
+                    if (type === '근무') {
+                      const [hours, minutes] = userData.start.split(', ')[index].split(':');
+                      const timeString = `${hours}:${minutes}`;
+                      console.log(timeString);
+                      console.log(selectedStartTime);
+                      return (
+                        <MenuItem key={timeString} value={timeString}>
+                          {timeString}
+                        </MenuItem>
+                      );
+                    }
+                    return null;
                   })}
                 </TextField>
 
@@ -212,7 +409,7 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                   value={endTime}
                   onChange={handleEndTime}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  style={textStyle} // 좌우 여백 설정
                   SelectProps={{
                     MenuProps: {
                       getContentAnchorEl: null,
@@ -232,21 +429,42 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                     const hours = Math.floor(index / 2);
                     const minutes = (index % 2) * 30;
                     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-                    return (
-                      <MenuItem key={timeString} value={timeString}>
-                        {timeString}
-                      </MenuItem>
-                    );
+
+                    if (timeString >= startTime) {
+                      return (
+                        <MenuItem key={timeString} value={timeString}>
+                          {timeString}
+                        </MenuItem>
+                      );
+                    }
+                    return null;
                   })}
+                  <MenuItem key={`24:00`} value={`24:00`}>
+                    00:00
+                  </MenuItem>
                 </TextField>
 
                 <TextField
-                  name="workHour"
+                  name="workingTime"
                   label="소정근무시간"
                   fullWidth
-                  value={editedUserData.workHour}
+                  value={workingTime}
+                  onChange={handleWorkingTime}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  style={textStyle} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+
+                <TextField
+                  name="overtime"
+                  label="초과근무시간"
+                  fullWidth
+                  value={overtime}
+                  onChange={handleOvertime}
+                  margin="normal"
+                  style={textStyle} // 좌우 여백 설정
                   InputProps={{
                     readOnly: true,
                   }}
@@ -260,9 +478,9 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
                   value={workState}
                   onChange={handleWorkState}
                   margin="normal"
-                  style={{ marginLeft: '20px', marginRight: '10px', width: '80%' }} // 좌우 여백 설정
+                  style={textStyle} // 좌우 여백 설정
                 >
-                  <MenuItem value="정상처리">정상처리</MenuItem>
+                  <MenuItem value="정상근무">정상처리</MenuItem>
                   <MenuItem value="미처리">미처리</MenuItem>
                   <MenuItem value="근태이상">근태이상</MenuItem>
                 </TextField>
@@ -294,6 +512,17 @@ const ScheduleModal = ({ open, onClose, editUserId }) => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Dialog open={warningModalOpen} onClose={handleWarningModalClose}>
+          <DialogTitle>경고</DialogTitle>
+          <DialogContent>의무 시간에 해당하는 범위가 선택되었습니다.</DialogContent>
+          <DialogActions>
+            <Button onClick={handleWarningModalClose} color="primary" variant="outlined">
+              확인
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Snackbar
           open={editSnackbar}
           autoHideDuration={2000}

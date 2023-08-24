@@ -6,7 +6,6 @@ import SimpleLayout from './layouts/simple';
 
 // 사용자 페이지
 import DashboardAppPage from './pages/DashboardAppPage';
-import HolidayPage from './pages/holiday/HolidayPage';
 import WorkGroupIndexPage from './pages/workgroup/WorkGroupIndexPage';
 import PrivilegePage from './pages/privilege/PrivilegePage';
 import SchedulePage from './pages/schedule/SchedulePage';
@@ -37,8 +36,8 @@ export default function Router() {
 
   const routes = useRoutes([
     {
-      path: '/', // 루트 경로 접속 시 메인 페이지(dashboard)로 이동
-      element: authenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" replace />,
+      path: '/',
+      element: userRole === 'SUPERADMIN' ? <Navigate to="/admin" replace /> : <Navigate to="/dashboard" replace />,
     },
     {
       path: '/dashboard', // 메인 페이지 및 하위 경로. 특정 경로는 회사 관리자(ADMIN)만 접근 가능
@@ -48,17 +47,17 @@ export default function Router() {
         // 메인 페이지
         { path: 'app', element: <DashboardAppPage /> },
         // HR 권한 페이지
-        {
-          path: 'holiday',
-          element: checkPermission(userRole, ['HR', 'ADMIN']) ? <HolidayPage /> : <Navigate to="/403" />,
-        },
+        // {
+        //   path: 'holiday',
+        //   element: checkPermission(userRole, ['HR', 'ADMIN']) ? <HolidayPage /> : <Navigate to="/403" />,
+        // },
         {
           path: 'workgroups',
-          element: checkPermission(userRole, ['HR', 'ADMIN']) ? <WorkGroupIndexPage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['HR', 'MNG', 'ADMIN']) ? <WorkGroupIndexPage /> : <Navigate to="/403" />,
         },
         {
           path: 'privilege',
-          element: checkPermission(userRole, ['HR', 'ADMIN']) ? <PrivilegePage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['HR', 'MNG', 'ADMIN']) ? <PrivilegePage /> : <Navigate to="/403" />,
         },
         // FO 권한 페이지
         {
@@ -67,7 +66,7 @@ export default function Router() {
         },
         {
           path: 'schedule',
-          element: checkPermission(userRole, ['FO', 'ADMIN']) ? <SchedulePage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['FO', 'MNG', 'ADMIN']) ? <SchedulePage /> : <Navigate to="/403" />,
         },
       ],
     },
@@ -75,7 +74,7 @@ export default function Router() {
       path: '/admin', // 서비스 관리자 페이지. 서비스 관리자(SUPERADMIN)만 접근 가능한 경로
       element: checkPermission(userRole, ['SUPERADMIN']) ? <DashboardLayout /> : <Navigate to="/403" />,
       children: [
-        { path: '/admin', element: <AdminPage /> },
+        { path: '', element: <AdminPage /> },
         {
           path: 'company',
           element: checkPermission(userRole, ['SUPERADMIN']) ? <CompanyPage /> : <Navigate to="/403" />,
@@ -93,7 +92,7 @@ export default function Router() {
     {
       element: <SimpleLayout />,
       children: [
-        { element: <Navigate to="/dashboard/app" />, index: true },
+        // { element: <Navigate to="/dashboard/app" />, index: true }, // 버그발생
         { path: '404', element: <Page404 /> },
         { path: '403', element: <Page403 /> },
         { path: '*', element: <Navigate to="/404" /> },
