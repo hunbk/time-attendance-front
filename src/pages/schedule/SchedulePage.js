@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useState} from 'react';
+import { useState, useEffect} from 'react';
 // @mui
 import {
   Card,
@@ -31,22 +31,25 @@ import Scrollbar from '../../components/scrollbar';
 // sections
 import { SettleListHead, SettleListToolbar } from '../../sections/@dashboard/settlement';
 import ScheduleModal from './ScheduleModal';
-// mock
-import USERLIST from '../../_mock/privilege';
 
+// LoginAxios
+import loginAxios from '../../api/loginAxios';
+
+// 유저 상태
+import { useAuthState } from '../../context/AuthProvider';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
   { id: 'date', label: '근무일자'},
-  { id: 'id', label: '사원번호'},
+  { id: 'userId', label: '사원번호'},
   { id: 'name', label: '이름'},
-  { id: 'depart', label: '부서'},
-  { id: 'rank', label: '직급'},
-  { id: 'workType', label: '근무제유형'},
-  { id: 'workStart', label: '근무시작시간'},
-  { id: 'workEnd', label: '근무종료시간'},
-  { id: 'workHour', label: '소정근무시간'},
-  { id: 'workHour', label: '초과근무시간'},
+  { id: 'dept', label: '부서'},
+  { id: 'position', label: '직급'},
+  { id: 'workGroupType', label: '근무제유형'},
+  { id: 'start', label: '근무시작시간'},
+  { id: 'end', label: '근무종료시간'},
+  { id: 'workingTime', label: '소정근무시간'},
+  { id: 'overtime', label: '초과근무시간'},
   { id: 'workState', label: '처리상태'},
   { id: '' },
 ];
@@ -96,6 +99,24 @@ function applySortFilter(array, comparator, query) {
 }
 
 export default function SchedulePage() {
+  // 로그인 한 유저 정보
+  const { user } = useAuthState();
+
+  // 회원 목록
+  const [users, setUsers] = useState([]);
+
+  // 회사 목록 조회 API
+  const getUserList = async() => {
+    const start = startDate.toISOString().substring(0,10);
+    const end = endDate.toISOString().substring(0,10);
+    const res = await loginAxios.get(`/api/settlements?companyId=${user.companyId}&start=${start}&end=${end}`);
+    setUsers(res.data);
+  }
+
+  useEffect(() => {
+    getUserList();
+  }, []);
+
   const [open, setOpen] = useState(null);
 
   const [page, setPage] = useState(0);
@@ -112,15 +133,15 @@ export default function SchedulePage() {
 
   const [deleteSnackbar, setDeleteSnackbar] = useState(false);
 
-  const [filteredUsers, setFilteredUsers] = useState(USERLIST);
+  const [filteredUsers, setFilteredUsers] = useState(users);
 
   // 기본적으로 Calendar 숨기고 open하면 Date에 new Date() 설정함
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));;
+  const [endDate, setEndDate] = useState(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));;
   const [isSearched, setIsSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
 
   // 수정 대상 회원의 id를 저장
-  const [editUserId, setEditUserId] = useState(null);
+  const [userData, setUserData] = useState([]);
 
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
@@ -142,7 +163,7 @@ export default function SchedulePage() {
 
   const handleOpenMenu = (event, row) => {
     setOpen(event.currentTarget);
-    setEditUserId(row.id);
+    console.log(row);
   };
 
   const handleCloseMenu = () => {
@@ -157,7 +178,7 @@ export default function SchedulePage() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = USERLIST.map((n) => n.name);
+      const newSelecteds = users.map((n) => n.name);
       setSelected(newSelecteds);
       return;
     }
@@ -182,11 +203,11 @@ export default function SchedulePage() {
     // 검색창에 아무것도 입력하지 않았을 때는 전체 목록을 보여줍니다.
     if (!searchQuery) {
       setIsSearched(false); // 검색 버튼을 누르지 않은 경우이므로 isSearched 상태를 false로 설정합니다.
-      setFilteredUsers(USERLIST); // 전체 목록을 보여주기 위해 filteredUsers 상태를 USERLIST로 초기화합니다.
+      setFilteredUsers(users); // 전체 목록을 보여주기 위해 filteredUsers 상태를 USERLIST로 초기화합니다.
     } else {
       // 검색 버튼을 눌렀을 때만 실시간으로 결과가 나오도록 로직을 실행합니다.
       if (isSearched) {
-        const searchResult = applySortFilter(USERLIST, getComparator(order, orderBy), searchQuery);
+        const searchResult = applySortFilter(users, getComparator(order, orderBy), searchQuery);
         setFilteredUsers(searchResult);
       }
     }
@@ -202,7 +223,7 @@ export default function SchedulePage() {
     setIsSearched(true); // 검색 버튼을 눌렀을 때에만 결과값을 표시하기 위해 상태를 업데이트합니다.
 
     // 검색어를 기반으로 사용자 목록을 필터링합니다.
-    const searchResult = applySortFilter(USERLIST, getComparator(order, orderBy), searchQuery);
+    const searchResult = applySortFilter(users, getComparator(order, orderBy), searchQuery);
 
     // 필터링된 결과를 화면에 표시하기 위해 filteredUsers 상태를 업데이트합니다.
     setFilterName(searchQuery); // 검색어를 입력창에 표시하기 위해 filterName 상태를 업데이트합니다.
@@ -211,11 +232,11 @@ export default function SchedulePage() {
     setFilteredUsers(searchResult);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - users.length) : 0;
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
-  const filterUser = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
+  const filterUser = applySortFilter(users, getComparator(order, orderBy), filterName);
 
   // Snackbar 열기 함수
   const handleOpenSnackbar = () => {
@@ -235,6 +256,15 @@ export default function SchedulePage() {
     setScheduleModalOpen(false);
     handleCloseMenu();
   };
+
+  const formatTime = (time) => {
+    const [hours, minutes] = time.split(":");
+    return `${hours}:${minutes}`;
+  }
+
+  useEffect(() => {
+    getUserList();
+  }, [startDate, endDate]);
 
   return (
     <>
@@ -278,31 +308,31 @@ export default function SchedulePage() {
                 />
                 <TableBody>
                   {filterUser.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { date, id, name, depart, rank, workType, workStart, workEnd, workHour, workState } = row;
+                    const { settlementId ,date, userId, startTime, endTime, name, dept, position, workGroupType, workingTime, overtime, workState, startWork, leaveWork } = row;
 
                     return (
-                      <TableRow hover key={id}>
+                      <TableRow hover key={settlementId}>
                         <TableCell padding="checkbox">{}</TableCell>
 
                         <TableCell align="left">{formatDate(date)}</TableCell>
 
-                        <TableCell align="center">{id}</TableCell>
+                        <TableCell align="center">{userId}</TableCell>
 
                         <TableCell align="left">{name}</TableCell>
 
-                        <TableCell align="left">{depart}</TableCell>
+                        <TableCell align="left">{dept}</TableCell>
 
-                        <TableCell align="left">{rank}</TableCell>
+                        <TableCell align="left">{position}</TableCell>
 
-                        <TableCell align="left">{workType}</TableCell>
+                        <TableCell align="left">{workGroupType}</TableCell>
 
-                        <TableCell align="left">{workStart}(08:40)</TableCell>
+                        <TableCell align="left">{formatTime(startTime)}({formatTime(startWork)})</TableCell>
 
-                        <TableCell align="left">{workEnd}(19:30)</TableCell>
+                        <TableCell align="left">{formatTime(endTime)}({formatTime(leaveWork)})</TableCell>
 
-                        <TableCell align="left">{workHour}</TableCell>
+                        <TableCell align="left">{formatTime(workingTime)}</TableCell>
 
-                        <TableCell align="left">02:00</TableCell>
+                        <TableCell align="left">{formatTime(overtime)}</TableCell>
 
                         <TableCell align="left">
                           {workState === '정상처리' ? (
@@ -322,10 +352,9 @@ export default function SchedulePage() {
                             color="inherit"
                             onClick={(event) => {
                               handleOpenMenu(event, row);
+                              setUserData(row);
                             }}
                           >
-                            {console.log(row.id)}
-                            {console.log(editUserId)}
                             <Iconify icon={'eva:more-vertical-fill'} />
                           </IconButton>
                         </TableCell>
@@ -369,7 +398,7 @@ export default function SchedulePage() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={filteredUsers.length}
+            count={users.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -405,7 +434,7 @@ export default function SchedulePage() {
           수정
         </MenuItem>
 
-        <ScheduleModal open={scheduleModalOpen} onClose={handleCloseModal} editUserId={editUserId} />
+        <ScheduleModal open={scheduleModalOpen} onClose={handleCloseModal} userData={userData} />
 
         <MenuItem onClick={handleDeleteConfirmOpen} sx={{ color: 'error.main' }}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
