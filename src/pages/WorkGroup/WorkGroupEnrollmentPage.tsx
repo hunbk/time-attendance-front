@@ -254,21 +254,21 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
 
     console.log(dataToBeSent);
 
-    // fetch('http://localhost:8080/api/workgroups', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(dataToBeSent),
-    // })
-    //   .then((response) => response.text())
-    //   .then((data) => {
-    //     alert(data);
-    //     window.location.href = "http://localhost:3000/dashboard/workgroups";
-    //   })
-    //   .catch((error) => {
-    //     console.error(error);
-    //   });
+    fetch('http://localhost:8080/api/workgroups', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataToBeSent),
+    })
+      .then((response) => response.text())
+      .then((data) => {
+        alert(data);
+        window.location.href = "http://localhost:3000/dashboard/workgroups";
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   return (
