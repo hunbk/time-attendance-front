@@ -307,7 +307,7 @@ export default function PrivilegeAdd() {
       <Helmet>
         <title>관리자 추가</title>
       </Helmet>
-      <Container>
+      <Container maxWidth="xl">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
             사원 목록
