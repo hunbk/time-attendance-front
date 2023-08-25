@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
 // @mui
 import {
   Card,
@@ -40,17 +40,17 @@ import { useAuthState } from '../../context/AuthProvider';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'date', label: '근무일자'},
-  { id: 'userId', label: '사원번호'},
-  { id: 'name', label: '이름'},
-  { id: 'dept', label: '부서'},
-  { id: 'position', label: '직급'},
-  { id: 'workGroupType', label: '근무제유형'},
-  { id: 'start', label: '근무시작시간'},
-  { id: 'end', label: '근무종료시간'},
-  { id: 'workingTime', label: '소정근무시간'},
-  { id: 'overtime', label: '초과근무시간'},
-  { id: 'workState', label: '처리상태'},
+  { id: 'date', label: '근무일자' },
+  { id: 'userId', label: '사원번호' },
+  { id: 'name', label: '이름' },
+  { id: 'dept', label: '부서' },
+  { id: 'position', label: '직급' },
+  { id: 'workGroupType', label: '근무제유형' },
+  { id: 'start', label: '근무시작시간' },
+  { id: 'end', label: '근무종료시간' },
+  { id: 'workingTime', label: '소정근무시간' },
+  { id: 'overtime', label: '초과근무시간' },
+  { id: 'workState', label: '처리상태' },
   { id: '' },
 ];
 
@@ -106,12 +106,12 @@ export default function SchedulePage() {
   const [users, setUsers] = useState([]);
 
   // 회사 목록 조회 API
-  const getUserList = async() => {
-    const start = startDate.toISOString().substring(0,10);
-    const end = endDate.toISOString().substring(0,10);
+  const getUserList = async () => {
+    const start = startDate.toISOString().substring(0, 10);
+    const end = endDate.toISOString().substring(0, 10);
     const res = await loginAxios.get(`/api/settlements?companyId=${user.companyId}&start=${start}&end=${end}`);
     setUsers(res.data);
-  }
+  };
 
   useEffect(() => {
     getUserList();
@@ -136,8 +136,8 @@ export default function SchedulePage() {
   const [filteredUsers, setFilteredUsers] = useState(users);
 
   // 기본적으로 Calendar 숨기고 open하면 Date에 new Date() 설정함
-  const [startDate, setStartDate] = useState(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));;
-  const [endDate, setEndDate] = useState(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));;
+  const [startDate, setStartDate] = useState(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));
+  const [endDate, setEndDate] = useState(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));
   const [isSearched, setIsSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
 
   // 수정 대상 회원의 id를 저장
@@ -146,6 +146,12 @@ export default function SchedulePage() {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  const [editSnackbar, setEditSnackbar] = useState(false);
+
+  const handleEditSnackbarChange = (newValue) => {
+    setEditSnackbar(newValue);
+  };
 
   const handleDeleteConfirmOpen = () => {
     setDeleteConfirmOpen(true);
@@ -246,6 +252,7 @@ export default function SchedulePage() {
   // Snackbar 닫기 함수
   const handleCloseSnackbar = () => {
     setDeleteSnackbar(false);
+    setEditSnackbar(false);
   };
 
   const handleOpenModal = () => {
@@ -258,9 +265,9 @@ export default function SchedulePage() {
   };
 
   const formatTime = (time) => {
-    const [hours, minutes] = time.split(":");
+    const [hours, minutes] = time.split(':');
     return `${hours}:${minutes}`;
-  }
+  };
 
   useEffect(() => {
     getUserList();
@@ -308,7 +315,22 @@ export default function SchedulePage() {
                 />
                 <TableBody>
                   {filterUser.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { settlementId ,date, userId, startTime, endTime, name, dept, position, workGroupType, workingTime, overtime, workState, startWork, leaveWork } = row;
+                    const {
+                      settlementId,
+                      date,
+                      userCode,
+                      startTime,
+                      endTime,
+                      name,
+                      dept,
+                      position,
+                      workGroupType,
+                      workingTime,
+                      overtime,
+                      workState,
+                      startWork,
+                      leaveWork,
+                    } = row;
 
                     return (
                       <TableRow hover key={settlementId}>
@@ -316,7 +338,7 @@ export default function SchedulePage() {
 
                         <TableCell align="left">{formatDate(date)}</TableCell>
 
-                        <TableCell align="center">{userId}</TableCell>
+                        <TableCell align="center">{userCode}</TableCell>
 
                         <TableCell align="left">{name}</TableCell>
 
@@ -326,18 +348,26 @@ export default function SchedulePage() {
 
                         <TableCell align="left">{workGroupType}</TableCell>
 
-                        <TableCell align="left">{formatTime(startTime)}({formatTime(startWork)})</TableCell>
+                        <TableCell align="left">
+                          {formatTime(startTime)}({formatTime(startWork)})
+                        </TableCell>
 
-                        <TableCell align="left">{formatTime(endTime)}({formatTime(leaveWork)})</TableCell>
+                        <TableCell align="left">
+                          {formatTime(endTime)}({formatTime(leaveWork)})
+                        </TableCell>
 
                         <TableCell align="left">{formatTime(workingTime)}</TableCell>
 
                         <TableCell align="left">{formatTime(overtime)}</TableCell>
 
                         <TableCell align="left">
-                          {workState === '정상처리' ? (
+                          {workState === '정상근무' ? (
                             <Stack direction="row" alignItems="center" spacing={1}>
                               <Label color="info">정상처리</Label>
+                            </Stack>
+                          ) : workState === '근태이상' ? (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Label color="error">근태이상</Label>
                             </Stack>
                           ) : (
                             <Stack direction="row" alignItems="center" spacing={1}>
@@ -434,7 +464,14 @@ export default function SchedulePage() {
           수정
         </MenuItem>
 
-        <ScheduleModal open={scheduleModalOpen} onClose={handleCloseModal} userData={userData} />
+        <ScheduleModal 
+        open={scheduleModalOpen} 
+        onClose={handleCloseModal} 
+        userData={userData} 
+        editSnackbar={editSnackbar} 
+        onEditSnackbarChange={handleEditSnackbarChange} 
+        getUserList={getUserList}
+        />
 
         <MenuItem onClick={handleDeleteConfirmOpen} sx={{ color: 'error.main' }}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
@@ -470,6 +507,21 @@ export default function SchedulePage() {
           삭제되었습니다!
         </Alert>
       </Snackbar>
+
+      <Snackbar
+          open={editSnackbar}
+          autoHideDuration={2000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'center',
+          }}
+          sx={{ width: 400 }}
+        >
+          <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+            수정되었습니다!
+          </Alert>
+        </Snackbar>
     </>
   );
 }

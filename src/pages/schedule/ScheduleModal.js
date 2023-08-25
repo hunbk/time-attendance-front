@@ -10,7 +10,7 @@ import {
   Snackbar,
   Alert,
   TableContainer,
-  Divider,
+  Stack,
 } from '@mui/material';
 // components
 
@@ -18,6 +18,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import Label from '../../components/label';
 
 // mock
 import USERLIST from '../../_mock/privilege';
@@ -28,7 +29,7 @@ import loginAxios from '../../api/loginAxios';
 // 유저 상태
 import { useAuthState } from '../../context/AuthProvider';
 
-const ScheduleModal = ({ open, onClose, userData }) => {
+const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarChange, getUserList }) => {
   const formatTime = (time) => {
     const [hours, minutes] = time.split(':');
     return `${hours}:${minutes}`;
@@ -42,21 +43,14 @@ const ScheduleModal = ({ open, onClose, userData }) => {
   const [workingTime, setWorkingTime] = useState(formatTime(userData.workingTime));
   const [overtime, setOvertime] = useState(formatTime(userData.overtime));
   const [workState, setWorkState] = useState(userData.workState);
-  const [selectedStartTime, setSelectedStartTime] = useState(startTime);
-  const [confirmEditOpen, setConfirmEditOpen] = useState(false);
 
-  const [editSnackbar, setEditSnackbar] = useState(false);
+  const [confirmEditOpen, setConfirmEditOpen] = useState(false);
 
   const [warningModalOpen, setWarningModalOpen] = useState(false);
 
   // Snackbar 열기 함수
   const handleOpenSnackbar = () => {
-    setEditSnackbar(true);
-  };
-
-  // Snackbar 닫기 함수
-  const handleCloseSnackbar = () => {
-    setEditSnackbar(false);
+    onEditSnackbarChange(true);
   };
 
   const handleConfirmEditOpen = () => {
@@ -67,9 +61,27 @@ const ScheduleModal = ({ open, onClose, userData }) => {
     setConfirmEditOpen(false);
   };
 
-  const handleConfirmEdit = () => {
+  const handleConfirmEdit = async () => {
+    const startTimeDate = startTime;
+    const endTimeDate = endTime;
+    const workingTimeDate = workingTime;
+    const overtimeDate = overtime;
+    const settlementId = userData.settlementId;
+    
+
+    const editedData = {
+      startTime: startTimeDate, // Date 객체를 보내기
+      endTime: endTimeDate, // Date 객체를 보내기
+      workingTime: workingTimeDate,// Date 객체를 보내기
+      overtime: overtimeDate, // Date 객체를 보내기
+      workState, // workState을 String 형태 그대로 보내기
+      settlementId
+    };
+    await loginAxios.patch('/api/settlements', editedData);
     handleOpenSnackbar();
     handleConfirmEditClose();
+    getUserList();
+    onClose();
   };
 
   const handleStartTime = (event) => {
@@ -146,22 +158,10 @@ const ScheduleModal = ({ open, onClose, userData }) => {
       }
     });
 
-    console.log(startTimes);
-    console.log(endTimes);
-    console.log(timeRangeTypes);
-
-    console.log(breakIndexes); // 휴게 인덱스
-    console.log(workIndexes); // 근무 인덱스
-    console.log(approvedIndex); // 승인 인덱스
-    console.log(dutyIndexes); // 의무 인덱스
-
     const startInMinutes = start[0] * 60 + start[1];
     const endInMinutes = end[0] * 60 + end[1];
     const startapproved = startTimes[approvedIndex][0] * 60 + startTimes[approvedIndex][1];
     const endapproved = endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
-
-    console.log(start);
-    console.log(end);
 
     // 총 근무 시간을 계산하기 위한 변수를 초기화합니다.
     let totalWorkingTimeInMinutes = endInMinutes - startInMinutes; // 소정 근무 시간
@@ -174,7 +174,6 @@ const ScheduleModal = ({ open, onClose, userData }) => {
       console.log('의무 시간 검사');
 
       if (startduty < startInMinutes || endduty > endInMinutes) {
-        console.log('의무 시간 오류');
         handleWarningModalOpen();
       }
     });
@@ -303,7 +302,7 @@ const ScheduleModal = ({ open, onClose, userData }) => {
                   name="id"
                   label="사원번호"
                   fullWidth
-                  value={userData.userId}
+                  value={userData.userCode}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
                   InputProps={{
@@ -390,7 +389,7 @@ const ScheduleModal = ({ open, onClose, userData }) => {
                       const [hours, minutes] = userData.start.split(', ')[index].split(':');
                       const timeString = `${hours}:${minutes}`;
                       console.log(timeString);
-                      console.log(selectedStartTime);
+
                       return (
                         <MenuItem key={timeString} value={timeString}>
                           {timeString}
@@ -480,9 +479,21 @@ const ScheduleModal = ({ open, onClose, userData }) => {
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
                 >
-                  <MenuItem value="정상근무">정상처리</MenuItem>
-                  <MenuItem value="미처리">미처리</MenuItem>
-                  <MenuItem value="근태이상">근태이상</MenuItem>
+                  <MenuItem value="정상근무">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Label color="info">정상처리</Label>
+                    </Stack>
+                  </MenuItem>
+                  <MenuItem value="근태이상">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Label color="error">근태이상</Label>
+                    </Stack>
+                  </MenuItem>
+                  <MenuItem value="미처리">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Label color="default">미처리</Label>
+                    </Stack>
+                  </MenuItem>
                 </TextField>
 
                 {/* 필요한 다른 입력 필드들 추가 */}
@@ -504,7 +515,13 @@ const ScheduleModal = ({ open, onClose, userData }) => {
           <DialogTitle>수정 확인</DialogTitle>
           <DialogContent>선택한 정보를 수정하시겠습니까?</DialogContent>
           <DialogActions>
-            <Button onClick={handleConfirmEdit} color="secondary" variant="contained">
+            <Button
+              onClick={() => {
+                handleConfirmEdit();
+              }}
+              color="secondary"
+              variant="contained"
+            >
               수정
             </Button>
             <Button onClick={handleConfirmEditClose} color="primary" variant="outlined">
@@ -522,21 +539,6 @@ const ScheduleModal = ({ open, onClose, userData }) => {
             </Button>
           </DialogActions>
         </Dialog>
-
-        <Snackbar
-          open={editSnackbar}
-          autoHideDuration={2000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
-          }}
-          sx={{ width: 400 }}
-        >
-          <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-            수정되었습니다!
-          </Alert>
-        </Snackbar>
       </Dialog>
     </Modal>
   );
