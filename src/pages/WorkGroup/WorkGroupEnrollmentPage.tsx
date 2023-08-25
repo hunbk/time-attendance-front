@@ -22,6 +22,7 @@ import { useImmer } from "use-immer";
 import TimeInputDiv from "../../components/workGroup/TimeInputDiv";
 import HolidayPayLeave from "../../components/workGroup/HolidayPayLeave";
 import { DataToBeModifiedType } from './WorkGroupIndexPage';
+import { useAuthState } from '../../context/AuthProvider';
 
 type WorkGroupEnrollmentPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -40,22 +41,25 @@ type WorkDayTypeType = {
 }
 
 export type DataType = {
+  id: number,
   name: string;
-  type: 'n' | 'f';
+  type: "일반" | "시차";
   workDayType: WorkDayTypeType,
-  timeRangeType: ("work" | "break" | "approved" | "compulsory")[],
+  timeRangeType: string[],
   start: string[],
   end: string[],
+  companyId: number
 }
 
 const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGroupListHidden, dataToBeModified, setDataToBeModified }) => {
+  const { user } = useAuthState();
   const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
   const handleHour = (startOrEnd: string, timeType: string, value: Dayjs | null) => {
     setHours((draft) => {
       draft[timeType][startOrEnd] = value?.format('HH:mm:ss');
     })
   }
-  const getTimeRangeByType = (timeRangeType: ("work" | "break" | "approved" | "compulsory")[], start: string[], end: string[], targetType: "work" | "break" | "approved" | "compulsory") => {
+  const getTimeRangeByType = (timeRangeType: string[], start: string[], end: string[], targetType: string) => {
     const matchedRanges = [];
 
     for (let i = 0; i < timeRangeType.length; i += 1) {
@@ -67,7 +71,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     return matchedRanges;
 
   }
-  const timeInputDivSet = (timeType: "work" | "break" | "approved" | "compulsory") =>
+  const timeInputDivSet = (timeType: string) =>
   (dataToBeModified ? <>{getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, timeType).map((matchedRange, index) => <Fragment key={index}>
     <TimeInputDiv
       handleTempHour={handleHour}
@@ -97,17 +101,18 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
   </>);
 
   const [timeInputDivsBreak, setTimeInputDivsBreak] = useState([
-    timeInputDivSet("break")
+    timeInputDivSet("휴게")
   ]);
   const [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
-    timeInputDivSet("compulsory")
+    timeInputDivSet("의무")
   ]);
   const [alignments, setAlignments] = useState<string[]>(dataToBeModified ? dataToBeModified.alignments.work : []);
   const [dayHolidays, setDayHolidays] = useState<string[]>(dataToBeModified ? DAYS.filter(day => !dataToBeModified.alignments.work.includes(day)) : []);
   const [holidayOnOff, setHolidayOnOff] = useState<"on" | "off">("on");
   const [data, setData] = useImmer<DataType>({
+    id: 0,
     name: "",
-    type: 'n',
+    type: dataToBeModified ? dataToBeModified.contents.type : "일반",
     workDayType: {
       mon: '무급',
       tue: '무급',
@@ -120,29 +125,30 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     timeRangeType: [],
     start: [],
     end: [],
+    companyId: user.companyId
   });
   const [hours, setHours] = useImmer({
-    work: {
+    근무: {
       start: '',
       end: '',
     },
-    break: {
+    휴게: {
       start: '',
       end: '',
     },
-    compulsory: {
+    의무: {
       start: '',
       end: '',
     },
-    approved: {
+    승인: {
       start: '',
       end: '',
     }
   })
   const [isChecked, setIsChecked] = useImmer({
-    break: true,
-    compulsory: true,
-    approved: true,
+    휴게: true,
+    의무: true,
+    승인: true,
   });
   useEffect(() => {
     if (dataToBeModified) {
@@ -150,20 +156,46 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  const addTimeInputDiv = (divKind: "break" | "compulsory") => {
+  const addTimeInputDiv = (divKind: "휴게" | "의무") => {
     setData((draft) => {
       draft.timeRangeType.push(divKind);
       draft.start.push(hours[divKind].start);
       draft.end.push(hours[divKind].end);
     })
 
-    if (divKind === "break") {
-      setTimeInputDivsBreak([...timeInputDivsBreak, timeInputDivSet("break")]);
+    if (divKind === "휴게") {
+      setTimeInputDivsBreak([...timeInputDivsBreak, timeInputDivSet("휴게")]);
     } else {
-      setTimeInputDivsCompulsory([...timeInputDivsCompulsory, timeInputDivSet("compulsory")]);
+      setTimeInputDivsCompulsory([...timeInputDivsCompulsory, timeInputDivSet("의무")]);
     }
   };
-  const handleCheckboxChange = (type: "break" | "approved" | "compulsory") => {
+  const handleCheckboxChange = (type: "휴게" | "승인" | "의무") => {
+    if (isChecked) {
+      setData((draft) => {
+        if (draft.timeRangeType.includes(type)) {
+          const indexArr: number[] = [];
+
+          for (let i = 0; i < draft.timeRangeType.length; i += 1) {
+            if (draft.timeRangeType[i] === type) {
+              indexArr.push(i);
+            }
+          }
+
+          for (let i = indexArr.length - 1; i >= 0; i -= 1) {
+            draft.timeRangeType.splice(indexArr[i], 1);
+            draft.start.splice(indexArr[i], 1);
+            draft.end.splice(indexArr[i], 1);
+          }
+        }
+      })
+      setHours((draft) => {
+        draft[type].start = '';
+        draft[type].end = '';
+      })
+    } else {
+
+      // 수정중
+    }
     setIsChecked((draft) => { draft[type] = !draft[type] });
   };
   const handleToggle = (_event: MouseEvent<HTMLElement>, newAlignment: string[]) => {
@@ -197,21 +229,30 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
 
     let dataToBeSent: DataType = data;
 
-    dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "work"] };
-    dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.work.start] };
-    dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.work.end] };
+    if (hours.근무.start !== '') {
+      dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "근무"] };
+      dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.근무.start] };
+      dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.근무.end] };
+    }
 
-    dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "break"] };
-    dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.break.start] };
-    dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.break.end] };
+    if (hours.휴게.start !== '') {
+      dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "휴게"] };
+      dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.휴게.start] };
+      dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.휴게.end] };
+    }
 
-    dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "compulsory"] };
-    dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.compulsory.start] };
-    dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.compulsory.end] };
+    if (hours.의무.start !== '') {
+      dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "의무"] };
+      dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.의무.start] };
+      dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.의무.end] };
 
-    dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "approved"] };
-    dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.approved.start] };
-    dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.approved.end] };
+    }
+
+    if (hours.승인.start !== '') {
+      dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "승인"] };
+      dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.승인.start] };
+      dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.승인.end] };
+    }
 
     console.log(dataToBeSent);
 
@@ -260,17 +301,17 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
               <FormControl>
                 <RadioGroup
                   value={data.type}
-                  defaultValue='n'
+                  defaultValue={'일반'}
                   row
-                  onChange={(e) => setData({ ...data, type: e.target.value as 'n' | 'f' })}
+                  onChange={(e) => setData({ ...data, type: e.target.value as "일반" | "시차" })}
                 >
                   <FormControlLabel
-                    value='n'
+                    value="일반"
                     control={<Radio />}
                     label="일반근로제"
                   />
                   <FormControlLabel
-                    value='f'
+                    value="시차"
                     control={<Radio />}
                     label="시차출퇴근제"
                   />
@@ -350,60 +391,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
               <HolidayPayLeave key={dayHoliday + index} dayHoliday={dayHoliday} defaultPayLeave={dataToBeModified ? dataToBeModified.alignments.payLeave.includes(dayHoliday) : false} updateDayHoliday={updateDayHoliday} />
             ) : <></>}
           </Grid>
-          {/* <Grid xs={3}> </Grid>
-          <Grid xs={9}>
-            <Box display={"flex"}>
-              <Stack direction="row" spacing={1}>
-                <Chip
-                  label={`출근시간 ??:??`}
-                  onDelete={handleDelete}
-                />
-                <Chip label="Deletable" variant="outlined" onDelete={handleDelete} />
-              </Stack>
-              <AddCircleOutlineIcon />
-            </Box>
-          </Grid> */}
-          {/* <Grid xs={3}>
-            <span>근무테이블</span>
-          </Grid>
-          <Grid xs={9}>
-            ResponsiveBar
-            <ResponsiveBar
-              data={[
-                {
-                  work: 8,
-                  workColor: "hsl(73, 70%, 50%)",
-                  break: 1,
-                  breakColor: "hsl(360, 70%, 50%)",
-                  compulsory: 8,
-                  compulsoryColor: "hsl(136, 70%, 50%)",
-                  overTime: 8,
-                  overTimeColor: "hsl(43, 70%, 50%)",
-                },
-              ]}
-              keys={["work", "break", "compulsory", "overTime"]}
-              padding={0.3}
-              layout="horizontal"
-              valueScale={{ type: "linear" }}
-              indexScale={{ type: "band", round: true }}
-              colors={{ scheme: "nivo" }}
-              borderColor={{
-                from: "color",
-                modifiers: [["darker", 1.6]],
-              }}
-              labelSkipWidth={12}
-              labelSkipHeight={12}
-              labelTextColor={{
-                from: "color",
-                modifiers: [["darker", 1.6]],
-              }}
-              role="application"
-              ariaLabel="Nivo bar chart demo"
-              barAriaLabel={(e) =>
-                e.id + ": " + e.formattedValue + " in country: " + e.indexValue
-              }
-            />
-          </Grid> */}
           <Grid xs={3}>
             <div>시간입력</div>
             <div>선택적근로시간제 상세시간 및 설정값을 입력합니다.</div>
@@ -420,15 +407,15 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                     근무시작 및 종료시각을 근로자의 결정으로 선택할 수 있는
                     시간대를 입력합니다.
                   </div>
-                  {timeInputDivSet("work")}
+                  {timeInputDivSet("근무")}
                 </Grid>
                 <Grid xs={3}>
                   <span>휴게시간</span>
                 </Grid>
                 <Grid xs={1}>
-                  <Checkbox defaultChecked onChange={() => handleCheckboxChange("break")} />
+                  <Checkbox defaultChecked onChange={() => handleCheckboxChange("휴게")} />
                 </Grid>
-                {isChecked.break ? <Grid xs={8}>
+                {isChecked.휴게 ? <Grid xs={8}>
                   <div>휴게시간 설정을 사용합니다.</div>
                   <div>휴게시간 시작시간과 종료시간을 입력합니다.</div>
                   {timeInputDivsBreak.map((div, index) =>
@@ -436,7 +423,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                   )}
                   <Button
                     onClick={() => {
-                      addTimeInputDiv("break");
+                      addTimeInputDiv("휴게");
                     }}
                   >
                     <AddIcon sx={{ border: "1px solid" }} />
@@ -446,9 +433,9 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                   <span>의무근로시간대</span>
                 </Grid>
                 <Grid xs={1}>
-                  <Checkbox defaultChecked onChange={() => handleCheckboxChange("compulsory")} />
+                  <Checkbox defaultChecked onChange={() => handleCheckboxChange("의무")} />
                 </Grid>
-                {isChecked.compulsory ? <Grid xs={8}>
+                {isChecked.의무 ? <Grid xs={8}>
                   <div>의무근로시간대 설정을 사용합니다.</div>
                   <div>
                     업무협조 및 업무특성을 감안하여 반드시 근무해야하는 시간을
@@ -459,7 +446,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                   )}
                   <Button
                     onClick={() => {
-                      addTimeInputDiv("compulsory");
+                      addTimeInputDiv("의무");
                     }}
                   >
                     <AddIcon sx={{ border: "1px solid" }} />
@@ -469,15 +456,15 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                   <span>승인근로시간대</span>
                 </Grid>
                 <Grid xs={1}>
-                  <Checkbox defaultChecked onChange={() => handleCheckboxChange("approved")} />
+                  <Checkbox defaultChecked onChange={() => handleCheckboxChange("승인")} />
                 </Grid>
-                {isChecked.approved ? <Grid xs={8}>
+                {isChecked.승인 ? <Grid xs={8}>
                   <div>승인근로시간대 설정을 사용합니다.</div>
                   <div>
                     사전에 승인을 받은 경우에만 근로시간으로 인정하는 시간을
                     입력할 수 있는 시간대를 설정합니다.
                   </div>
-                  {timeInputDivSet("approved")}
+                  {timeInputDivSet("승인")}
                 </Grid> : <Grid xs={8}> </Grid>}
               </Grid>
             </Card>

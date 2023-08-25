@@ -17,10 +17,18 @@ export type DataToBeModifiedType = {
     }
 }
 
+export type WorkGroupSimpleType = {
+    id: number;
+    name: string;
+    type: string;
+    numOfMembers: number;
+}
+
 const WorkGroupIndexPage: FC = () => {
     const [currentTabIndex, setCurrentTabIndex] = useState<number>(0);
     const [isWorkGroupListHidden, setIsWorkGroupListHidden] = useState<boolean>(false);
     const [dataToBeModified, setDataToBeModified] = useState<DataToBeModifiedType>(null);
+    const [workGroupSimple, setWorkGroupSimple] = useState<WorkGroupSimpleType[]>([]);
     const handleChange = (_event: SyntheticEvent, newValue: number) => {
         setCurrentTabIndex(newValue);
     };
@@ -34,10 +42,10 @@ const WorkGroupIndexPage: FC = () => {
                 </Tabs>
             </Box>
             <CustomTabPanel value={currentTabIndex} index={0}>
-                {isWorkGroupListHidden ? <WorkGroupEnrollmentPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} dataToBeModified={dataToBeModified} setDataToBeModified={setDataToBeModified} /> : <WorkGroupListPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} setDataToBeModified={setDataToBeModified} />}
+                {isWorkGroupListHidden ? <WorkGroupEnrollmentPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} dataToBeModified={dataToBeModified} setDataToBeModified={setDataToBeModified} /> : <WorkGroupListPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} setDataToBeModified={setDataToBeModified} setWorkGroupSimple={setWorkGroupSimple}/>}
             </CustomTabPanel>
             <CustomTabPanel value={currentTabIndex} index={1}>
-                <DistributionIndexPage />
+                <DistributionIndexPage workGroupSimple={workGroupSimple} />
             </CustomTabPanel>
         </Box>
     )

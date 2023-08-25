@@ -6,7 +6,7 @@ import { useState } from 'react';
 type TimeInputDivProps = {
     handleTempHour: (startOrEnd: string, timeType: string, value: Dayjs | null) => void;
     startOrEnd: "start" | "end";
-    timeType: "work" | "break" | "compulsory" | "approved";
+    timeType: string;
     defaultValue: Dayjs;
 }
 

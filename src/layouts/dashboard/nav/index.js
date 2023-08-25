@@ -17,8 +17,6 @@ import NavWork from '../../../components/nav-work/NavWork';
 
 // ----------------------------------------------------------------------
 
-const url = `${process.env.PUBLIC_URL}/assets/logo2.svg`;
-
 const NAV_WIDTH = 280;
 
 const StyledAccount = styled('div')(({ theme }) => ({

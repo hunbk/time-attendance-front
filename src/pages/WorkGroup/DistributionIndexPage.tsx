@@ -7,32 +7,70 @@ import DistributionPage from './DistributionPage';
 import WorkGroupCard from 'src/components/workGroup/WorkGroupCard';
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
 import CustomTabPanel from 'src/components/workGroup/CustomTabPanel';
+import { WorkGroupSimpleType } from './WorkGroupIndexPage';
+import { useAuthState } from '../../context/AuthProvider';
 
-type WorkGroupSimpleType = {
-    id: number;
-    name: string;
-    type: string;
-    numOfMembers: number;
+type DistributionIndexPageProps = {
+    workGroupSimple: WorkGroupSimpleType[];
 }
 
-type DeptType = {
-    id: number;
+export type UserResponseDtoType = {
+    userId: number;
     name: string;
+    email: string;
+    phone: string;
+    hireDate: Date;
+    birthday: Date;
+    dept: string;
+    position: string;
+    role: string;
+    distribution: boolean;
+    companyId: number
 }
 
-const DistributionIndexPage: FC = () => {
+export type UserResponseDtoWrappedType = {
+    id: number;
+    userId: number;
+    name: string;
+    email: string;
+    phone: string;
+    hireDate: Date;
+    birthday: Date;
+    dept: string;
+    position: string;
+    role: string;
+    distribution: boolean;
+    companyId: number
+}
+
+const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple }) => {
+    const { user } = useAuthState();
+    const [userListWrappedD, setUserListWrappedD] = useState<UserResponseDtoWrappedType[]>([]);
+    const [userListWrappedND, setUserListWrappedND] = useState<UserResponseDtoWrappedType[]>([]);
     const [currentTabIndex, setCurrentTabIndex] = useState<number>(0);
-    const [workGroupSimple, setWorkGroupSimple] = useState<WorkGroupSimpleType[]>([]);
-    const [deptList, setDeptList] = useState<DeptType[]>([]);
-    const [selectedWorkGroupId, setSelectedWorkGroupId] = useState<number>(0);
-    const handleSelectedWorkGroupId = (id: number) => {
-        setSelectedWorkGroupId(id);
+    const [deptList, setDeptList] = useState<string[]>([]);
+    const [selectedWorkGroup, setSelectedWorkGroup] = useState<WorkGroupSimpleType>({
+        id: 0,
+        name: "",
+        type: "일반",
+        numOfMembers: 0
+    });
+    const handleSelectedWorkGroup = (id: number, name: string, type: string, numOfMembers: number) => {
+        const tempWorkGroupSimple = {
+            id,
+            name,
+            type,
+            numOfMembers
+        }
+
+        setSelectedWorkGroup(tempWorkGroupSimple);
     };
-    const handleChange = (event: SyntheticEvent, newValue: number) => {
+    const handleChange = (_event: SyntheticEvent, newValue: number) => {
         setCurrentTabIndex(newValue);
     };
-    const getWorkGroupSimpleData = async () => {
-        const url = `http://localhost:8080/api/workgroups-simple`;
+
+    const getUsers = async () => {
+        const url = `http://localhost:8080/api/users?companyId=${user.companyId}`;
 
         const response = await fetch(url, {
             method: "GET",
@@ -41,24 +79,37 @@ const DistributionIndexPage: FC = () => {
             },
         });
 
-        response.json().then((data) => setWorkGroupSimple(data));
+        response.json().then((data: UserResponseDtoType[]) => {
+            setDeptList([...new Set(data.map(UserResponseDto => UserResponseDto.dept))]);
+            wrapIdForUserList(data);
+        });
     }
-    const getAllDeptsData = async () => {
-        const url = `http://localhost:8080/api/findAllDepts`;
 
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            },
+    // Add id property and filter by distribution
+    const wrapIdForUserList = (userList: UserResponseDtoType[]) => {
+        const tempUserListWrappedD = [];
+        const tempUserListWrappedND = [];
+
+        userList.forEach((user) => {
+            const userListWrapped = {
+                ...user, id: user.userId
+            }
+
+            if (userListWrapped.position !== "관리자" && userListWrapped.userId !== 1 && userListWrapped.userId !== 2) {
+                if (userListWrapped.distribution === true) {
+                    tempUserListWrappedD.push(userListWrapped);
+                } else {
+                    tempUserListWrappedND.push(userListWrapped);
+                }
+            }
         });
 
-        response.json().then((data) => setDeptList(data));
+        setUserListWrappedD(tempUserListWrappedD);
+        setUserListWrappedND(tempUserListWrappedND);
     }
 
     useEffect(() => {
-        getWorkGroupSimpleData();
-        getAllDeptsData();
+        getUsers();
     }, []);
 
     return (
@@ -67,7 +118,7 @@ const DistributionIndexPage: FC = () => {
                 <Box sx={{ width: '100%' }}>
                     근로그룹목록
                     <Stack spacing={2}>
-                        {workGroupSimple.length !== 0 && workGroupSimple.map((item, index) => <WorkGroupCard key={index} id={item.id} name={item.name} type={item.type} numOfMembers={item.numOfMembers} handleSelectedWorkGroupId={handleSelectedWorkGroupId} />)}
+                        {workGroupSimple.length !== 0 && workGroupSimple.map((item, index) => <WorkGroupCard key={index} id={item.id} name={item.name} type={item.type} numOfMembers={item.numOfMembers} handleSelectedWorkGroup={handleSelectedWorkGroup} />)}
                     </Stack>
                 </Box>
             </Grid>
@@ -80,10 +131,10 @@ const DistributionIndexPage: FC = () => {
                         </Tabs>
                     </Box>
                     <CustomTabPanel value={currentTabIndex} index={0}>
-                        <DistributionPage deptList={deptList} selectedWorkGroupId={selectedWorkGroupId} isDistributed={false} />
+                        <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} deptList={deptList} selectedWorkGroup={selectedWorkGroup} isDistributed={false} />
                     </CustomTabPanel>
                     <CustomTabPanel value={currentTabIndex} index={1}>
-                        <DistributionPage deptList={deptList} selectedWorkGroupId={selectedWorkGroupId} isDistributed />
+                        <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} deptList={deptList} selectedWorkGroup={selectedWorkGroup} isDistributed />
                     </CustomTabPanel>
                 </Box>
             </Grid>
