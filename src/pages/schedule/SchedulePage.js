@@ -279,7 +279,7 @@ export default function SchedulePage() {
         <title> User | Minimal UI </title>
       </Helmet>
 
-      <Container>
+      <Container maxWidth="xl">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
             정산목록
