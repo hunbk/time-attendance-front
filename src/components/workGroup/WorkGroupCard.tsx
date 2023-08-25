@@ -16,15 +16,15 @@ type WorkGroupCardProps = {
     name: string;
     type: string;
     numOfMembers: number;
-    handleSelectedWorkGroupId: (id) => void;
+    handleSelectedWorkGroup: (id: number, name: string, type: string, numOfMembers: number) => void;
 }
 
-const WorkGroupCard: React.FC<WorkGroupCardProps> = ({ id, name, type, numOfMembers, handleSelectedWorkGroupId }) => {
+const WorkGroupCard: React.FC<WorkGroupCardProps> = ({ id, name, type, numOfMembers, handleSelectedWorkGroup }) => {
     const [isSelected, setIsSelected] = React.useState(false);
 
     const handleCardClick = () => {
         setIsSelected((prevSelected) => !prevSelected);
-        handleSelectedWorkGroupId(id);
+        handleSelectedWorkGroup(id, name, type, numOfMembers);
     };
 
     return (
