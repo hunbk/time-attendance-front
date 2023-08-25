@@ -188,7 +188,7 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                             </Button>
 
                                             <Button sx={{ color: "red" }} onClick={() => {
-                                                // handleDelete(workGroupResponseDto.id);
+                                                handleDelete(workGroupResponseDto.id);
                                                 handleClickSnackbar({ vertical: 'top', horizontal: 'center' }, "success", "삭제되었습니다.");
                                             }}>
                                                 <DeleteIcon fontSize="small" sx={{ marginRight: "10px" }} />
