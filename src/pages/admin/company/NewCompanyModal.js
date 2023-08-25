@@ -78,7 +78,7 @@ export default function NewCompanyModal({ open, onClose, getCompanyList }) {
         if (response.status === 201) {
           enqueueSnackbar('등록되었습니다!', { variant: 'success' });
           getCompanyList(); // 회사 목록 업데이트
-          onClose(); // 성공시 모달 창 닫기
+          handleClose(); // 성공시 모달 창 닫기
         }
       })
       .catch((error) => {
