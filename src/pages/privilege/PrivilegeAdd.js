@@ -22,6 +22,11 @@ import {
   Card,
   Select,
   MenuItem,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogActions,
+  DialogContentText,
 } from '@mui/material';
 // components
 import PersonIcon from '@mui/icons-material/Person';
@@ -29,10 +34,6 @@ import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
 import Label from '../../components/label';
 import Scrollbar from '../../components/scrollbar';
 // sections
@@ -142,6 +143,8 @@ export default function PrivilegeAdd() {
   const [selectedAdminType, setSelectedAdminType] = useState('USER'); // selectedAdminType 상태 추가
 
   const [filteredModalUsers, setFilteredModalUsers] = useState(users);
+
+  const [confirmEditOpen, setConfirmEditOpen] = useState(false);
 
   const filterUser = applySortFilter(users, getComparator(order, orderBy), modalFilterName);
 
@@ -253,13 +256,22 @@ export default function PrivilegeAdd() {
     setOpenAdminModal(false);
   };
 
-  const handleSaveConfirmClose = async () => {
+  const handleSaveConfirmClose = () => {
     if (selectedAdminType === 'ADMIN') {
       handleOpenAdminModal();
     } else {
       updateAdminType();
       setSaveConfirmOpen(false);
+      handleConfirmEditClose();
     }
+  };
+
+  const handleConfirmEditOpen = () => {
+    setConfirmEditOpen(true);
+  };
+
+  const handleConfirmEditClose = () => {
+    setConfirmEditOpen(false);
   };
 
   const updateAdminType = async () => {
@@ -325,7 +337,7 @@ export default function PrivilegeAdd() {
                   {filterUser
                     .slice(modalPage * rowsModalPerPage, modalPage * rowsModalPerPage + rowsModalPerPage)
                     .map((row) => {
-                      const { name, dept, position, userId, hireDate, role } = row;
+                      const { name, dept, position, userId, userCode, hireDate, role } = row;
 
                       const selectedModalUser = modalSelected.indexOf(userId) !== -1;
 
@@ -351,7 +363,7 @@ export default function PrivilegeAdd() {
 
                           <TableCell align="center">{position}</TableCell>
 
-                          <TableCell align="center">{userId}</TableCell>
+                          <TableCell align="center">{userCode}</TableCell>
 
                           <TableCell align="center">{hireDate}</TableCell>
 
@@ -555,6 +567,7 @@ export default function PrivilegeAdd() {
               setModalSelected([]);
               updateAdminType();
               setSaveConfirmOpen(false);
+              handleConfirmEditClose();
               handleCloseAdminModal();
             }}
             variant="contained"
@@ -564,9 +577,9 @@ export default function PrivilegeAdd() {
           <Button
             onClick={() => {
               setSaveConfirmOpen(false);
-              resetSelectedAdminType();
               handleCloseAdminModal();
               handleSaveConfirmOpen();
+              handleConfirmEditClose();
             }}
             variant="outlined"
           >
@@ -637,24 +650,24 @@ export default function PrivilegeAdd() {
                 />
                 <TableBody>
                   {modalSelected.map((selectedUser) => {
-                    const user = users.find((u) => u.userId === selectedUser);
-                    if (user) {
+                    const userRole = users.find((u) => u.userId === selectedUser);
+                    if (userRole) {
                       return (
-                        <TableRow key={user.name}>
+                        <TableRow key={userRole.name}>
                           <TableCell align="center" component="th" scope="row" padding="5">
                             <Stack direction="row" alignItems="center" spacing={2} sx={{ justifyContent: 'center' }}>
-                              <Avatar alt={user.name} />
+                              <Avatar alt={userRole.name} />
                               <Typography variant="subtitle2" noWrap>
-                                {user.name}
+                                {userRole.name}
                               </Typography>
                             </Stack>
                           </TableCell>
-                          <TableCell align="center">{user.dept}</TableCell>
-                          <TableCell align="center">{user.position}</TableCell>
-                          <TableCell align="center">{user.userId}</TableCell>
+                          <TableCell align="center">{userRole.dept}</TableCell>
+                          <TableCell align="center">{userRole.position}</TableCell>
+                          <TableCell align="center">{userRole.userId}</TableCell>
                           <TableCell align="center">
                             {(() => {
-                              switch (user.role) {
+                              switch (userRole.role) {
                                 case 'USER':
                                   return (
                                     <Stack
@@ -735,6 +748,8 @@ export default function PrivilegeAdd() {
                     }
                     return null;
                   })}
+
+                  
                 </TableBody>
               </Table>
             </TableContainer>
@@ -743,7 +758,7 @@ export default function PrivilegeAdd() {
         <DialogActions>
           <Button
             onClick={() => {
-              handleSaveConfirmClose();
+              handleConfirmEditOpen();
             }}
             variant="contained"
           >
@@ -760,193 +775,37 @@ export default function PrivilegeAdd() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog open={confirmEditOpen} onClose={handleConfirmEditClose}>
+        <DialogTitle>권한 변경 확인</DialogTitle>
+        <DialogContent>
+          {(() => {
+            switch (selectedAdminType) {
+              case 'ADMIN':
+                return <DialogContentText>최고 권한자로 권한을 변경하시겠습니까?</DialogContentText>;
+              case 'MNG':
+                return <DialogContentText>총괄 책임자로 권한을 변경하시겠습니까?</DialogContentText>;
+              case 'HR':
+                return <DialogContentText>인사 관리자로 권한을 변경하시겠습니까?</DialogContentText>;
+              case 'FO':
+                return <DialogContentText>재무 관리자로 권한을 변경하시겠습니까?</DialogContentText>;
+              case 'USER':
+                return <DialogContentText>일반 권한자로 권한을 변경하시겠습니까?</DialogContentText>;
+              default:
+                return <DialogContentText>일반 권한자로 권한을 변경하시겠습니까?</DialogContentText>;
+            }
+          })()}
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={handleSaveConfirmClose} variant="contained">
+            확인
+          </Button>
+          <Button onClick={handleConfirmEditClose} variant="outlined">
+            취소
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
-
-    // <DialogTitle>관리자 추가</DialogTitle>
-    // <DialogContent dividers>
-    //   <UserListToolbar
-    //     numSelected={modalSelected.length}
-    //     filterName={modalFilterName}
-    //     onFilterName={handleModalFilterByName}
-    //     onSearch={handleModalSearch}
-    //   />
-    //   <TableContainer>
-    //     <Table
-    //       sx={{ minWidth: 500, minHeight: 400, display: 'block', alignItems: 'start', justifyContent: 'start' }}
-    //     >
-    //       <UserListHead
-    //         order={order}
-    //         orderBy={orderBy}
-    //         headLabel={MODAL_HEAD}
-    //         rowCount={filteredModalUsers.length}
-    //         numSelected={modalSelected.length}
-    //         onRequestSort={handleRequestSort}
-    //         onSelectAllClick={handleModalSelectAllClick}
-    //       />
-    // <TableBody>
-    //   {filterUser
-    //     .slice(modalPage * rowsModalPerPage, modalPage * rowsModalPerPage + rowsModalPerPage)
-    //     .map((row) => {
-    //       const { name, depart, rank, id, date, AccessLevel } = row;
-
-    //       const selectedModalUser = modalSelected.indexOf(name) !== -1;
-
-    //       return (
-    //         <TableRow key={name}>
-    //           <TableCell align="left">
-    //             <Checkbox checked={selectedModalUser} onChange={(event) => handleModalClick(event, name)} />
-    //           </TableCell>
-
-    //           <TableCell component="th" scope="row" padding="none">
-    //             <Stack direction="row" alignItems="center" spacing={2}>
-    //               <Typography variant="subtitle2" noWrap>
-    //                 {name}
-    //               </Typography>
-    //             </Stack>
-    //           </TableCell>
-
-    //           <TableCell align="left">{depart}</TableCell>
-
-    //           <TableCell align="left">{rank}</TableCell>
-
-    //           <TableCell align="left">{id}</TableCell>
-
-    //           <TableCell align="left">{date}</TableCell>
-
-    //           <TableCell align="left">
-    //             {AccessLevel === '관리자' ? (
-    //               <Stack direction="row" alignItems="center" spacing={1}>
-    //                 <SupervisorAccountIcon sx={{ fontSize: 18 }} />
-    //                 <Label color="success">관리자</Label>
-    //               </Stack>
-    //             ) : (
-    //               <Stack direction="row" alignItems="center" spacing={1}>
-    //                 <PersonIcon sx={{ fontSize: 18 }} />
-    //                 <Label color="default">사원</Label>
-    //               </Stack>
-    //             )}
-    //           </TableCell>
-    //         </TableRow>
-    //       );
-    //     })}
-    //   {emptyModalRows > 0 && (
-    //     <TableRow style={{ height: 53 * emptyModalRows }}>
-    //       <TableCell colSpan={6} />
-    //     </TableRow>
-    //   )}
-    // </TableBody>
-
-    //     {isModalNotFound && (
-    //       <TableBody>
-    //         <TableRow>
-    //           <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
-    //             <Paper sx={{ textAlign: 'center', minWidth: 478 }}>
-    //               <Typography variant="h6" paragraph>
-    //                 검색결과가 없습니다.
-    //               </Typography>
-
-    //               <Typography variant="body2">
-    //                 다음 검색에 대한 결과를 찾을 수 없습니다.&nbsp;
-    //                 <strong>&quot;{modalFilterName}&quot;</strong>.
-    //                 <br /> 사용자의 이름을 다시 한번 확인해주세요.
-    //               </Typography>
-    //             </Paper>
-    //           </TableCell>
-    //         </TableRow>
-    //       </TableBody>
-    //     )}
-    //   </Table>
-    // </TableContainer>
-    // </DialogContent>
-    //     <DialogActions>
-    //       <Button onClick={handleSaveConfirmOpen} variant="contained">
-    //         추가
-    //       </Button>
-    //       <Button
-    //         onClick={() => {
-    //           resetFilterAndSelection();
-    //           handleCloseSaveSnackbar();
-    //         }}
-    //         variant="outlined"
-    //       >
-    //         취소
-    //       </Button>
-
-    //       <Snackbar
-    //         open={saveSnackbar}
-    //         autoHideDuration={2000}
-    //         onClose={handleCloseSaveSnackbar}
-    //         anchorOrigin={{
-    //           vertical: 'top',
-    //           horizontal: 'center',
-    //         }}
-    //         sx={{ width: 400 }}
-    //       >
-    //         <Alert onClose={handleCloseSaveSnackbar} severity="success" sx={{ width: '100%' }}>
-    //           관리자로 전환되었습니다!
-    //         </Alert>
-    //       </Snackbar>
-
-    //       <Snackbar
-    //         open={nullSnackbar}
-    //         autoHideDuration={2000}
-    //         onClose={handleCloseNullSnackbar}
-    //         anchorOrigin={{
-    //           vertical: 'top',
-    //           horizontal: 'center',
-    //         }}
-    //         sx={{ width: 400 }}
-    //       >
-    //         <Alert onClose={handleCloseNullSnackbar} severity="error" sx={{ width: '100%' }}>
-    //           선택한 사용자가 없습니다!
-    //         </Alert>
-    //       </Snackbar>
-    //     </DialogActions>
-
-    //     <Dialog open={saveConfirmOpen} onClose={() => setSaveConfirmOpen(false)}>
-    //       <DialogTitle>관리자 전환 확인</DialogTitle>
-    //       <DialogContent>
-    //         <Typography>선택한 사원을 관리자로 추가하시겠습니까?</Typography>
-    //       </DialogContent>
-    //       <DialogActions>
-    //         <Button
-    //           onClick={() => {
-    //             if (modalSelected !== null && modalSelected.length !== 0) {
-    //               handleSaveConfirmClose();
-    //               handleOpenSaveSnackbar();
-    //               setModalSelected([]);
-    //             } else {
-    //               // modalSelected가 null일 때 경고창 띄우기
-    //               handleOpenNullSnackbar();
-    //               handleSaveConfirmClose();
-    //               setModalSelected([]);
-    //             }
-    //           }}
-    //           variant="contained"
-    //         >
-    //           추가
-    //         </Button>
-    //         <Button onClick={() => setSaveConfirmOpen(false)} variant="outlined">
-    //           취소
-    //         </Button>
-    //       </DialogActions>
-    //     </Dialog>
-
-    //     {/* 페이징 기능 추가 */}
-    //     <TablePagination
-    //       rowsPerPageOptions={[5, 10, 25]}
-    //       component="div"
-    //       count={filteredModalUsers.length}
-    //       rowsPerPage={rowsModalPerPage}
-    //       page={modalPage}
-    //       onPageChange={handleModalChangePage}
-    //       onRowsPerPageChange={handleChangeModalRowsPerPage}
-    //       labelRowsPerPage="페이지당 사원 수 :"
-    //       labelDisplayedRows={({ count }) =>
-    //         `현재 페이지: ${modalPage + 1} / 전체 페이지: ${Math.ceil(count / rowsModalPerPage)}`
-    //       }
-    //     />
-    //   </Dialog>
-    // </Modal>
   );
 }
