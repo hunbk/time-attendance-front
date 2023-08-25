@@ -22,6 +22,7 @@ import { useImmer } from "use-immer";
 import TimeInputDiv from "../../components/workGroup/TimeInputDiv";
 import HolidayPayLeave from "../../components/workGroup/HolidayPayLeave";
 import { DataToBeModifiedType } from './WorkGroupIndexPage';
+import { useAuthState } from '../../context/AuthProvider';
 
 type WorkGroupEnrollmentPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -51,6 +52,7 @@ export type DataType = {
 }
 
 const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGroupListHidden, dataToBeModified, setDataToBeModified }) => {
+  const { user } = useAuthState();
   const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
   const handleHour = (startOrEnd: string, timeType: string, value: Dayjs | null) => {
     setHours((draft) => {
@@ -123,7 +125,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     timeRangeType: [],
     start: [],
     end: [],
-    companyId: 1
+    companyId: user.companyId
   });
   const [hours, setHours] = useImmer({
     근무: {

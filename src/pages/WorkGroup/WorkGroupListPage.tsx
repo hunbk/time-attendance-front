@@ -6,7 +6,7 @@ import { DataToBeModifiedType } from "./WorkGroupIndexPage";
 import WorkGroupCardList from "src/components/workGroup/WorkGroupCardList";
 import Grid from '@mui/material/Grid';
 import type { WorkGroupSimpleType } from "./WorkGroupIndexPage";
-// import { useAuthState } from '../../context/AuthProvider';
+import { useAuthState } from '../../context/AuthProvider';
 
 type WorkGroupListPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -28,11 +28,10 @@ export type WorkGroupResponseDtoType = {
 };
 
 const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidden, setDataToBeModified, setWorkGroupSimple }) => {
-  // const { user } = useAuthState();
+  const { user } = useAuthState();
   const [workGroupResponseDtoList, setWorkGroupResponseDtoList] = useState<WorkGroupResponseDtoType[]>([]);
   const getData = async () => {
-    // const url = `http://localhost:8080/api/workgroups/${user.companyId}`;
-    const url = `http://localhost:8080/api/workgroups?companyId=1`;
+    const url = `http://localhost:8080/api/workgroups?companyId=${user.companyId}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -108,7 +107,7 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
       timeRangeType: [],
       start: [],
       end: [],
-      companyId: 1
+      companyId: user.companyId
     };
 
     for (let i = 0; i < workGroupResponseDtoList.length; i += 1) {

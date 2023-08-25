@@ -8,6 +8,7 @@ import WorkGroupCard from 'src/components/workGroup/WorkGroupCard';
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
 import CustomTabPanel from 'src/components/workGroup/CustomTabPanel';
 import { WorkGroupSimpleType } from './WorkGroupIndexPage';
+import { useAuthState } from '../../context/AuthProvider';
 
 type DistributionIndexPageProps = {
     workGroupSimple: WorkGroupSimpleType[];
@@ -43,6 +44,7 @@ export type UserResponseDtoWrappedType = {
 }
 
 const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple }) => {
+    const { user } = useAuthState();
     const [userListWrappedD, setUserListWrappedD] = useState<UserResponseDtoWrappedType[]>([]);
     const [userListWrappedND, setUserListWrappedND] = useState<UserResponseDtoWrappedType[]>([]);
     const [currentTabIndex, setCurrentTabIndex] = useState<number>(0);
@@ -68,7 +70,7 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
     };
 
     const getUsers = async () => {
-        const url = `http://localhost:8080/api/users?companyId=1`;
+        const url = `http://localhost:8080/api/users?companyId=${user.companyId}`;
 
         const response = await fetch(url, {
             method: "GET",
