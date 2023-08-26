@@ -9,7 +9,7 @@ export default function AdminPage() {
         <title> 서비스 관리자 설정 </title>
       </Helmet>
 
-      <Container>
+      <Container maxWidth="xl">
         <Stack direction="row" alignItems="center" justifyContent="left" mb={5}>
           <Typography variant="h4" gutterBottom>
             서비스 관리자 설정
