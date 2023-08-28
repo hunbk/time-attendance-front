@@ -67,15 +67,14 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     const workingTimeDate = workingTime;
     const overtimeDate = overtime;
     const settlementId = userData.settlementId;
-    
 
     const editedData = {
       startTime: startTimeDate, // Date 객체를 보내기
       endTime: endTimeDate, // Date 객체를 보내기
-      workingTime: workingTimeDate,// Date 객체를 보내기
+      workingTime: workingTimeDate, // Date 객체를 보내기
       overtime: overtimeDate, // Date 객체를 보내기
       workState, // workState을 String 형태 그대로 보내기
-      settlementId
+      settlementId,
     };
     await loginAxios.patch('/api/settlements', editedData);
     handleOpenSnackbar();
@@ -273,7 +272,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
       <Dialog
         open={open}
         onClose={handleClose}
-        minWidth="md"
+        minWidth="xl"
         sx={{
           width: '100%', // 원하는 모달 너비 값으로 조절
           '& .MuiDialog-paper': {
@@ -284,7 +283,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
         <DialogTitle>사용자 정보 수정</DialogTitle>
         <DialogContent dividers>
           <TableContainer>
-            <Table sx={{ minHeight: 500, display: 'flex', alignItems: 'start', justifyContent: 'start' }}>
+            <Table sx={{minHeight: 500, display: 'flex', alignItems: 'start', justifyContent: 'start' }}>
               <TableBody>
                 <TextField
                   name="date"
@@ -322,7 +321,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   }}
                 />
 
-                <TextField
+                {/* <TextField
                   name="depart"
                   label="부서"
                   fullWidth
@@ -332,13 +331,39 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   InputProps={{
                     readOnly: true,
                   }}
-                />
+                /> */}
 
                 <TextField
                   name="rank"
                   label="직급"
                   fullWidth
                   value={userData.position}
+                  margin="normal"
+                  style={textStyle} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+
+                <TextField
+                  name="workingTime"
+                  label="소정근무시간"
+                  fullWidth
+                  value={workingTime}
+                  onChange={handleWorkingTime}
+                  margin="normal"
+                  style={textStyle} // 좌우 여백 설정
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+
+                <TextField
+                  name="overtime"
+                  label="초과근무시간"
+                  fullWidth
+                  value={overtime}
+                  onChange={handleOvertime}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
                   InputProps={{
@@ -356,8 +381,35 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                 />
 
                 <TextField
+                  name="workState"
+                  label="처리상태"
+                  select
+                  fullWidth
+                  value={workState}
+                  onChange={handleWorkState}
+                  margin="normal"
+                  style={textStyle} // 좌우 여백 설정
+                >
+                  <MenuItem value="정상근무">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Label color="info">정상처리</Label>
+                    </Stack>
+                  </MenuItem>
+                  <MenuItem value="근태이상">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Label color="error">근태이상</Label>
+                    </Stack>
+                  </MenuItem>
+                  <MenuItem value="미처리">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Label color="default">미처리</Label>
+                    </Stack>
+                  </MenuItem>
+                </TextField>
+
+                <TextField
                   name="start"
-                  label="근무시작시간"
+                  label="근무인정시작시간"
                   select
                   fullWidth
                   value={startTime}
@@ -402,7 +454,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
 
                 <TextField
                   name="end"
-                  label="근무종료시간"
+                  label="근무인정종료시간"
                   select
                   fullWidth
                   value={endTime}
@@ -444,57 +496,40 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                 </TextField>
 
                 <TextField
-                  name="workingTime"
-                  label="소정근무시간"
+                  name="workStart"
+                  label="근로시작시간"
                   fullWidth
-                  value={workingTime}
-                  onChange={handleWorkingTime}
+                  value={userData.leaveWork}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
-                  InputProps={{
-                    readOnly: true,
-                  }}
                 />
 
                 <TextField
-                  name="overtime"
-                  label="초과근무시간"
+                  name="workEnd"
+                  label="근로종료시간"
                   fullWidth
-                  value={overtime}
-                  onChange={handleOvertime}
+                  value={userData.leaveWork}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
-                  InputProps={{
-                    readOnly: true,
-                  }}
                 />
 
                 <TextField
-                  name="workState"
-                  label="처리상태"
-                  select
+                  name="실제출근시작"
+                  label="실제출근시간"
                   fullWidth
-                  value={workState}
-                  onChange={handleWorkState}
+                  value={userData.leaveWork}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
-                >
-                  <MenuItem value="정상근무">
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Label color="info">정상처리</Label>
-                    </Stack>
-                  </MenuItem>
-                  <MenuItem value="근태이상">
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Label color="error">근태이상</Label>
-                    </Stack>
-                  </MenuItem>
-                  <MenuItem value="미처리">
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Label color="default">미처리</Label>
-                    </Stack>
-                  </MenuItem>
-                </TextField>
+                />
+
+                <TextField
+                  name="실제출근종료"
+                  label="실제퇴근시간"
+                  fullWidth
+                  value={userData.leaveWork}
+                  margin="normal"
+                  style={textStyle} // 좌우 여백 설정
+                />
 
                 {/* 필요한 다른 입력 필드들 추가 */}
                 <DialogActions>
