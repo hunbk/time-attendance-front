@@ -43,7 +43,6 @@ const TABLE_HEAD = [
   { id: 'date', label: '근무일자' },
   { id: 'userId', label: '사원번호' },
   { id: 'name', label: '이름' },
-  { id: 'dept', label: '부서' },
   { id: 'position', label: '직급' },
   { id: 'workGroupType', label: '근무제유형' },
   { id: 'start', label: '근무시작시간' },
@@ -322,7 +321,6 @@ export default function SchedulePage() {
                       startTime,
                       endTime,
                       name,
-                      dept,
                       position,
                       workGroupType,
                       workingTime,
@@ -338,24 +336,22 @@ export default function SchedulePage() {
 
                         <TableCell align="left">{formatDate(date)}</TableCell>
 
-                        <TableCell align="center">{userCode}</TableCell>
+                        <TableCell align="left">{userCode}</TableCell>
 
                         <TableCell align="left">{name}</TableCell>
-
-                        <TableCell align="left">{dept}</TableCell>
 
                         <TableCell align="left">{position}</TableCell>
 
                         <TableCell align="left">{workGroupType}</TableCell>
 
                         <TableCell align="left">
-                          {formatTime(startTime)}({formatTime(startWork)})
+                          {formatTime(startTime)}
                         </TableCell>
 
                         <TableCell align="left">
-                          {formatTime(endTime)}({formatTime(leaveWork)})
+                          {formatTime(endTime)}
                         </TableCell>
-
+                       
                         <TableCell align="left">{formatTime(workingTime)}</TableCell>
 
                         <TableCell align="left">{formatTime(overtime)}</TableCell>
