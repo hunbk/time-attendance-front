@@ -18,7 +18,12 @@ const TimeInputDiv: React.FC<TimeInputDivProps> = ({ handleTempHour, startOrEnd,
             <TimePicker value={value} onChange={(newValue) => {
                 setValue(newValue);
                 handleTempHour(startOrEnd, timeType, newValue);
-            }} />
+            }}
+                slotProps={{
+                    textField: {
+                        required: timeType === "근무" && true,
+                    },
+                }} />
         </DemoContainer>
     );
 }

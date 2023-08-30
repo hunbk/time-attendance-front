@@ -142,7 +142,7 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                 {workGroupResponseDto.name}
                             </Typography>
                             <Typography variant="subtitle1" color="text.secondary">
-                                {workGroupResponseDto.type === 'n' ? "일반" : "시차"}
+                                {workGroupResponseDto.type === '일반' ? "일반" : "시차"}
                             </Typography>
                             <Typography variant="caption">
                                 인원: {workGroupResponseDto.numOfMembers}명

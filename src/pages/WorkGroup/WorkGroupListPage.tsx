@@ -7,6 +7,7 @@ import WorkGroupCardList from "src/components/workGroup/WorkGroupCardList";
 import Grid from '@mui/material/Grid';
 import type { WorkGroupSimpleType } from "./WorkGroupIndexPage";
 import { useAuthState } from '../../context/AuthProvider';
+import loginAxios from '../../api/loginAxios';
 
 type WorkGroupListPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -31,20 +32,21 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
   const { user } = useAuthState();
   const [workGroupResponseDtoList, setWorkGroupResponseDtoList] = useState<WorkGroupResponseDtoType[]>([]);
   const getData = async () => {
-    const url = `http://localhost:8080/api/workgroups?companyId=${user.companyId}`;
+    try {
+      const response = await loginAxios.get(`/api/workgroups?companyId=${user.companyId}`);
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Accept": "application/json"
-      },
-    });
-
-    response.json().then((data) => {
-      const dataFiltered = data.filter((item) => item.name !== "미배포" && item);
-      convertDtoToSimple(dataFiltered);
-      setWorkGroupResponseDtoList(dataFiltered);
-    });
+      if (response.status === 200) {
+        const { data } = response;
+        const dataFiltered = data.filter((item) => item.name !== "미배포" && item);
+        convertDtoToSimple(dataFiltered);
+        setWorkGroupResponseDtoList(dataFiltered);
+      } else {
+        // Handle other status codes
+      }
+    } catch (error) {
+      // Handle errors
+      console.error('An error occurred:', error);
+    }
   }
 
   const convertDtoToSimple = (data: WorkGroupResponseDtoType[]) => {

@@ -10,7 +10,7 @@ import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
 import { UserResponseDtoWrappedType } from "./DistributionIndexPage";
 import { WorkGroupSimpleType } from "./WorkGroupIndexPage";
-
+import loginAxios from '../../api/loginAxios';
 
 type DistributionPageProps = {
     userListWrappedD: UserResponseDtoWrappedType[];
@@ -132,34 +132,51 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
 
 
     const updateDistribution = async (selectedUserIds: number[], selectedWorkGroupId?: number) => {
-        const url = `http://localhost:8080/api/workgroups/distribution`;
+        // 배포 해제
+        if (!selectedWorkGroupId && isDistributed === true) {
+            setUserListWrappedFiltered(null);
+            setUserListWrappedD(userListWrappedD.filter((user) => !selectedUserIds.includes(user.id)));
+            setUserListWrappedND([...userListWrappedND, ...userListWrappedD.filter((user) => selectedUserIds.includes(user.id))]);
 
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                userIds: selectedUserIds,
-                workGroupId: selectedWorkGroupId
-            }),
-        });
+            try {
+                const response = await loginAxios.delete(`/api/workgroups/distribution/${selectedUserIds}`);
 
-        response.text().then((data) => {
-            alert(data);
-
-            if (!selectedWorkGroupId && isDistributed === true) {
-                setUserListWrappedFiltered(null);
-                setUserListWrappedD(userListWrappedD.filter((user) => !selectedUserIds.includes(user.id)));
-                setUserListWrappedND([...userListWrappedND, ...userListWrappedD.filter((user) => selectedUserIds.includes(user.id))]);
+                if (response.status === 200) {
+                    alert("배포해제되었습니다.");
+                } else {
+                    // Handle other status codes
+                }
+            } catch (error) {
+                // Handle errors
+                console.error('An error occurred:', error);
             }
+        }
 
-            if (selectedWorkGroupId && isDistributed === false) {
-                setUserListWrappedFiltered(null);
-                setUserListWrappedND(userListWrappedND.filter((user) => !selectedUserIds.includes(user.id)));
-                setUserListWrappedD([...userListWrappedD, ...userListWrappedND.filter((user) => selectedUserIds.includes(user.id))]);
+        // 배포
+        if (selectedWorkGroupId && isDistributed === false) {
+            setUserListWrappedFiltered(null);
+            setUserListWrappedND(userListWrappedND.filter((user) => !selectedUserIds.includes(user.id)));
+            setUserListWrappedD([...userListWrappedD, ...userListWrappedND.filter((user) => selectedUserIds.includes(user.id))]);
+
+            try {
+                const response = await loginAxios.post('/api/workgroups/distribution', {
+                    userIds: selectedUserIds,
+                    workGroupId: selectedWorkGroupId
+                });
+
+                if (response.status === 200) {
+                    alert("배포되었습니다.");
+                } else {
+                    // Handle other status codes
+                }
+            } catch (error) {
+                // Handle errors
+                console.error('An error occurred:', error);
             }
-        });
+        }
+
+
+
     }
 
     return (
