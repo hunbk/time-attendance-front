@@ -23,6 +23,7 @@ import TimeInputDiv from "../../components/workGroup/TimeInputDiv";
 import HolidayPayLeave from "../../components/workGroup/HolidayPayLeave";
 import { DataToBeModifiedType } from './WorkGroupIndexPage';
 import { useAuthState } from '../../context/AuthProvider';
+import loginAxios from '../../api/loginAxios';
 
 type WorkGroupEnrollmentPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -193,7 +194,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
         draft[type].end = '';
       })
     } else {
-
       // 수정중
     }
     setIsChecked((draft) => { draft[type] = !draft[type] });
@@ -224,10 +224,13 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     setIsWorkGroupListHidden(false);
     setDataToBeModified(null);
   }
-  const submitForm = (event: FormEvent) => {
+
+  let dataToBeSent: DataType
+
+  const submitForm = async (event: FormEvent) => {
     event.preventDefault();
 
-    let dataToBeSent: DataType = data;
+    dataToBeSent = data;
 
     if (hours.근무.start !== '') {
       dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "근무"] };
@@ -254,23 +257,41 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.승인.end] };
     }
 
-    console.log(dataToBeSent);
+    if (alignments.length === 0) {
+      alert("근무일은 최소 1일 이상이어야합니다.")
+    } else {
+      console.log(dataToBeSent);
+    }
 
-    fetch('http://localhost:8080/api/workgroups', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dataToBeSent),
-    })
-      .then((response) => response.text())
-      .then((data) => {
-        alert(data);
-        window.location.href = "http://localhost:3000/dashboard/workgroups";
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    if (dataToBeModified) {
+      try {
+        const response = await loginAxios.put(`/api/workgroups/${dataToBeModified.id}`, dataToBeSent);
+
+        if (response.status === 200) {
+          alert("수정되었습니다.");
+          window.location.href = "http://localhost:3000/dashboard/workgroups";
+        } else {
+          // Handle other status codes
+        }
+      } catch (error) {
+        // Handle errors
+        console.error('An error occurred:', error);
+      }
+    } else {
+      try {
+        const response = await loginAxios.post('/api/workgroups', dataToBeSent);
+
+        if (response.status === 200) {
+          alert("저장되었습니다.");
+          window.location.href = "http://localhost:3000/dashboard/workgroups";
+        } else {
+          // Handle other status codes
+        }
+      } catch (error) {
+        // Handle errors
+        console.error('An error occurred:', error);
+      }
+    }
   };
 
   return (
@@ -290,6 +311,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                 onChange={(e) => {
                   setData({ ...data, name: e.target.value });
                 }}
+                required
               />
             </span>
           </Grid>
