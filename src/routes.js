@@ -26,6 +26,7 @@ import { useAuthState } from './context/AuthProvider';
 // util
 import { checkPermission } from './utils/checkPermission';
 import PrivilegeAdd from './pages/privilege/PrivilegeAdd';
+import CompanySettingPage from './pages/company/CompanySettingPage';
 
 // ----------------------------------------------------------------------
 
@@ -46,7 +47,6 @@ export default function Router() {
         { element: <Navigate to="/dashboard/app" />, index: true },
         // 메인 페이지
         { path: 'app', element: <DashboardAppPage /> },
-        // HR 권한 페이지
         // {
         //   path: 'holiday',
         //   element: checkPermission(userRole, ['HR', 'ADMIN']) ? <HolidayPage /> : <Navigate to="/403" />,
@@ -59,10 +59,13 @@ export default function Router() {
           path: 'privilege',
           element: checkPermission(userRole, ['HR', 'MNG', 'ADMIN']) ? <PrivilegePage /> : <Navigate to="/403" />,
         },
-        // FO 권한 페이지
         {
           path: 'privilegeAdd',
           element: checkPermission(userRole, ['ADMIN']) ? <PrivilegeAdd /> : <Navigate to="/403" />,
+        },
+        {
+          path: 'company',
+          element: checkPermission(userRole, ['ADMIN']) ? <CompanySettingPage /> : <Navigate to="/403" />,
         },
         {
           path: 'schedule',
