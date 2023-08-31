@@ -76,20 +76,18 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
   const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
   const handleDelete = async (workGroupId: number) => {
-    // 수정중
+    try {
+      const response = await loginAxios.delete(`/api/workgroups/${workGroupId}`);
 
-    // fetch(`http://localhost:8080/api/workgroups/${workGroupId}`, {
-    //   method: 'DELETE',
-    // })
-    //   .then((response) => response.text())
-    //   .then((data) => {
-    //     alert(data);
-    //     window.location.href = "http://localhost:3000/dashboard/workgroups";
-    //   })
-    //   .catch((error) => {
-    //     console.error(error);
-    //   });
-
+      if (response.status === 200) {
+        setWorkGroupResponseDtoList(workGroupResponseDtoList.filter((workGroupResponseDto) => workGroupResponseDto.id !== workGroupId))
+      } else {
+        // Handle other status codes
+      }
+    } catch (error) {
+      // Handle errors
+      console.error('An error occurred:', error);
+    }
   }
 
   const responseDtoToDataType = (workGroupId: number) => {

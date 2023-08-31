@@ -132,28 +132,47 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
 
 
     const updateDistribution = async (selectedUserIds: number[], selectedWorkGroupId?: number) => {
-        // 배포 해제
-        if (!selectedWorkGroupId && isDistributed === true) {
-            setUserListWrappedFiltered(null);
-            setUserListWrappedD(userListWrappedD.filter((user) => !selectedUserIds.includes(user.id)));
-            setUserListWrappedND([...userListWrappedND, ...userListWrappedD.filter((user) => selectedUserIds.includes(user.id))]);
+        if (isDistributed) {
+            // 배포 해제
+            if (!selectedWorkGroupId) {
+                setUserListWrappedFiltered(null);
+                setUserListWrappedD(userListWrappedD.filter((user) => !selectedUserIds.includes(user.id)));
+                setUserListWrappedND([...userListWrappedND, ...userListWrappedD.filter((user) => selectedUserIds.includes(user.id))]);
 
-            try {
-                const response = await loginAxios.delete(`/api/workgroups/distribution/${selectedUserIds}`);
+                try {
+                    const response = await loginAxios.delete(`/api/workgroups/distribution/${selectedUserIds}`);
 
-                if (response.status === 200) {
-                    alert("배포해제되었습니다.");
-                } else {
-                    // Handle other status codes
+                    if (response.status === 200) {
+                        alert("배포해제되었습니다.");
+                    } else {
+                        // Handle other status codes
+                    }
+                } catch (error) {
+                    // Handle errors
+                    console.error('An error occurred:', error);
                 }
-            } catch (error) {
-                // Handle errors
-                console.error('An error occurred:', error);
             }
-        }
+            // 근로제 변경
+            else {
+                try {
+                    const response = await loginAxios.put('/api/workgroups/distribution', {
+                        userIds: selectedUserIds,
+                        workGroupId: selectedWorkGroupId
+                    });
+                    if (response.status === 200) {
+                        alert("근로제 변경되었습니다.");
+                    } else {
+                        // Handle other status codes
+                    }
+                } catch (error) {
+                    // Handle errors
+                    console.error('An error occurred:', error);
+                }
+            }
 
+        }
         // 배포
-        if (selectedWorkGroupId && isDistributed === false) {
+        else {
             setUserListWrappedFiltered(null);
             setUserListWrappedND(userListWrappedND.filter((user) => !selectedUserIds.includes(user.id)));
             setUserListWrappedD([...userListWrappedD, ...userListWrappedND.filter((user) => selectedUserIds.includes(user.id))]);
@@ -173,9 +192,8 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                 // Handle errors
                 console.error('An error occurred:', error);
             }
+
         }
-
-
 
     }
 

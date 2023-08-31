@@ -72,8 +72,14 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     return matchedRanges;
 
   }
+  const [isChecked, setIsChecked] = useImmer({
+    근무: true,
+    휴게: true,
+    의무: true,
+    승인: true,
+  });
   const timeInputDivSet = (timeType: string) =>
-  (dataToBeModified ? <>{getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, timeType).map((matchedRange, index) => <Fragment key={index}>
+  (dataToBeModified && isChecked[timeType] === true ? <>{getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, timeType).map((matchedRange, index) => <Fragment key={index}>
     <TimeInputDiv
       handleTempHour={handleHour}
       startOrEnd="start"
@@ -107,6 +113,12 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
   const [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
     timeInputDivSet("의무")
   ]);
+  const [timeInputDivWork, setTimeInputDivWork] = useState(
+    timeInputDivSet("근무")
+  );
+  const [timeInputDivApproved, setTimeInputDivApproved] = useState(
+    timeInputDivSet("승인")
+  );
   const [alignments, setAlignments] = useState<string[]>(dataToBeModified ? dataToBeModified.alignments.work : []);
   const [dayHolidays, setDayHolidays] = useState<string[]>(dataToBeModified ? DAYS.filter(day => !dataToBeModified.alignments.work.includes(day)) : []);
   const [holidayOnOff, setHolidayOnOff] = useState<"on" | "off">("on");
@@ -146,11 +158,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       end: '',
     }
   })
-  const [isChecked, setIsChecked] = useImmer({
-    휴게: true,
-    의무: true,
-    승인: true,
-  });
   useEffect(() => {
     if (dataToBeModified) {
       setData(dataToBeModified.contents);
@@ -171,7 +178,8 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     }
   };
   const handleCheckboxChange = (type: "휴게" | "승인" | "의무") => {
-    if (isChecked) {
+    if (isChecked[type]) {
+      console.log(`${type} un-checked`)
       setData((draft) => {
         if (draft.timeRangeType.includes(type)) {
           const indexArr: number[] = [];
@@ -194,7 +202,9 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
         draft[type].end = '';
       })
     } else {
-      // 수정중
+      console.log(`${type} checked`)
+      setTimeInputDivsBreak([timeInputDivSet("휴게")]);
+      setTimeInputDivsCompulsory([timeInputDivSet("의무")]);
     }
     setIsChecked((draft) => { draft[type] = !draft[type] });
   };
@@ -217,9 +227,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       }
     })
   }
-  // const handleDelete = () => {
-  //   console.info("You clicked the delete icon.");
-  // };
   const handleCancel = () => {
     setIsWorkGroupListHidden(false);
     setDataToBeModified(null);
@@ -263,35 +270,35 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       console.log(dataToBeSent);
     }
 
-    if (dataToBeModified) {
-      try {
-        const response = await loginAxios.put(`/api/workgroups/${dataToBeModified.id}`, dataToBeSent);
+    // if (dataToBeModified) {
+    //   try {
+    //     const response = await loginAxios.put(`/api/workgroups/${dataToBeModified.id}`, dataToBeSent);
 
-        if (response.status === 200) {
-          alert("수정되었습니다.");
-          window.location.href = "http://localhost:3000/dashboard/workgroups";
-        } else {
-          // Handle other status codes
-        }
-      } catch (error) {
-        // Handle errors
-        console.error('An error occurred:', error);
-      }
-    } else {
-      try {
-        const response = await loginAxios.post('/api/workgroups', dataToBeSent);
+    //     if (response.status === 200) {
+    //       alert("수정되었습니다.");
+    //       window.location.href = "http://localhost:3000/dashboard/workgroups";
+    //     } else {
+    //       // Handle other status codes
+    //     }
+    //   } catch (error) {
+    //     // Handle errors
+    //     console.error('An error occurred:', error);
+    //   }
+    // } else {
+    //   try {
+    //     const response = await loginAxios.post('/api/workgroups', dataToBeSent);
 
-        if (response.status === 200) {
-          alert("저장되었습니다.");
-          window.location.href = "http://localhost:3000/dashboard/workgroups";
-        } else {
-          // Handle other status codes
-        }
-      } catch (error) {
-        // Handle errors
-        console.error('An error occurred:', error);
-      }
-    }
+    //     if (response.status === 200) {
+    //       alert("저장되었습니다.");
+    //       window.location.href = "http://localhost:3000/dashboard/workgroups";
+    //     } else {
+    //       // Handle other status codes
+    //     }
+    //   } catch (error) {
+    //     // Handle errors
+    //     console.error('An error occurred:', error);
+    //   }
+    // }
   };
 
   return (
@@ -429,7 +436,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                     근무시작 및 종료시각을 근로자의 결정으로 선택할 수 있는
                     시간대를 입력합니다.
                   </div>
-                  {timeInputDivSet("근무")}
+                  {timeInputDivWork}
                 </Grid>
                 <Grid xs={3}>
                   <span>휴게시간</span>
@@ -486,7 +493,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                     사전에 승인을 받은 경우에만 근로시간으로 인정하는 시간을
                     입력할 수 있는 시간대를 설정합니다.
                   </div>
-                  {timeInputDivSet("승인")}
+                  {timeInputDivApproved}
                 </Grid> : <Grid xs={8}> </Grid>}
               </Grid>
             </Card>
