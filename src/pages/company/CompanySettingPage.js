@@ -54,7 +54,9 @@ export default function CompanySettingPage() {
       if (response.status === 200) {
         setName(response.data.name);
         setAuthCode(response.data.code);
-        setPreview(`http://localhost:8080/images/${response.data.logoUrl}`);
+        if (response.data.logoUrl !== null) {
+          setPreview(`http://localhost:8080/images/${response.data.logoUrl}`);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch initial data:', error);
