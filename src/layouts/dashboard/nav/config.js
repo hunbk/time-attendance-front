@@ -39,6 +39,12 @@ const navConfig = [
     icon: icon('ic_workgroup'),
     roles: ['HR', 'MNG', 'ADMIN'],
   },
+  {
+    title: '회사 설정',
+    path: '/dashboard/company',
+    icon: icon('ic_setting'),
+    roles: ['ADMIN'],
+  },
   // {
   //   title: '휴일 관리',
   //   path: '/dashboard/holiday',

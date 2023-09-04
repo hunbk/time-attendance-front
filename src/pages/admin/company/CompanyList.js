@@ -54,7 +54,7 @@ export default function CompanyList({ companies }) {
 
   return (
     <>
-      {/* 회사 이름으로 검색 */}
+      {/* 회사명으로 검색 */}
       <CompanyListSearchbar filterName={filterName} onFilterName={handleFilterByName} />
 
       <Scrollbar>
@@ -64,7 +64,7 @@ export default function CompanyList({ companies }) {
               <TableRow>
                 <TableCell sx={{ width: '20px' }}>ID</TableCell>
                 <TableCell sx={{ width: '100px' }}>회사 로고</TableCell>
-                <TableCell sx={{ width: '100px' }}>회사 이름</TableCell>
+                <TableCell sx={{ width: '100px' }}>회사명</TableCell>
                 <TableCell sx={{ width: '300px' }}>인증 코드</TableCell>
                 <TableCell sx={{ width: '100px' }}>등록 날짜</TableCell>
                 <TableCell sx={{ width: '100px' }}>최종 수정 날짜</TableCell>
