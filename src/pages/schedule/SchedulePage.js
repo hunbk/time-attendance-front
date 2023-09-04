@@ -48,7 +48,7 @@ const TABLE_HEAD = [
   { id: 'start', label: '근무시작시간' },
   { id: 'end', label: '근무종료시간' },
   { id: 'workingTime', label: '소정근무시간' },
-  { id: 'overtime', label: '초과근무시간' },
+  { id: 'overTime', label: '초과근무시간' },
   { id: 'workState', label: '처리상태' },
   { id: '' },
 ];
@@ -324,7 +324,7 @@ export default function SchedulePage() {
                       position,
                       workGroupType,
                       workingTime,
-                      overtime,
+                      overTime,
                       workState,
                       startWork,
                       leaveWork,
@@ -354,7 +354,7 @@ export default function SchedulePage() {
                        
                         <TableCell align="left">{formatTime(workingTime)}</TableCell>
 
-                        <TableCell align="left">{formatTime(overtime)}</TableCell>
+                        <TableCell align="left">{formatTime(overTime)}</TableCell>
 
                         <TableCell align="left">
                           {workState === '정상근무' ? (
