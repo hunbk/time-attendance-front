@@ -41,7 +41,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
   const [startTime, setStartTime] = useState(formatTime(userData.startTime));
   const [endTime, setEndTime] = useState(formatTime(userData.endTime));
   const [workingTime, setWorkingTime] = useState(formatTime(userData.workingTime));
-  const [overtime, setOvertime] = useState(formatTime(userData.overtime));
+  const [overTime, setOverTime] = useState(formatTime(userData.overTime));
   const [workState, setWorkState] = useState(userData.workState);
 
   const [confirmEditOpen, setConfirmEditOpen] = useState(false);
@@ -65,14 +65,14 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     const startTimeDate = startTime;
     const endTimeDate = endTime;
     const workingTimeDate = workingTime;
-    const overtimeDate = overtime;
+    const overTimeDate = overTime;
     const settlementId = userData.settlementId;
 
     const editedData = {
       startTime: startTimeDate, // Date 객체를 보내기
       endTime: endTimeDate, // Date 객체를 보내기
       workingTime: workingTimeDate, // Date 객체를 보내기
-      overtime: overtimeDate, // Date 객체를 보내기
+      overTime: overTimeDate, // Date 객체를 보내기
       workState, // workState을 String 형태 그대로 보내기
       settlementId,
     };
@@ -95,8 +95,8 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     setWorkingTime(event.target.value);
   };
 
-  const handleOvertime = (event) => {
-    setOvertime(event.target.value);
+  const handleOverTime = (event) => {
+    setOverTime(event.target.value);
   };
 
   const handleWorkState = (event) => {
@@ -164,7 +164,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
 
     // 총 근무 시간을 계산하기 위한 변수를 초기화합니다.
     let totalWorkingTimeInMinutes = endInMinutes - startInMinutes; // 소정 근무 시간
-    let totalOvertimeInMinutes = 0;
+    let totalOverTimeInMinutes = 0;
 
     // 의무 시간 관련 로직
     dutyIndexes.forEach((i) => {
@@ -192,11 +192,11 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
       const startwork = startTimes[i][0] * 60 + startTimes[i][1];
       const endwork = endTimes[i][0] * 60 + endTimes[i][1];
       if (startwork === startInMinutes && endInMinutes >= startapproved && endInMinutes <= endapproved) {
-        totalOvertimeInMinutes = endInMinutes - endwork;
-        if (totalOvertimeInMinutes >= 0) {
-          totalWorkingTimeInMinutes -= totalOvertimeInMinutes;
+        totalOverTimeInMinutes = endInMinutes - endwork;
+        if (totalOverTimeInMinutes >= 0) {
+          totalWorkingTimeInMinutes -= totalOverTimeInMinutes;
         } else {
-          totalOvertimeInMinutes = 0;
+          totalOverTimeInMinutes = 0;
         }
       }
     });
@@ -206,12 +206,12 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     const workingTimeMinutes = totalWorkingTimeInMinutes % 60;
 
     // 초과 시간을 시간과 분으로 변환하여 workingTime 상태를 업데이트합니다.
-    const overtimeHours = Math.floor(totalOvertimeInMinutes / 60);
-    const overtimeMinutes = totalOvertimeInMinutes % 60;
+    const overTimeHours = Math.floor(totalOverTimeInMinutes / 60);
+    const overTimeMinutes = totalOverTimeInMinutes % 60;
 
     // workingTime 상태를 업데이트합니다.
     setWorkingTime(`${workingTimeHours.toString().padStart(2, '0')}:${workingTimeMinutes.toString().padStart(2, '0')}`);
-    setOvertime(`${overtimeHours.toString().padStart(2, '0')}:${overtimeMinutes.toString().padStart(2, '0')}`);
+    setOverTime(`${overTimeHours.toString().padStart(2, '0')}:${overTimeMinutes.toString().padStart(2, '0')}`);
   };
 
   // 유급 휴무 계산 로직
@@ -227,30 +227,30 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     const endTimeInMinutes = endTimeParts[0] * 60 + endTimeParts[1];
 
     // 초과 근무 시간 계산
-    let overtimeInMinutes = endTimeInMinutes - startTimeInMinutes;
+    let overTimeInMinutes = endTimeInMinutes - startTimeInMinutes;
 
     // endTime이 startTime보다 이전인 경우에는 하루가 더해져야 함
     if (endTimeInMinutes < startTimeInMinutes) {
-      overtimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해줌
+      overTimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해줌
     }
 
     // 음수인 경우 계산을 조정해줌
-    if (overtimeInMinutes < 0) {
-      overtimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해주고
-      overtimeInMinutes -= 60; // 1시간에 해당하는 분을 빼줌
+    if (overTimeInMinutes < 0) {
+      overTimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해주고
+      overTimeInMinutes -= 60; // 1시간에 해당하는 분을 빼줌
     }
 
     // 분을 시간과 분으로 변환하여 설정
-    const overtimeHours = Math.floor(overtimeInMinutes / 60);
-    const overtimeMinutes = overtimeInMinutes % 60;
+    const overTimeHours = Math.floor(overTimeInMinutes / 60);
+    const overTimeMinutes = overTimeInMinutes % 60;
 
-    setOvertime(`${overtimeHours.toString().padStart(2, '0')}:${overtimeMinutes.toString().padStart(2, '0')}`);
+    setOverTime(`${overTimeHours.toString().padStart(2, '0')}:${overTimeMinutes.toString().padStart(2, '0')}`);
   };
 
   // 무급 휴무 정산 로직
   const calculateUnpaidDayType = () => {
     setWorkingTime('00:00');
-    setOvertime('00:00');
+    setOverTime('00:00');
   };
 
   const modalStyle = {
@@ -359,11 +359,11 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                 />
 
                 <TextField
-                  name="overtime"
+                  name="overTime"
                   label="초과근무시간"
                   fullWidth
-                  value={overtime}
-                  onChange={handleOvertime}
+                  value={overTime}
+                  onChange={handleOverTime}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
                   InputProps={{
