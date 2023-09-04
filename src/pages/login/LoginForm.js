@@ -35,11 +35,10 @@ export default function LoginForm() {
 
         // 사용자 정보 가져오기
         const userInfoResponse = await loginAxios.get('http://localhost:8080/api/users/me');
-        const userInfo = JSON.stringify(userInfoResponse.data);
-        localStorage.setItem('userInfo', userInfo);
+        const userInfo = userInfoResponse.data;
 
         // AuthContext의 상태 업데이트
-        authDispatch('LOGIN', JSON.parse(userInfo));
+        authDispatch({ type: 'LOGIN', payload: userInfo });
 
         // 메인화면으로 이동
         navigate('/');

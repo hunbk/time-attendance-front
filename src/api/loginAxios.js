@@ -25,7 +25,6 @@ loginAxios.interceptors.response.use(
       // 토큰이 만료되거나 유효하지 않은 경우 로그아웃 로직 처리
       // 토큰, 사용자 정보 제거
       localStorage.removeItem('accessToken');
-      localStorage.removeItem('userInfo');
 
       // TODO: 알림 방식 개선
       alert('인증이 만료되었습니다. 다시 로그인해 주세요.');

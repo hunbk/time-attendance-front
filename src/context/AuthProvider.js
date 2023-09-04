@@ -1,13 +1,11 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import PropTypes from 'prop-types';
 
-const AuthStateContext = createContext({
-  authenticated: false,
-  user: undefined,
-  loading: true,
-});
+import loginAxios from '../api/loginAxios';
+import { LinearProgress } from '@mui/material';
 
-const AuthDispatchContext = createContext(null);
+const AuthStateContext = createContext();
+const AuthDispatchContext = createContext();
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -16,65 +14,145 @@ const reducer = (state, action) => {
         ...state,
         authenticated: true,
         user: action.payload,
+        loading: false, // 로딩 완료
       };
     case 'LOGOUT':
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('userInfo');
       return {
         ...state,
         authenticated: false,
-        user: undefined,
+        user: null,
+        loading: false, // 로딩 완료
       };
-    case 'STOP_LOADING':
+    case 'LOADING':
       return {
         ...state,
-        loading: false,
+        loading: true, // 로딩 시작
       };
     default:
-      throw new Error(`Unknown action type: ${action.type}`);
+      return state;
   }
 };
 
-export const AuthProvider = ({ children }) => {
-  const accessToken = localStorage.getItem('accessToken');
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+// 정상적으로 동작하는 코드
+// const reducer = (state, action) => {
+//   switch (action.type) {
+//     case 'LOGIN':
+//       return {
+//         authenticated: true,
+//         user: action.payload,
+//       };
+//     case 'LOGOUT':
+//       return { authenticated: false, user: null };
+//     default:
+//       return state;
+//   }
+// };
 
-  const [state, defaultDispatch] = useReducer(reducer, {
-    user: userInfo || undefined, // 로컬스토리지에 사용자 정보가 있으면 저장, 없으면 undefined
-    authenticated: !!accessToken && !!userInfo, // 로컬스토리지에 토큰, 사용자 정보가 있으면 true, 없으면 false
-    loading: true,
+export const useAuthState = () => {
+  const context = useContext(AuthStateContext);
+  if (!context) {
+    throw new Error('useAuthState must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const useAuthDispatch = () => {
+  const context = useContext(AuthDispatchContext);
+  if (!context) {
+    throw new Error('useAuthDispatch must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, {
+    authenticated: false,
+    user: null,
+    loading: true, // 초기 로딩 상태를 true로 설정
   });
 
-  const dispatch = (type, payload) => {
-    defaultDispatch({ type, payload });
-  };
+  useEffect(() => {
+    dispatch({ type: 'LOADING' }); // 로딩 시작
 
-  // TODO: 로그인 한 사용자의 정보를 새로고침 시, 받아올려고 시도하였지만 현재는 실패함.
+    (async () => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          const { data } = await loginAxios.get('/api/users/me');
+          if (data) {
+            dispatch({ type: 'LOGIN', payload: data });
+          } else {
+            dispatch({ type: 'LOGOUT' }); // 로그인 실패
+          }
+        } catch (error) {
+          console.error('Error fetching user info:', error);
+          dispatch({ type: 'LOGOUT' }); // 에러 발생 시 로그아웃
+        }
+      } else {
+        dispatch({ type: 'LOGOUT' }); // 토큰 없으면 로그아웃
+      }
+    })();
+  }, []);
+
+  // 정상적으로 동작하는 코드(로그인은 유지, 새로고침 시 404 버그 존재)
   // useEffect(() => {
-  //   console.log('mount');
-  //   async function loadUser() {
+  //   (async () => {
+  //     const token = localStorage.getItem('accessToken');
+  //     console.log('저장된 토큰:', token); // 토큰 출력
+  //     if (token) {
+  //       try {
+  //         const { data } = await loginAxios.get('/api/users/me');
+  //         console.log('서버 응답:', data); // 서버 응답 출력
+  //         if (data) {
+  //           console.log('dispatch 전'); // dispatch 호출 전 확인
+  //           dispatch({ type: 'LOGIN', payload: data });
+  //           console.log('dispatch 후'); // dispatch 호출 후 확인
+  //         }
+  //       } catch (error) {
+  //         console.error('Error fetching user info:', error);
+  //       }
+  //     }
+  //   })();
+  // }, []);
+
+  // 비정상적인 코드
+  // useEffect(() => {
+  //   const token = localStorage.getItem('accessToken');
+  //   if (token) {
   //     try {
-  //       const res = await loginAxios.get('/api/users/me');
-  //       dispatch('LOGIN', res.data);
+  //       const { data } = loginAxios.get('/api/users/me');
+  //       console.log('서버 응답:', data); // 서버 응답 출력
+  //       if (data) {
+  //         console.log('dispatch 전'); // dispatch 호출 전 확인
+  //         dispatch({ type: 'LOGIN', payload: data });
+  //         console.log('dispatch 후'); // dispatch 호출 후 확인
+  //       }
   //     } catch (error) {
-  //       dispatch('LOGOUT');
-  //     } finally {
-  //       dispatch('STOP_LOADING');
+  //       console.error('Error fetching user info:', error);
   //     }
   //   }
-  //   loadUser();
   // }, []);
 
   return (
     <AuthStateContext.Provider value={state}>
-      <AuthDispatchContext.Provider value={dispatch}>{children}</AuthDispatchContext.Provider>
+      <AuthDispatchContext.Provider value={dispatch}>
+        {state.loading ? (
+          <LinearProgress color="inherit" /> // 로딩 중일 때
+        ) : (
+          children // 로딩 완료되면 실제 컨텐츠 표시
+        )}
+      </AuthDispatchContext.Provider>
     </AuthStateContext.Provider>
   );
+
+  // 정상적인 코드
+  // return (
+  //   <AuthStateContext.Provider value={state}>
+  //     <AuthDispatchContext.Provider value={dispatch}>{children}</AuthDispatchContext.Provider>
+  //   </AuthStateContext.Provider>
+  // );
 };
 
 AuthProvider.propTypes = {
-  children: PropTypes.node,
+  children: PropTypes.node.isRequired,
 };
-
-export const useAuthState = () => useContext(AuthStateContext);
-export const useAuthDispatch = () => useContext(AuthDispatchContext);
