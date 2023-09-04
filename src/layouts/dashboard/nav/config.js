@@ -40,7 +40,7 @@ const navConfig = [
     roles: ['HR', 'MNG', 'ADMIN'],
   },
   {
-    title: '회사설정',
+    title: '회사 설정',
     path: '/dashboard/company',
     icon: icon('ic_setting'),
     roles: ['ADMIN'],
