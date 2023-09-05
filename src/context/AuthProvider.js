@@ -33,21 +33,6 @@ const reducer = (state, action) => {
   }
 };
 
-// 정상적으로 동작하는 코드
-// const reducer = (state, action) => {
-//   switch (action.type) {
-//     case 'LOGIN':
-//       return {
-//         authenticated: true,
-//         user: action.payload,
-//       };
-//     case 'LOGOUT':
-//       return { authenticated: false, user: null };
-//     default:
-//       return state;
-//   }
-// };
-
 export const useAuthState = () => {
   const context = useContext(AuthStateContext);
   if (!context) {
@@ -94,45 +79,6 @@ export const AuthProvider = ({ children }) => {
     })();
   }, []);
 
-  // 정상적으로 동작하는 코드(로그인은 유지, 새로고침 시 404 버그 존재)
-  // useEffect(() => {
-  //   (async () => {
-  //     const token = localStorage.getItem('accessToken');
-  //     console.log('저장된 토큰:', token); // 토큰 출력
-  //     if (token) {
-  //       try {
-  //         const { data } = await loginAxios.get('/api/users/me');
-  //         console.log('서버 응답:', data); // 서버 응답 출력
-  //         if (data) {
-  //           console.log('dispatch 전'); // dispatch 호출 전 확인
-  //           dispatch({ type: 'LOGIN', payload: data });
-  //           console.log('dispatch 후'); // dispatch 호출 후 확인
-  //         }
-  //       } catch (error) {
-  //         console.error('Error fetching user info:', error);
-  //       }
-  //     }
-  //   })();
-  // }, []);
-
-  // 비정상적인 코드
-  // useEffect(() => {
-  //   const token = localStorage.getItem('accessToken');
-  //   if (token) {
-  //     try {
-  //       const { data } = loginAxios.get('/api/users/me');
-  //       console.log('서버 응답:', data); // 서버 응답 출력
-  //       if (data) {
-  //         console.log('dispatch 전'); // dispatch 호출 전 확인
-  //         dispatch({ type: 'LOGIN', payload: data });
-  //         console.log('dispatch 후'); // dispatch 호출 후 확인
-  //       }
-  //     } catch (error) {
-  //       console.error('Error fetching user info:', error);
-  //     }
-  //   }
-  // }, []);
-
   return (
     <AuthStateContext.Provider value={state}>
       <AuthDispatchContext.Provider value={dispatch}>
@@ -144,13 +90,6 @@ export const AuthProvider = ({ children }) => {
       </AuthDispatchContext.Provider>
     </AuthStateContext.Provider>
   );
-
-  // 정상적인 코드
-  // return (
-  //   <AuthStateContext.Provider value={state}>
-  //     <AuthDispatchContext.Provider value={dispatch}>{children}</AuthDispatchContext.Provider>
-  //   </AuthStateContext.Provider>
-  // );
 };
 
 AuthProvider.propTypes = {
