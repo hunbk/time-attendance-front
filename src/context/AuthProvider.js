@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import PropTypes from 'prop-types';
 
 import loginAxios from '../api/loginAxios';
-import { LinearProgress } from '@mui/material';
+import { Box, CircularProgress, LinearProgress } from '@mui/material';
 
 const AuthStateContext = createContext();
 const AuthDispatchContext = createContext();
@@ -86,9 +86,13 @@ export const AuthProvider = ({ children }) => {
     <AuthStateContext.Provider value={state}>
       <AuthDispatchContext.Provider value={dispatch}>
         {state.loading ? (
-          <LinearProgress color="inherit" /> // 로딩 중일 때
+          // 로딩 중일 때
+          <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+            <CircularProgress color="primary" />
+          </Box>
         ) : (
-          children // 로딩 완료되면 실제 컨텐츠 표시
+          // 로딩 완료되면 실제 컨텐츠 표시
+          children
         )}
       </AuthDispatchContext.Provider>
     </AuthStateContext.Provider>
