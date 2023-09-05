@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 // @mui
 import { styled, alpha } from '@mui/material/styles';
 import { Box, Link, Button, Drawer, Typography, Avatar } from '@mui/material';
@@ -12,7 +12,7 @@ import Scrollbar from '../../../components/scrollbar';
 import NavSection from '../../../components/nav-section';
 //
 import navConfig from './config';
-import { useAuthState } from '../../../context/AuthProvider';
+import { useAuthDispatch, useAuthState } from '../../../context/AuthProvider';
 import NavWork from '../../../components/nav-work/NavWork';
 
 // ----------------------------------------------------------------------
@@ -35,8 +35,12 @@ Nav.propTypes = {
 };
 
 export default function Nav({ openNav, onCloseNav }) {
+  const navigate = useNavigate();
+
   const { pathname } = useLocation();
+
   const { user } = useAuthState();
+  const authDispatch = useAuthDispatch();
 
   const isDesktop = useResponsive('up', 'lg');
 
@@ -46,6 +50,15 @@ export default function Nav({ openNav, onCloseNav }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
+
+  const handleLogout = () => {
+    // Local Storage에서 토큰 제거
+    localStorage.removeItem('accessToken');
+    // 상태 업데이트
+    authDispatch({ type: 'LOGOUT' });
+    // 로그인 페이지로 리다이렉트
+    navigate('/login');
+  };
 
   const renderContent = (
     <Scrollbar
@@ -78,17 +91,7 @@ export default function Nav({ openNav, onCloseNav }) {
           </StyledAccount>
         </Link>
         <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-          <Button
-            size="small"
-            variant="text"
-            onClick={() => {
-              // authDispatch('LOGOUT');
-              // 버그발생해서 수동 로그아웃 처리함
-              localStorage.removeItem('accessToken');
-              localStorage.removeItem('userInfo');
-              window.location.href = '/login';
-            }}
-          >
+          <Button size="small" variant="text" onClick={handleLogout}>
             로그아웃
           </Button>
         </Box>
