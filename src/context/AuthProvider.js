@@ -56,27 +56,30 @@ export const AuthProvider = ({ children }) => {
     loading: true, // 초기 로딩 상태를 true로 설정
   });
 
-  useEffect(() => {
+  // 서버에서 사용자 정보를 요청하는 API
+  const fetchUserData = async () => {
     dispatch({ type: 'LOADING' }); // 로딩 시작
 
-    (async () => {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        try {
-          const { data } = await loginAxios.get('/api/users/me');
-          if (data) {
-            dispatch({ type: 'LOGIN', payload: data });
-          } else {
-            dispatch({ type: 'LOGOUT' }); // 로그인 실패
-          }
-        } catch (error) {
-          console.error('Error fetching user info:', error);
-          dispatch({ type: 'LOGOUT' }); // 에러 발생 시 로그아웃
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        const { data } = await loginAxios.get('/api/users/me');
+        if (data) {
+          dispatch({ type: 'LOGIN', payload: data });
+        } else {
+          dispatch({ type: 'LOGOUT' }); // 인증 실패
         }
-      } else {
-        dispatch({ type: 'LOGOUT' }); // 토큰 없으면 로그아웃
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+        dispatch({ type: 'LOGOUT' }); // 에러 발생 시 로그아웃
       }
-    })();
+    } else {
+      dispatch({ type: 'LOGOUT' }); // 토큰이 없으면 로그아웃
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
   }, []);
 
   return (
