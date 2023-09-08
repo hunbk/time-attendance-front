@@ -35,6 +35,14 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     return `${hours}:${minutes}`;
   };
 
+  const formatDateTimeToTime = (localDateTime) => {
+    const dateTime = new Date(localDateTime);
+    const hours = String(dateTime.getHours()).padStart(2, '0');
+    const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+
+    return `${hours}:${minutes}`;
+  };
+
   // 로그인 한 유저 정보
   const { user } = useAuthState();
 
@@ -283,7 +291,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
         <DialogTitle>사용자 정보 수정</DialogTitle>
         <DialogContent dividers>
           <TableContainer>
-            <Table sx={{minHeight: 500, display: 'flex', alignItems: 'start', justifyContent: 'start' }}>
+            <Table sx={{ minHeight: 500, display: 'flex', alignItems: 'start', justifyContent: 'start' }}>
               <TableBody>
                 <TextField
                   name="date"
@@ -383,29 +391,12 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                 <TextField
                   name="workState"
                   label="처리상태"
-                  select
                   fullWidth
                   value={workState}
                   onChange={handleWorkState}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
-                >
-                  <MenuItem value="정상근무">
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Label color="info">정상처리</Label>
-                    </Stack>
-                  </MenuItem>
-                  <MenuItem value="근태이상">
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Label color="error">근태이상</Label>
-                    </Stack>
-                  </MenuItem>
-                  <MenuItem value="미처리">
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Label color="default">미처리</Label>
-                    </Stack>
-                  </MenuItem>
-                </TextField>
+                />
 
                 <TextField
                   name="start"
@@ -481,14 +472,11 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                     const minutes = (index % 2) * 30;
                     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
-                    if (timeString >= startTime) {
-                      return (
-                        <MenuItem key={timeString} value={timeString}>
-                          {timeString}
-                        </MenuItem>
-                      );
-                    }
-                    return null;
+                    return (
+                      <MenuItem key={timeString} value={timeString}>
+                        {timeString}
+                      </MenuItem>
+                    );
                   })}
                   <MenuItem key={`24:00`} value={`24:00`}>
                     00:00
@@ -499,7 +487,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   name="workStart"
                   label="근로시작시간"
                   fullWidth
-                  value={userData.leaveWork}
+                  value={formatDateTimeToTime(userData.startWork)}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
                 />
@@ -508,7 +496,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   name="workEnd"
                   label="근로종료시간"
                   fullWidth
-                  value={userData.leaveWork}
+                  value={formatDateTimeToTime(userData.leaveWork)}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
                 />
@@ -517,7 +505,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   name="실제출근시작"
                   label="실제출근시간"
                   fullWidth
-                  value={userData.leaveWork}
+                  value={formatDateTimeToTime(userData.startWork)}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
                 />
@@ -526,7 +514,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   name="실제출근종료"
                   label="실제퇴근시간"
                   fullWidth
-                  value={userData.leaveWork}
+                  value={formatDateTimeToTime(userData.leaveWork)}
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
                 />
