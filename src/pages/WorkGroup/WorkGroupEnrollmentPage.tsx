@@ -397,35 +397,35 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       console.log(dataToBeSent);
     }
 
-    // if (dataToBeModified) {
-    //   try {
-    //     const response = await loginAxios.put(`/api/workgroups/${dataToBeModified.id}`, dataToBeSent);
+    if (dataToBeModified) {
+      try {
+        const response = await loginAxios.put(`/api/workgroups/${dataToBeModified.id}`, dataToBeSent);
 
-    //     if (response.status === 200) {
-    //       alert("수정되었습니다.");
-    //       window.location.href = "http://localhost:3000/dashboard/workgroups";
-    //     } else {
-    //       // Handle other status codes
-    //     }
-    //   } catch (error) {
-    //     // Handle errors
-    //     console.error('An error occurred:', error);
-    //   }
-    // } else {
-    //   try {
-    //     const response = await loginAxios.post('/api/workgroups', dataToBeSent);
+        if (response.status === 200) {
+          alert("수정되었습니다.");
+          window.location.href = "http://localhost:3000/dashboard/workgroups";
+        } else {
+          // Handle other status codes
+        }
+      } catch (error) {
+        // Handle errors
+        console.error('An error occurred:', error);
+      }
+    } else {
+      try {
+        const response = await loginAxios.post('/api/workgroups', dataToBeSent);
 
-    //     if (response.status === 200) {
-    //       alert("저장되었습니다.");
-    //       window.location.href = "http://localhost:3000/dashboard/workgroups";
-    //     } else {
-    //       // Handle other status codes
-    //     }
-    //   } catch (error) {
-    //     // Handle errors
-    //     console.error('An error occurred:', error);
-    //   }
-    // }
+        if (response.status === 200) {
+          alert("저장되었습니다.");
+          window.location.href = "http://localhost:3000/dashboard/workgroups";
+        } else {
+          // Handle other status codes
+        }
+      } catch (error) {
+        // Handle errors
+        console.error('An error occurred:', error);
+      }
+    }
   };
 
   return (
