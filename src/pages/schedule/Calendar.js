@@ -132,6 +132,7 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate}) => {
             closeOnScroll
             // onChange={handleEndDateChange}
             minDate={startDate}
+            maxDate={new Date().getTime() - 24 * 60 * 60 * 1000}
           />
         </DateBox2>
         {showModal && <BasicModal onClose={handleCloseModal} />}

@@ -20,9 +20,6 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Label from '../../components/label';
 
-// mock
-import USERLIST from '../../_mock/privilege';
-
 // LoginAxios
 import loginAxios from '../../api/loginAxios';
 
@@ -31,16 +28,22 @@ import { useAuthState } from '../../context/AuthProvider';
 
 const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarChange, getUserList }) => {
   const formatTime = (time) => {
-    const [hours, minutes] = time.split(':');
-    return `${hours}:${minutes}`;
+    if (time !== null) {
+      const [hours, minutes] = time.split(':');
+      return `${hours}:${minutes}`;
+    }
+    return `-`;
   };
 
   const formatDateTimeToTime = (localDateTime) => {
-    const dateTime = new Date(localDateTime);
-    const hours = String(dateTime.getHours()).padStart(2, '0');
-    const minutes = String(dateTime.getMinutes()).padStart(2, '0');
+    if (localDateTime !== null) {
+      const dateTime = new Date(localDateTime);
+      const hours = String(dateTime.getHours()).padStart(2, '0');
+      const minutes = String(dateTime.getMinutes()).padStart(2, '0');
 
-    return `${hours}:${minutes}`;
+      return `${hours}:${minutes}`;
+    }
+    return `-`;
   };
 
   // 로그인 한 유저 정보
@@ -385,6 +388,9 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   fullWidth
                   value={userData.workGroupType}
                   margin="normal"
+                  InputProps={{
+                    readOnly: true, // 읽기 전용으로 설정
+                  }}
                   style={textStyle} // 좌우 여백 설정
                 />
 
@@ -395,6 +401,9 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   value={workState}
                   onChange={handleWorkState}
                   margin="normal"
+                  InputProps={{
+                    readOnly: true, // 읽기 전용으로 설정
+                  }}
                   style={textStyle} // 좌우 여백 설정
                 />
 
@@ -485,19 +494,25 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
 
                 <TextField
                   name="workStart"
-                  label="근로시작시간"
+                  label="계약출근시간"
                   fullWidth
                   value={formatDateTimeToTime(userData.startWork)}
                   margin="normal"
+                  InputProps={{
+                    readOnly: true, // 읽기 전용으로 설정
+                  }}
                   style={textStyle} // 좌우 여백 설정
                 />
 
                 <TextField
                   name="workEnd"
-                  label="근로종료시간"
+                  label="계약퇴근시간"
                   fullWidth
                   value={formatDateTimeToTime(userData.leaveWork)}
                   margin="normal"
+                  InputProps={{
+                    readOnly: true, // 읽기 전용으로 설정
+                  }}
                   style={textStyle} // 좌우 여백 설정
                 />
 
@@ -507,6 +522,9 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   fullWidth
                   value={formatDateTimeToTime(userData.startWork)}
                   margin="normal"
+                  InputProps={{
+                    readOnly: true, // 읽기 전용으로 설정
+                  }}
                   style={textStyle} // 좌우 여백 설정
                 />
 
@@ -516,6 +534,9 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   fullWidth
                   value={formatDateTimeToTime(userData.leaveWork)}
                   margin="normal"
+                  InputProps={{
+                    readOnly: true, // 읽기 전용으로 설정
+                  }}
                   style={textStyle} // 좌우 여백 설정
                 />
 
