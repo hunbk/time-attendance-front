@@ -263,7 +263,7 @@ export default function SchedulePage() {
     handleCloseMenu();
   };
 
-  const formatTime = (time) => {
+  const formatTimeToTime = (time) => {
     const [hours, minutes] = time.split(':');
     return `${hours}:${minutes}`;
   };
@@ -345,16 +345,16 @@ export default function SchedulePage() {
                         <TableCell align="left">{workGroupType}</TableCell>
 
                         <TableCell align="left">
-                          {formatTime(startTime)}
+                          {formatTimeToTime(startTime)}
                         </TableCell>
 
                         <TableCell align="left">
-                          {formatTime(endTime)}
+                          {formatTimeToTime(endTime)}
                         </TableCell>
                        
-                        <TableCell align="left">{formatTime(workingTime)}</TableCell>
+                        <TableCell align="left">{formatTimeToTime(workingTime)}</TableCell>
 
-                        <TableCell align="left">{formatTime(overTime)}</TableCell>
+                        <TableCell align="left">{formatTimeToTime(overTime)}</TableCell>
 
                         <TableCell align="left">
                           {workState === '정상근무' ? (
