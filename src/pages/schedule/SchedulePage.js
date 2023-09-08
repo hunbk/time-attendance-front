@@ -264,8 +264,11 @@ export default function SchedulePage() {
   };
 
   const formatTimeToTime = (time) => {
+    if(time !== null){
     const [hours, minutes] = time.split(':');
     return `${hours}:${minutes}`;
+    }
+    return `-`;
   };
 
   useEffect(() => {
