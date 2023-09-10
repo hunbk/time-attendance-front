@@ -98,7 +98,7 @@ function applySortFilter(array, comparator, query) {
 
     // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
     queryIds.forEach((queryId) => {
-      const filteredUser = array.find((_user) => _user.id.toString() === queryId);
+      const filteredUser = array.find((user) => user.name === queryId);
       if (filteredUser) {
         filteredUsers.push(filteredUser);
       }
@@ -290,6 +290,10 @@ export default function PrivilegeAdd() {
     setSelectedAdminType('USER');
   };
 
+  const handleFilterButtonClick = (event) => {
+    setUsers(event.target.value);
+  }
+
   const emptyModalRows = modalPage > 0 ? Math.max(0, (1 + modalPage) * rowsModalPerPage - users.length) : 0;
 
   const isModalNotFound = !filteredModalUsers.length && !!modalFilterName;
@@ -319,6 +323,8 @@ export default function PrivilegeAdd() {
             filterName={modalFilterName}
             onFilterName={handleModalFilterByName}
             onSearch={handleModalSearch}
+            onFilterUsers={handleFilterButtonClick}
+            users = {users}
           />
           <Scrollbar>
             <TableContainer>
