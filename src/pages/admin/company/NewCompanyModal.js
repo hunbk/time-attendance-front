@@ -13,7 +13,7 @@ NewCompanyModal.propTypes = {
 
 // 이미지 업로드 영역 스타일
 const dropzoneStyle = {
-  border: '2px dashed #888888',
+  border: '1px dashed rgba(145, 158, 171, 0.5)',
   borderRadius: '5px',
   padding: '20px',
   textAlign: 'center',
@@ -84,7 +84,7 @@ export default function NewCompanyModal({ open, onClose, getCompanyList }) {
       .catch((error) => {
         if (error.response) {
           setNameError(true);
-          setNameHelperText('이미 존재하는 회사 이름입니다.');
+          setNameHelperText('이미 존재하는 회사명입니다.');
         }
       });
     setName(''); // 이름 필드 초기화
@@ -96,7 +96,7 @@ export default function NewCompanyModal({ open, onClose, getCompanyList }) {
         <DialogTitle>새 회사 등록</DialogTitle>
         <DialogContent>
           <InputLabel htmlFor="company-logo" style={{ color: '#161C24' }}>
-            회사로고
+            회사 로고
           </InputLabel>
           <div {...getRootProps()} style={dropzoneStyle} id="company-logo">
             <input {...getInputProps()} />
@@ -121,7 +121,6 @@ export default function NewCompanyModal({ open, onClose, getCompanyList }) {
               setNameError(false); // 입력값 변경시 에러 초기화
               setNameHelperText(''); // 에러 메시지 초기화
             }}
-            // label="회사명"
             fullWidth
             id="company-name"
           />

@@ -48,7 +48,7 @@ const TABLE_HEAD = [
   { id: 'start', label: '근무시작시간' },
   { id: 'end', label: '근무종료시간' },
   { id: 'workingTime', label: '소정근무시간' },
-  { id: 'overtime', label: '초과근무시간' },
+  { id: 'overTime', label: '초과근무시간' },
   { id: 'workState', label: '처리상태' },
   { id: '' },
 ];
@@ -263,9 +263,12 @@ export default function SchedulePage() {
     handleCloseMenu();
   };
 
-  const formatTime = (time) => {
+  const formatTimeToTime = (time) => {
+    if(time !== null){
     const [hours, minutes] = time.split(':');
     return `${hours}:${minutes}`;
+    }
+    return `-`;
   };
 
   useEffect(() => {
@@ -324,7 +327,7 @@ export default function SchedulePage() {
                       position,
                       workGroupType,
                       workingTime,
-                      overtime,
+                      overTime,
                       workState,
                       startWork,
                       leaveWork,
@@ -345,16 +348,16 @@ export default function SchedulePage() {
                         <TableCell align="left">{workGroupType}</TableCell>
 
                         <TableCell align="left">
-                          {formatTime(startTime)}
+                          {formatTimeToTime(startTime)}
                         </TableCell>
 
                         <TableCell align="left">
-                          {formatTime(endTime)}
+                          {formatTimeToTime(endTime)}
                         </TableCell>
                        
-                        <TableCell align="left">{formatTime(workingTime)}</TableCell>
+                        <TableCell align="left">{formatTimeToTime(workingTime)}</TableCell>
 
-                        <TableCell align="left">{formatTime(overtime)}</TableCell>
+                        <TableCell align="left">{formatTimeToTime(overTime)}</TableCell>
 
                         <TableCell align="left">
                           {workState === '정상근무' ? (

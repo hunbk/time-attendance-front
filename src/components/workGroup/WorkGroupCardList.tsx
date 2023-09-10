@@ -142,7 +142,7 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                 {workGroupResponseDto.name}
                             </Typography>
                             <Typography variant="subtitle1" color="text.secondary">
-                                {workGroupResponseDto.type === 'n' ? "일반" : "시차"}
+                                {workGroupResponseDto.type === '일반' ? "일반" : "시차"}
                             </Typography>
                             <Typography variant="caption">
                                 인원: {workGroupResponseDto.numOfMembers}명
@@ -188,8 +188,12 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                             </Button>
 
                                             <Button sx={{ color: "red" }} onClick={() => {
-                                                handleDelete(workGroupResponseDto.id);
-                                                handleClickSnackbar({ vertical: 'top', horizontal: 'center' }, "success", "삭제되었습니다.");
+                                                if (workGroupResponseDto.numOfMembers > 0) {
+                                                    handleClickSnackbar({ vertical: 'top', horizontal: 'center' }, "error", "배포인원 0명일 때 삭제 가능합니다.");
+                                                } else {
+                                                    handleDelete(workGroupResponseDto.id);
+                                                    handleClickSnackbar({ vertical: 'top', horizontal: 'center' }, "success", "삭제되었습니다.");
+                                                }
                                             }}>
                                                 <DeleteIcon fontSize="small" sx={{ marginRight: "10px" }} />
                                                 삭제

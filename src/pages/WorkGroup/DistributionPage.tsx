@@ -10,14 +10,14 @@ import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
 import { UserResponseDtoWrappedType } from "./DistributionIndexPage";
 import { WorkGroupSimpleType } from "./WorkGroupIndexPage";
-
+import loginAxios from '../../api/loginAxios';
 
 type DistributionPageProps = {
     userListWrappedD: UserResponseDtoWrappedType[];
     userListWrappedND: UserResponseDtoWrappedType[];
     setUserListWrappedD: Dispatch<SetStateAction<UserResponseDtoWrappedType[]>>;
     setUserListWrappedND: Dispatch<SetStateAction<UserResponseDtoWrappedType[]>>;
-    deptList: string[];
+    workGroupSimple: WorkGroupSimpleType[];
     selectedWorkGroup: WorkGroupSimpleType;
     isDistributed: boolean;
 }
@@ -34,9 +34,11 @@ const style = {
     p: 4,
 };
 
-const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userListWrappedND, setUserListWrappedD, setUserListWrappedND, deptList, selectedWorkGroup, isDistributed }) => {
+const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userListWrappedND, setUserListWrappedD, setUserListWrappedND, workGroupSimple, selectedWorkGroup, isDistributed }) => {
     const [isModalOpened, setIsModalOpened] = useState<boolean>(false);
     const [isModification, setIsModification] = useState<boolean>(false);
+    const [selectedWorkGroupId, setSelectedWorkGroupId] = useState<number>(0);
+    const [selectedWorkGroupName, setSelectedWorkGroupName] = useState<string>("");
     const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
     const [selectedUserNames, setSelectedUserNames] = useState<string[]>([]);
     const [userListWrappedFiltered, setUserListWrappedFiltered] = useState<UserResponseDtoWrappedType[]>(null);
@@ -48,6 +50,9 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         }
 
         setIsModalOpened(true);
+    };
+    const customLocaleText = {
+        noRowsLabel: '조회할 근로제를 선택해주세요.',
     };
 
     const columns: GridColDef<UserResponseDtoWrappedType>[] = [
@@ -63,13 +68,13 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                 </Box>
         },
         {
-            field: "department",
-            headerName: "부서",
+            field: "workgroup",
+            headerName: "근로제",
             flex: 1,
-            renderCell: ({ row: { dept } }) =>
+            renderCell: () =>
                 <Box>
                     <Typography>
-                        {dept}
+                        {selectedWorkGroupName.length === 0 ? "미배포" : selectedWorkGroupName}
                     </Typography>
                 </Box>
         },
@@ -108,77 +113,114 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         },
     ];
 
-    const filterByDept = (dept: string) => {
-        const tempUserListFiltered: UserResponseDtoWrappedType[] = [];
+    const filterByWorkGroup = async (selectedWorkGroupId: number, selectedWorkGroupName: string) => {
+        try {
+            const response = await loginAxios.get(`/api/workgroups/distribution/${selectedWorkGroupId}`);
 
-        if (isDistributed) {
-            userListWrappedD.forEach((user) => {
-                if (user.dept === dept) {
-                    tempUserListFiltered.push(user);
-                }
-            })
+            if (response.status === 200) {
+                const tempUserListFiltered: UserResponseDtoWrappedType[] = [];
 
-            setUserListWrappedFiltered(tempUserListFiltered);
-        } else {
-            userListWrappedND.forEach((user) => {
-                if (user.dept === dept) {
-                    tempUserListFiltered.push(user);
-                }
-            })
+                userListWrappedD.forEach((user) => {
+                    if (response.data.includes(user.userId)) {
+                        tempUserListFiltered.push(user);
+                    }
+                })
 
-            setUserListWrappedFiltered(tempUserListFiltered);
+                setSelectedWorkGroupId(selectedWorkGroupId);
+                setSelectedWorkGroupName(selectedWorkGroupName);
+                setUserListWrappedFiltered(tempUserListFiltered);
+            } else {
+                // Handle other status codes
+            }
+        } catch (error) {
+            // Handle errors
+            console.error('An error occurred:', error);
         }
     }
 
 
     const updateDistribution = async (selectedUserIds: number[], selectedWorkGroupId?: number) => {
-        const url = `http://localhost:8080/api/workgroups/distribution`;
-
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                userIds: selectedUserIds,
-                workGroupId: selectedWorkGroupId
-            }),
-        });
-
-        response.text().then((data) => {
-            alert(data);
-
-            if (!selectedWorkGroupId && isDistributed === true) {
+        if (isDistributed) {
+            // 배포 해제
+            if (!selectedWorkGroupId) {
                 setUserListWrappedFiltered(null);
                 setUserListWrappedD(userListWrappedD.filter((user) => !selectedUserIds.includes(user.id)));
                 setUserListWrappedND([...userListWrappedND, ...userListWrappedD.filter((user) => selectedUserIds.includes(user.id))]);
+
+                try {
+                    const response = await loginAxios.delete(`/api/workgroups/distribution/${selectedUserIds}`);
+
+                    if (response.status === 200) {
+                        alert("배포해제되었습니다.");
+                    } else {
+                        // Handle other status codes
+                    }
+                } catch (error) {
+                    // Handle errors
+                    console.error('An error occurred:', error);
+                }
+            }
+            // 근로제 변경
+            else {
+                try {
+                    const response = await loginAxios.put('/api/workgroups/distribution', {
+                        userIds: selectedUserIds,
+                        workGroupId: selectedWorkGroupId
+                    });
+                    if (response.status === 200) {
+                        alert("근로제 변경되었습니다.");
+                    } else {
+                        // Handle other status codes
+                    }
+                } catch (error) {
+                    // Handle errors
+                    console.error('An error occurred:', error);
+                }
             }
 
-            if (selectedWorkGroupId && isDistributed === false) {
-                setUserListWrappedFiltered(null);
-                setUserListWrappedND(userListWrappedND.filter((user) => !selectedUserIds.includes(user.id)));
-                setUserListWrappedD([...userListWrappedD, ...userListWrappedND.filter((user) => selectedUserIds.includes(user.id))]);
+        }
+        // 배포
+        else {
+            setUserListWrappedFiltered(null);
+            setUserListWrappedND(userListWrappedND.filter((user) => !selectedUserIds.includes(user.id)));
+            setUserListWrappedD([...userListWrappedD, ...userListWrappedND.filter((user) => selectedUserIds.includes(user.id))]);
+
+            try {
+                const response = await loginAxios.post('/api/workgroups/distribution', {
+                    userIds: selectedUserIds,
+                    workGroupId: selectedWorkGroupId
+                });
+
+                if (response.status === 200) {
+                    alert("배포되었습니다.");
+                } else {
+                    // Handle other status codes
+                }
+            } catch (error) {
+                // Handle errors
+                console.error('An error occurred:', error);
             }
-        });
+
+        }
+
     }
 
     return (
         <Grid container spacing={2}>
-            <Grid xs={2}>
+            {isDistributed === true ? <Grid xs={2}>
                 <TreeView
                     defaultCollapseIcon={<ExpandMoreIcon />}
                     defaultExpandIcon={<ChevronRightIcon />}
                     sx={{ height: 240, flexGrow: 1, maxWidth: 400, overflowY: 'auto' }}
                     defaultExpanded={["-1"]}
                 >
-                    <TreeItem nodeId="-1" label="부서">
-                        {deptList.map((dept, index) => dept === "관리자" ? <div key={index}> </div> : <TreeItem key={index} nodeId={`${index}`} label={dept} onClick={() => { filterByDept(dept) }} />)}
+                    <TreeItem nodeId="-1" label="근로제">
+                        {workGroupSimple.map((item, index) => <TreeItem key={index} nodeId={`${index}`} label={item.name} onClick={() => { filterByWorkGroup(item.id, item.name) }} />)}
                     </TreeItem>
                 </TreeView>
-            </Grid>
-            <Grid xs={10}>
-                직원 리스트
-                <DataGrid checkboxSelection rows={userListWrappedFiltered !== null ? userListWrappedFiltered : isDistributed ? userListWrappedD : userListWrappedND} columns={columns} onRowSelectionModelChange={(selection: number[]) => {
+            </Grid> : <></>}
+            <Grid xs={isDistributed === true ? 10 : 12}>
+                <DataGrid checkboxSelection rows={userListWrappedFiltered !== null ? userListWrappedFiltered : isDistributed ? selectedWorkGroupId !== 0 ? userListWrappedD : [] : userListWrappedND} columns={columns} onRowSelectionModelChange={(selection: number[]) => {
                     setSelectedUserIds(selection);
 
                     if (isDistributed) {
@@ -204,10 +246,11 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                         pagination: { paginationModel: { pageSize: 5 } },
                     }}
                     pageSizeOptions={[5, 10, 25]}
+                    localeText={customLocaleText}
                 />
             </Grid>
-            <Grid xs={2}> </Grid>
-            <Grid xs={10} sx={{ display: "flex", justifyContent: "end", margin: "20px 0" }}>
+            {isDistributed === true ? <Grid xs={2}> </Grid> : <></>}
+            <Grid xs={isDistributed === true ? 10 : 12} sx={{ display: "flex", justifyContent: "end", margin: "20px 0" }}>
                 {isDistributed ? <><Button id="modification" onClick={handleModalOpen} variant="outlined" sx={{ marginRight: "10px" }}>근로제 변경</Button><Button id="deletion" onClick={handleModalOpen} variant="outlined">배포 해제</Button>
                     <Modal
                         open={isModalOpened}

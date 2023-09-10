@@ -1,13 +1,11 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import PropTypes from 'prop-types';
 
-const AuthStateContext = createContext({
-  authenticated: false,
-  user: undefined,
-  loading: true,
-});
+import loginAxios from '../api/loginAxios';
+import { Box, CircularProgress, LinearProgress } from '@mui/material';
 
-const AuthDispatchContext = createContext(null);
+const AuthStateContext = createContext();
+const AuthDispatchContext = createContext();
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -16,65 +14,91 @@ const reducer = (state, action) => {
         ...state,
         authenticated: true,
         user: action.payload,
+        loading: false, // 로딩 완료
       };
     case 'LOGOUT':
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('userInfo');
       return {
         ...state,
         authenticated: false,
-        user: undefined,
+        user: null,
+        loading: false, // 로딩 완료
       };
-    case 'STOP_LOADING':
+    case 'LOADING':
       return {
         ...state,
-        loading: false,
+        loading: true, // 로딩 시작
       };
     default:
-      throw new Error(`Unknown action type: ${action.type}`);
+      return state;
   }
 };
 
-export const AuthProvider = ({ children }) => {
-  const accessToken = localStorage.getItem('accessToken');
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+export const useAuthState = () => {
+  const context = useContext(AuthStateContext);
+  if (!context) {
+    throw new Error('useAuthState must be used within an AuthProvider');
+  }
+  return context;
+};
 
-  const [state, defaultDispatch] = useReducer(reducer, {
-    user: userInfo || undefined, // 로컬스토리지에 사용자 정보가 있으면 저장, 없으면 undefined
-    authenticated: !!accessToken && !!userInfo, // 로컬스토리지에 토큰, 사용자 정보가 있으면 true, 없으면 false
-    loading: true,
+export const useAuthDispatch = () => {
+  const context = useContext(AuthDispatchContext);
+  if (!context) {
+    throw new Error('useAuthDispatch must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, {
+    authenticated: false,
+    user: null,
+    loading: true, // 초기 로딩 상태를 true로 설정
   });
 
-  const dispatch = (type, payload) => {
-    defaultDispatch({ type, payload });
+  // 서버에서 사용자 정보를 요청하는 API
+  const fetchUserData = async () => {
+    dispatch({ type: 'LOADING' }); // 로딩 시작
+
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        const { data } = await loginAxios.get('/api/users/me');
+        if (data) {
+          dispatch({ type: 'LOGIN', payload: data });
+        } else {
+          dispatch({ type: 'LOGOUT' }); // 인증 실패
+        }
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+        dispatch({ type: 'LOGOUT' }); // 에러 발생 시 로그아웃
+      }
+    } else {
+      dispatch({ type: 'LOGOUT' }); // 토큰이 없으면 로그아웃
+    }
   };
 
-  // TODO: 로그인 한 사용자의 정보를 새로고침 시, 받아올려고 시도하였지만 현재는 실패함.
-  // useEffect(() => {
-  //   console.log('mount');
-  //   async function loadUser() {
-  //     try {
-  //       const res = await loginAxios.get('/api/users/me');
-  //       dispatch('LOGIN', res.data);
-  //     } catch (error) {
-  //       dispatch('LOGOUT');
-  //     } finally {
-  //       dispatch('STOP_LOADING');
-  //     }
-  //   }
-  //   loadUser();
-  // }, []);
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
   return (
     <AuthStateContext.Provider value={state}>
-      <AuthDispatchContext.Provider value={dispatch}>{children}</AuthDispatchContext.Provider>
+      <AuthDispatchContext.Provider value={dispatch}>
+        {state.loading ? (
+          // 로딩 중일 때
+          <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+            <CircularProgress color="primary" />
+          </Box>
+        ) : (
+          // 로딩 완료되면 실제 컨텐츠 표시
+          children
+        )}
+      </AuthDispatchContext.Provider>
     </AuthStateContext.Provider>
   );
 };
 
 AuthProvider.propTypes = {
-  children: PropTypes.node,
+  children: PropTypes.node.isRequired,
 };
-
-export const useAuthState = () => useContext(AuthStateContext);
-export const useAuthDispatch = () => useContext(AuthDispatchContext);

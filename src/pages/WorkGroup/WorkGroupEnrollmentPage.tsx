@@ -19,10 +19,12 @@ import Card from "@mui/material/Card";
 import Checkbox from "@mui/material/Checkbox";
 import AddIcon from "@mui/icons-material/Add";
 import { useImmer } from "use-immer";
+import produce from 'immer';
 import TimeInputDiv from "../../components/workGroup/TimeInputDiv";
 import HolidayPayLeave from "../../components/workGroup/HolidayPayLeave";
 import { DataToBeModifiedType } from './WorkGroupIndexPage';
 import { useAuthState } from '../../context/AuthProvider';
+import loginAxios from '../../api/loginAxios';
 
 type WorkGroupEnrollmentPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -53,10 +55,16 @@ export type DataType = {
 
 const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGroupListHidden, dataToBeModified, setDataToBeModified }) => {
   const { user } = useAuthState();
+  const [hours, setHours] = useImmer({
+    "근무": [{ start: '', end: '' }],
+    "휴게": [{ start: '', end: '' }],
+    "의무": [{ start: '', end: '' }],
+    "승인": [{ start: '', end: '' }],
+  });
   const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-  const handleHour = (startOrEnd: string, timeType: string, value: Dayjs | null) => {
+  const handleHour = (index: number, startOrEnd: string, timeType: string, value: Dayjs | null) => {
     setHours((draft) => {
-      draft[timeType][startOrEnd] = value?.format('HH:mm:ss');
+      draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
     })
   }
   const getTimeRangeByType = (timeRangeType: string[], start: string[], end: string[], targetType: string) => {
@@ -69,43 +77,81 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     }
 
     return matchedRanges;
-
   }
-  const timeInputDivSet = (timeType: string) =>
-  (dataToBeModified ? <>{getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, timeType).map((matchedRange, index) => <Fragment key={index}>
-    <TimeInputDiv
-      handleTempHour={handleHour}
-      startOrEnd="start"
-      timeType={timeType}
-      defaultValue={dayjs(matchedRange.start, 'HH:mm:ss')}
-    />
-    <TimeInputDiv
-      handleTempHour={handleHour}
-      startOrEnd="end"
-      timeType={timeType}
-      defaultValue={dayjs(matchedRange.end, 'HH:mm:ss')}
-    />
-  </Fragment>)}</> : <>
-    <TimeInputDiv
-      handleTempHour={handleHour}
-      startOrEnd="start"
-      timeType={timeType}
-      defaultValue={null}
-    />
-    <TimeInputDiv
-      handleTempHour={handleHour}
-      startOrEnd="end"
-      timeType={timeType}
-      defaultValue={null}
-    />
-  </>);
+  // eslint-disable-next-line prefer-const
+  let [isChecked, setIsChecked] = useImmer({
+    근무: true,
+    휴게: true,
+    의무: true,
+    승인: true,
+  });
+  // eslint-disable-next-line prefer-const
+  let [statusReset, setStatusReset] = useImmer({
+    근무: false,
+    휴게: false,
+    의무: false,
+    승인: false,
+  });
+  const [currentTimeInputDivIndex, setCurrentTimeInputDivIndex] = useImmer({
+    휴게: 0,
+    의무: 0,
+  });
+  const timeInputDivSet = (timeType: string, index: number, isFromAdd?: boolean) => {
+    if (dataToBeModified && !statusReset[timeType] && !isFromAdd) {
+      const timeRangeByType = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, timeType);
+
+      return <>{
+        timeRangeByType.map((matchedRange, mapIndex) =>
+          <Fragment key={mapIndex}>
+            <TimeInputDiv
+              index={mapIndex}
+              handleTempHour={handleHour}
+              startOrEnd="start"
+              timeType={timeType}
+              defaultValue={dayjs(matchedRange.start, 'HH:mm:ss')}
+            />
+            <TimeInputDiv
+              index={mapIndex}
+              handleTempHour={handleHour}
+              startOrEnd="end"
+              timeType={timeType}
+              defaultValue={dayjs(matchedRange.end, 'HH:mm:ss')}
+            />
+          </Fragment>
+        )
+      }</>
+    }
+
+    return <>
+      <TimeInputDiv
+        index={index}
+        handleTempHour={handleHour}
+        startOrEnd="start"
+        timeType={timeType}
+        defaultValue={null}
+      />
+      <TimeInputDiv
+        index={index}
+        handleTempHour={handleHour}
+        startOrEnd="end"
+        timeType={timeType}
+        defaultValue={null}
+      />
+    </>
+  };
 
   const [timeInputDivsBreak, setTimeInputDivsBreak] = useState([
-    timeInputDivSet("휴게")
+    timeInputDivSet("휴게", 0)
   ]);
   const [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
-    timeInputDivSet("의무")
+    timeInputDivSet("의무", 0)
   ]);
+  const [timeInputDivWork, setTimeInputDivWork] = useState(
+    timeInputDivSet("근무", 0)
+  );
+  const [timeInputDivApproved, setTimeInputDivApproved] = useState(
+    timeInputDivSet("승인", 0)
+  );
   const [alignments, setAlignments] = useState<string[]>(dataToBeModified ? dataToBeModified.alignments.work : []);
   const [dayHolidays, setDayHolidays] = useState<string[]>(dataToBeModified ? DAYS.filter(day => !dataToBeModified.alignments.work.includes(day)) : []);
   const [holidayOnOff, setHolidayOnOff] = useState<"on" | "off">("on");
@@ -127,77 +173,101 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     end: [],
     companyId: user.companyId
   });
-  const [hours, setHours] = useImmer({
-    근무: {
-      start: '',
-      end: '',
-    },
-    휴게: {
-      start: '',
-      end: '',
-    },
-    의무: {
-      start: '',
-      end: '',
-    },
-    승인: {
-      start: '',
-      end: '',
-    }
-  })
-  const [isChecked, setIsChecked] = useImmer({
-    휴게: true,
-    의무: true,
-    승인: true,
-  });
   useEffect(() => {
     if (dataToBeModified) {
       setData(dataToBeModified.contents);
+
+      const tempHours = {
+        "근무": [{ start: '', end: '' }],
+        "휴게": [{ start: '', end: '' }],
+        "의무": [{ start: '', end: '' }],
+        "승인": [{ start: '', end: '' }],
+      };
+
+      tempHours["근무"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "근무");
+      tempHours["휴게"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "휴게");
+      tempHours["의무"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "의무");
+      tempHours["승인"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "승인");
+
+      setHours(tempHours);
+      setCurrentTimeInputDivIndex((draft) => {
+        draft["휴게"] = tempHours["휴게"].length - 1;
+        draft["의무"] = tempHours["의무"].length - 1;
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const addTimeInputDiv = (divKind: "휴게" | "의무") => {
-    setData((draft) => {
-      draft.timeRangeType.push(divKind);
-      draft.start.push(hours[divKind].start);
-      draft.end.push(hours[divKind].end);
+    setCurrentTimeInputDivIndex((draft) => {
+      draft[divKind] += 1;
+    })
+    setHours((draft) => {
+      draft[divKind].push({ start: '', end: '' });
     })
 
     if (divKind === "휴게") {
-      setTimeInputDivsBreak([...timeInputDivsBreak, timeInputDivSet("휴게")]);
+      setTimeInputDivsBreak([...timeInputDivsBreak, timeInputDivSet("휴게", currentTimeInputDivIndex["휴게"] + 1, true)]);
     } else {
-      setTimeInputDivsCompulsory([...timeInputDivsCompulsory, timeInputDivSet("의무")]);
+      setTimeInputDivsCompulsory([...timeInputDivsCompulsory, timeInputDivSet("의무", currentTimeInputDivIndex["의무"] + 1, true)]);
     }
   };
   const handleCheckboxChange = (type: "휴게" | "승인" | "의무") => {
-    if (isChecked) {
-      setData((draft) => {
-        if (draft.timeRangeType.includes(type)) {
-          const indexArr: number[] = [];
-
-          for (let i = 0; i < draft.timeRangeType.length; i += 1) {
-            if (draft.timeRangeType[i] === type) {
-              indexArr.push(i);
-            }
-          }
-
-          for (let i = indexArr.length - 1; i >= 0; i -= 1) {
-            draft.timeRangeType.splice(indexArr[i], 1);
-            draft.start.splice(indexArr[i], 1);
-            draft.end.splice(indexArr[i], 1);
-          }
-        }
-      })
+    if (isChecked[type]) {
+      console.log(`${type} un-checked`)
+      // produce(hours, (draft) => {
+      //   draft[type] = [{ start: '', end: '' }];
+      // });
       setHours((draft) => {
-        draft[type].start = '';
-        draft[type].end = '';
-      })
-    } else {
+        draft[type] = [{ start: '', end: '' }];
+      });
+      // setData((draft) => {
+      //   if (draft.timeRangeType.includes(type)) {
+      //     const indexArr: number[] = [];
 
-      // 수정중
+      //     for (let i = 0; i < draft.timeRangeType.length; i += 1) {
+      //       if (draft.timeRangeType[i] === type) {
+      //         indexArr.push(i);
+      //       }
+      //     }
+
+      //     for (let i = indexArr.length - 1; i >= 0; i -= 1) {
+      //       draft.timeRangeType.splice(indexArr[i], 1);
+      //       draft.start.splice(indexArr[i], 1);
+      //       draft.end.splice(indexArr[i], 1);
+      //     }
+      //   }
+      // })
+
+      if (type === "휴게" || type === "의무") {
+        setCurrentTimeInputDivIndex((draft) => {
+          draft[type] = 0;
+        })
+      }
+
+      isChecked = { ...isChecked, [type]: false };
+
+      statusReset = { ...statusReset, [type]: true };
+      setStatusReset((draft) => { draft[type] = true });
+
+      switch (type) {
+        case "휴게":
+          setTimeInputDivsBreak([timeInputDivSet("휴게", 0)]);
+          break;
+        case "승인":
+          setTimeInputDivApproved(timeInputDivSet("승인", 0));
+          break;
+        case "의무":
+          setTimeInputDivsCompulsory([timeInputDivSet("의무", 0)]);
+          break;
+        default:
+      }
+    } else {
+      console.log(`${type} checked`)
     }
+
     setIsChecked((draft) => { draft[type] = !draft[type] });
   };
+
   const handleToggle = (_event: MouseEvent<HTMLElement>, newAlignment: string[]) => {
     setAlignments(newAlignment);
     setDayHolidays(DAYS.filter(day => !newAlignment.includes(day)));
@@ -217,60 +287,145 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       }
     })
   }
-  // const handleDelete = () => {
-  //   console.info("You clicked the delete icon.");
-  // };
   const handleCancel = () => {
     setIsWorkGroupListHidden(false);
     setDataToBeModified(null);
   }
-  const submitForm = (event: FormEvent) => {
+
+  let dataToBeSent: DataType
+
+  const submitForm = async (event: FormEvent) => {
     event.preventDefault();
 
-    let dataToBeSent: DataType = data;
+    dataToBeSent = data;
 
-    if (hours.근무.start !== '') {
-      dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "근무"] };
-      dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.근무.start] };
-      dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.근무.end] };
+    // if (hours["근무"][0].start !== '' && hours["근무"][0].end === '') {
+    //   const index = dataToBeSent.timeRangeType.indexOf("근무");
+    //   const arrayToBeUpdated = [...dataToBeSent.start];
+    //   arrayToBeUpdated[index] = hours["근무"][0].start;
+    //   dataToBeSent = { ...dataToBeSent, start: arrayToBeUpdated };
+    // } else if (hours["근무"][0].start === '' && hours["근무"][0].end !== '') {
+    //   const index = dataToBeSent.timeRangeType.indexOf("근무");
+    //   const arrayToBeUpdated = [...dataToBeSent.end];
+    //   arrayToBeUpdated[index] = hours["근무"][0].end;
+    //   dataToBeSent = { ...dataToBeSent, end: arrayToBeUpdated };
+    // } else if (hours["근무"][0].start !== '' && hours["근무"][0].end !== '') {
+    //   const index = dataToBeSent.timeRangeType.indexOf("근무");
+    //   const arrayToBeUpdatedStart = [...dataToBeSent.start];
+    //   const arrayToBeUpdatedEnd = [...dataToBeSent.end];
+    //   arrayToBeUpdatedStart[index] = hours["근무"][0].start;
+    //   arrayToBeUpdatedEnd[index] = hours["근무"][0].end;
+    //   dataToBeSent = { ...dataToBeSent, start: arrayToBeUpdatedStart };
+    //   dataToBeSent = { ...dataToBeSent, end: arrayToBeUpdatedEnd };
+    // }
+
+
+
+
+    // if (hours.휴게.start !== '') {
+    //   dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "휴게"] };
+    //   dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.휴게.start] };
+    //   dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.휴게.end] };
+    // }
+
+    // if (hours.의무.start !== '') {
+    //   dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "의무"] };
+    //   dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.의무.start] };
+    //   dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.의무.end] };
+
+    // }
+
+
+    // if (hours.승인.start !== '' || hours.승인.end !== '') {
+    //   dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "승인"] };
+    //   dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.승인.start] };
+    //   dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.승인.end] };
+    // }
+
+
+
+    const tempTimeRangeType = [];
+    const tempStart = [];
+    const tempEnd = [];
+
+    // Delete all timeRangeType, start, end arrays in dataToBeSent
+    dataToBeSent = { ...dataToBeSent, timeRangeType: [] };
+    dataToBeSent = { ...dataToBeSent, start: [] };
+    dataToBeSent = { ...dataToBeSent, end: [] };
+
+    // Convert hours array into timeRangeType, start, end arrays
+    if (hours["근무"][0].start.length !== 0) {
+      for (let i = 0; i < hours["근무"].length; i += 1) {
+        tempTimeRangeType.push("근무");
+        tempStart.push(hours["근무"][i].start);
+        tempEnd.push(hours["근무"][i].end);
+      }
+    }
+    if (hours["휴게"][0].start.length !== 0) {
+      for (let i = 0; i < hours["휴게"].length; i += 1) {
+        tempTimeRangeType.push("휴게");
+        tempStart.push(hours["휴게"][i].start);
+        tempEnd.push(hours["휴게"][i].end);
+      }
+    }
+    if (hours["의무"][0].start.length !== 0) {
+      for (let i = 0; i < hours["의무"].length; i += 1) {
+        tempTimeRangeType.push("의무");
+        tempStart.push(hours["의무"][i].start);
+        tempEnd.push(hours["의무"][i].end);
+      }
+    }
+    if (hours["승인"][0].start.length !== 0) {
+      for (let i = 0; i < hours["승인"].length; i += 1) {
+        tempTimeRangeType.push("승인");
+        tempStart.push(hours["승인"][i].start);
+        tempEnd.push(hours["승인"][i].end);
+      }
     }
 
-    if (hours.휴게.start !== '') {
-      dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "휴게"] };
-      dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.휴게.start] };
-      dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.휴게.end] };
+
+    // Save that in dataToBeSent object
+    dataToBeSent = { ...dataToBeSent, timeRangeType: tempTimeRangeType };
+    dataToBeSent = { ...dataToBeSent, start: tempStart };
+    dataToBeSent = { ...dataToBeSent, end: tempEnd };
+
+
+
+    if (alignments.length === 0) {
+      alert("근무일은 최소 1일 이상이어야합니다.")
+    } else {
+      console.log(dataToBeSent);
     }
 
-    if (hours.의무.start !== '') {
-      dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "의무"] };
-      dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.의무.start] };
-      dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.의무.end] };
+    if (dataToBeModified) {
+      try {
+        const response = await loginAxios.put(`/api/workgroups/${dataToBeModified.id}`, dataToBeSent);
 
+        if (response.status === 200) {
+          alert("수정되었습니다.");
+          window.location.href = "http://localhost:3000/dashboard/workgroups";
+        } else {
+          // Handle other status codes
+        }
+      } catch (error) {
+        // Handle errors
+        console.error('An error occurred:', error);
+      }
+    } else {
+      try {
+        const response = await loginAxios.post('/api/workgroups', dataToBeSent);
+
+        if (response.status === 200) {
+          alert("저장되었습니다.");
+          window.location.href = "http://localhost:3000/dashboard/workgroups";
+        } else {
+          // Handle other status codes
+        }
+      } catch (error) {
+        // Handle errors
+        console.error('An error occurred:', error);
+      }
     }
-
-    if (hours.승인.start !== '') {
-      dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "승인"] };
-      dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.승인.start] };
-      dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.승인.end] };
-    }
-
-    console.log(dataToBeSent);
-
-    fetch('http://localhost:8080/api/workgroups', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dataToBeSent),
-    })
-      .then((response) => response.text())
-      .then((data) => {
-        alert(data);
-        window.location.href = "http://localhost:3000/dashboard/workgroups";
-      })
-      .catch((error) => {
-        console.error(error);
-      });
   };
 
   return (
@@ -290,6 +445,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                 onChange={(e) => {
                   setData({ ...data, name: e.target.value });
                 }}
+                required
               />
             </span>
           </Grid>
@@ -407,7 +563,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                     근무시작 및 종료시각을 근로자의 결정으로 선택할 수 있는
                     시간대를 입력합니다.
                   </div>
-                  {timeInputDivSet("근무")}
+                  {timeInputDivWork}
                 </Grid>
                 <Grid xs={3}>
                   <span>휴게시간</span>
@@ -464,7 +620,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                     사전에 승인을 받은 경우에만 근로시간으로 인정하는 시간을
                     입력할 수 있는 시간대를 설정합니다.
                   </div>
-                  {timeInputDivSet("승인")}
+                  {timeInputDivApproved}
                 </Grid> : <Grid xs={8}> </Grid>}
               </Grid>
             </Card>
@@ -482,3 +638,4 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
 };
 
 export default WorkGroupEnrollmentPage;
+

@@ -9,6 +9,7 @@ import { FC, SyntheticEvent, useEffect, useState } from 'react';
 import CustomTabPanel from 'src/components/workGroup/CustomTabPanel';
 import { WorkGroupSimpleType } from './WorkGroupIndexPage';
 import { useAuthState } from '../../context/AuthProvider';
+import loginAxios from '../../api/loginAxios';
 
 type DistributionIndexPageProps = {
     workGroupSimple: WorkGroupSimpleType[];
@@ -48,7 +49,6 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
     const [userListWrappedD, setUserListWrappedD] = useState<UserResponseDtoWrappedType[]>([]);
     const [userListWrappedND, setUserListWrappedND] = useState<UserResponseDtoWrappedType[]>([]);
     const [currentTabIndex, setCurrentTabIndex] = useState<number>(0);
-    const [deptList, setDeptList] = useState<string[]>([]);
     const [selectedWorkGroup, setSelectedWorkGroup] = useState<WorkGroupSimpleType>({
         id: 0,
         name: "",
@@ -70,19 +70,19 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
     };
 
     const getUsers = async () => {
-        const url = `http://localhost:8080/api/users?companyId=${user.companyId}`;
+        try {
+            const response = await loginAxios.get(`/api/users?companyId=${user.companyId}`);
 
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            },
-        });
-
-        response.json().then((data: UserResponseDtoType[]) => {
-            setDeptList([...new Set(data.map(UserResponseDto => UserResponseDto.dept))]);
-            wrapIdForUserList(data);
-        });
+            if (response.status === 200) {
+                const data = response.data as UserResponseDtoType[];
+                wrapIdForUserList(data);
+            } else {
+                // Handle other status codes
+            }
+        } catch (error) {
+            // Handle errors
+            console.error('An error occurred:', error);
+        }
     }
 
     // Add id property and filter by distribution
@@ -116,7 +116,6 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
         <Grid container spacing={2}>
             <Grid xs={2}>
                 <Box sx={{ width: '100%' }}>
-                    근로그룹목록
                     <Stack spacing={2}>
                         {workGroupSimple.length !== 0 && workGroupSimple.map((item, index) => <WorkGroupCard key={index} id={item.id} name={item.name} type={item.type} numOfMembers={item.numOfMembers} handleSelectedWorkGroup={handleSelectedWorkGroup} />)}
                     </Stack>
@@ -131,10 +130,10 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
                         </Tabs>
                     </Box>
                     <CustomTabPanel value={currentTabIndex} index={0}>
-                        <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} deptList={deptList} selectedWorkGroup={selectedWorkGroup} isDistributed={false} />
+                        <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} isDistributed={false} />
                     </CustomTabPanel>
                     <CustomTabPanel value={currentTabIndex} index={1}>
-                        <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} deptList={deptList} selectedWorkGroup={selectedWorkGroup} isDistributed />
+                        <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} isDistributed />
                     </CustomTabPanel>
                 </Box>
             </Grid>
