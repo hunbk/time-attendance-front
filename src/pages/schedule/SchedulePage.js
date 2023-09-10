@@ -86,7 +86,7 @@ function applySortFilter(array, comparator, query) {
     const filteredUsers = [];
     // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
     queryIds.forEach((queryId) => {
-      const filteredUser = array.find((_user) => _user.id.toString() === queryId);
+      const filteredUser = array.find((_user) => _user.name === queryId); 
       if (filteredUser) {
         filteredUsers.push(filteredUser);
       }
