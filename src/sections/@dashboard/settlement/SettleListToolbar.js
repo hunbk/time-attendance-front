@@ -7,7 +7,6 @@ import { Toolbar, Typography, OutlinedInput, InputAdornment, Button } from '@mui
 import Iconify from '../../../components/iconify';
 import Calendar from '../../../pages/schedule/Calendar';
 
-
 // ----------------------------------------------------------------------
 
 const StyledRoot = styled(Toolbar)(({ theme }) => ({
@@ -107,7 +106,7 @@ export default function SettleListToolbar({
             value={filterName}
             onChange={onFilterName}
             onKeyDown={handleSearchKeyPress}
-            placeholder="사원 ID를 적어주세요."
+            placeholder="사원의 이름을 적어주세요."
             startAdornment={
               <InputAdornment position="start">
                 <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
