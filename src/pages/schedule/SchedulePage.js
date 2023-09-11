@@ -86,7 +86,7 @@ function applySortFilter(array, comparator, query) {
     const filteredUsers = [];
     // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
     queryIds.forEach((queryId) => {
-      const filteredUser = array.find((_user) => _user.name === queryId); 
+      const filteredUser = array.find((_user) => _user.name === queryId);
       if (filteredUser) {
         filteredUsers.push(filteredUser);
       }
@@ -206,14 +206,14 @@ export default function SchedulePage() {
     setRowsPerPage(5);
 
     // 검색창에 아무것도 입력하지 않았을 때는 전체 목록을 보여줍니다.
-    if (!searchQuery) {
+    if (searchQuery !== null || searchQuery === '') {
       setIsSearched(false); // 검색 버튼을 누르지 않은 경우이므로 isSearched 상태를 false로 설정합니다.
       setFilteredUsers(users); // 전체 목록을 보여주기 위해 filteredUsers 상태를 USERLIST로 초기화합니다.
     } else {
       // 검색 버튼을 눌렀을 때만 실시간으로 결과가 나오도록 로직을 실행합니다.
       if (isSearched) {
-        const searchResult = applySortFilter(users, getComparator(order, orderBy), searchQuery);
-        setFilteredUsers(searchResult);
+        const filteredUsers = users.filter(user => user.name === searchQuery);
+        setFilteredUsers(filteredUsers)
       }
     }
   };
