@@ -242,6 +242,7 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                 <Grid item xs={2} sx={{ display: "flex", justifyContent: "end" }}>
                                     <Typography>
                                         <SwitchWrapped
+                                            id={workGroupResponseDto.id}
                                             isOn={workGroupResponseDto.isOn}
                                             numOfMembers={workGroupResponseDto.numOfMembers}
                                             handleClickSnackbar={handleClickSnackbar}
