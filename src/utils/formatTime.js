@@ -25,3 +25,8 @@ export function fToNow(date) {
       })
     : '';
 }
+
+// "HH:mm:dd"
+export function fTime(timeString) {
+  return timeString ? timeString.substring(0, 5) : '';
+}

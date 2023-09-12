@@ -16,6 +16,12 @@ const navConfig = [
     icon: icon('ic_analytics'),
     roles: ['USER', 'HR', 'FO', 'MNG', 'ADMIN'],
   },
+  {
+    title: '마이페이지',
+    path: '/dashboard/mypage',
+    icon: icon('ic_user'),
+    roles: ['USER', 'HR', 'FO', 'MNG', 'ADMIN'],
+  },
   // {
   //   title: '권한 목록',
   //   path: '/dashboard/privilege',

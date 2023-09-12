@@ -21,7 +21,7 @@ export default function App() {
   dayjs.locale('ko');
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ko">
       <HelmetProvider>
         <AuthProvider>
           <BrowserRouter>
