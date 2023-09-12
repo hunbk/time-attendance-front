@@ -1,8 +1,7 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from "react";
 import { Box } from "@mui/material";
 import Button from '@mui/material/Button';
-import { DataType } from "./WorkGroupEnrollmentPage";
-import { DataToBeModifiedType } from "./WorkGroupIndexPage";
+import { DataToBeModifiedType, DataType } from "./WorkGroupIndexPage";
 import WorkGroupCardList from "src/components/workGroup/WorkGroupCardList";
 import Grid from '@mui/material/Grid';
 import type { WorkGroupSimpleType } from "./WorkGroupIndexPage";
@@ -31,44 +30,45 @@ export type WorkGroupResponseDtoType = {
 const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidden, setDataToBeModified, setWorkGroupSimple }) => {
   const { user } = useAuthState();
   const [workGroupResponseDtoList, setWorkGroupResponseDtoList] = useState<WorkGroupResponseDtoType[]>([]);
-  const getData = async () => {
-    try {
-      const response = await loginAxios.get(`/api/workgroups?companyId=${user.companyId}`);
 
-      if (response.status === 200) {
-        const { data } = response;
-        const dataFiltered = data.filter((item) => item.name !== "미배포" && item);
-        convertDtoToSimple(dataFiltered);
-        setWorkGroupResponseDtoList(dataFiltered);
-      } else {
-        // Handle other status codes
-      }
-    } catch (error) {
-      // Handle errors
-      console.error('An error occurred:', error);
-    }
-  }
-
-  const convertDtoToSimple = (data: WorkGroupResponseDtoType[]) => {
-    const tempSimpleArray: WorkGroupSimpleType[] = [];
-
-    data.forEach((dto) => {
-      const tempSimple: WorkGroupSimpleType = {
-        id: dto.id,
-        name: dto.name,
-        type: dto.type,
-        numOfMembers: dto.numOfMembers
-      };
-
-      tempSimpleArray.push(tempSimple);
-    })
-
-    setWorkGroupSimple(tempSimpleArray);
-  }
 
   useEffect(() => {
+    const convertDtoToSimple = (data: WorkGroupResponseDtoType[]) => {
+      const tempSimpleArray: WorkGroupSimpleType[] = [];
+
+      data.forEach((dto) => {
+        const tempSimple: WorkGroupSimpleType = {
+          id: dto.id,
+          name: dto.name,
+          type: dto.type,
+          numOfMembers: dto.numOfMembers
+        };
+
+        tempSimpleArray.push(tempSimple);
+      })
+
+      setWorkGroupSimple(tempSimpleArray);
+    }
+    const getData = async () => {
+      try {
+        const response = await loginAxios.get(`/api/workgroups?companyId=${user.companyId}`);
+
+        if (response.status === 200) {
+          const { data } = response;
+          const dataFiltered = data.filter((item: WorkGroupResponseDtoType) => item.name !== "미배포" && item);
+          convertDtoToSimple(dataFiltered);
+          setWorkGroupResponseDtoList(dataFiltered);
+        } else {
+          // Handle other status codes
+        }
+      } catch (error) {
+        // Handle errors
+        console.error('An error occurred:', error);
+      }
+    }
+
     getData();
-  }, []);
+  }, [setWorkGroupSimple, user.companyId]);
 
   const alignments: string[] = [];
   const payLeaves: string[] = [];
