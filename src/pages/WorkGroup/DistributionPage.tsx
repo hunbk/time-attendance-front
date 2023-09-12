@@ -42,6 +42,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
     const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
     const [selectedUserNames, setSelectedUserNames] = useState<string[]>([]);
     const [userListWrappedFiltered, setUserListWrappedFiltered] = useState<UserResponseDtoWrappedType[]>(null);
+    const [selectedCard, setSelectedCard] = useState(false);
     const handleModalOpen = (event: MouseEvent<HTMLButtonElement>) => {
         if (event.currentTarget.id === "modification") {
             setIsModification(true);

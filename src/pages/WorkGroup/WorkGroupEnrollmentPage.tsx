@@ -14,17 +14,16 @@ import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
-import { Dispatch, FC, FormEvent, SetStateAction, useState, MouseEvent, useEffect, Fragment } from "react";
+import { Dispatch, FC, FormEvent, SetStateAction, useState, MouseEvent, useEffect, Fragment, useCallback } from "react";
 import Card from "@mui/material/Card";
 import Checkbox from "@mui/material/Checkbox";
 import AddIcon from "@mui/icons-material/Add";
 import { useImmer } from "use-immer";
-import produce from 'immer';
 import TimeInputDiv from "../../components/workGroup/TimeInputDiv";
 import HolidayPayLeave from "../../components/workGroup/HolidayPayLeave";
-import { DataToBeModifiedType } from './WorkGroupIndexPage';
 import { useAuthState } from '../../context/AuthProvider';
 import loginAxios from '../../api/loginAxios';
+import { DataType, DataToBeModifiedType } from './WorkGroupIndexPage';
 
 type WorkGroupEnrollmentPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -32,26 +31,7 @@ type WorkGroupEnrollmentPageProps = {
   setDataToBeModified: Dispatch<SetStateAction<DataToBeModifiedType>>;
 }
 
-type WorkDayTypeType = {
-  mon: "근무" | "유급" | "무급";
-  tue: "근무" | "유급" | "무급";
-  wed: "근무" | "유급" | "무급";
-  thu: "근무" | "유급" | "무급";
-  fri: "근무" | "유급" | "무급";
-  sat: "근무" | "유급" | "무급";
-  sun: "근무" | "유급" | "무급";
-}
-
-export type DataType = {
-  id: number,
-  name: string;
-  type: "일반" | "시차";
-  workDayType: WorkDayTypeType,
-  timeRangeType: string[],
-  start: string[],
-  end: string[],
-  companyId: number
-}
+type DefaultHour = { start: '', end: '' };
 
 const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGroupListHidden, dataToBeModified, setDataToBeModified }) => {
   const { user } = useAuthState();
@@ -62,22 +42,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     "승인": [{ start: '', end: '' }],
   });
   const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-  const handleHour = (index: number, startOrEnd: string, timeType: string, value: Dayjs | null) => {
-    setHours((draft) => {
-      draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
-    })
-  }
-  const getTimeRangeByType = (timeRangeType: string[], start: string[], end: string[], targetType: string) => {
-    const matchedRanges = [];
-
-    for (let i = 0; i < timeRangeType.length; i += 1) {
-      if (timeRangeType[i] === targetType) {
-        matchedRanges.push({ start: start[i], end: end[i] });
-      }
-    }
-
-    return matchedRanges;
-  }
   // eslint-disable-next-line prefer-const
   let [isChecked, setIsChecked] = useImmer({
     근무: true,
@@ -85,61 +49,53 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     의무: true,
     승인: true,
   });
-  // eslint-disable-next-line prefer-const
-  let [statusReset, setStatusReset] = useImmer({
-    근무: false,
-    휴게: false,
-    의무: false,
-    승인: false,
-  });
   const [currentTimeInputDivIndex, setCurrentTimeInputDivIndex] = useImmer({
     휴게: 0,
     의무: 0,
   });
-  const timeInputDivSet = (timeType: string, index: number, isFromAdd?: boolean) => {
-    if (dataToBeModified && !statusReset[timeType] && !isFromAdd) {
-      const timeRangeByType = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, timeType);
+  const timeInputDivSet = useCallback(
+    (timeType: string, index: number, timeRangeByType?: DefaultHour[], isFromAdd?: boolean) => {
+      console.log(`${timeType} triggered`)
+      const handleHour = (index: number, startOrEnd: string, timeType: string, value: Dayjs | null) => {
+        setHours((draft) => {
+          draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
+        })
+      }
+      const renderTimeInputDivs = (timeType: string, index: number, defaultValueStart: Dayjs, defaultValueEnd: Dayjs) => (
+        <>
+          <TimeInputDiv
+            index={index}
+            handleTempHour={handleHour}
+            startOrEnd="start"
+            timeType={timeType}
+            defaultValue={defaultValueStart}
+          />
+          <TimeInputDiv
+            index={index}
+            handleTempHour={handleHour}
+            startOrEnd="end"
+            timeType={timeType}
+            defaultValue={defaultValueEnd}
+          />
+        </>
+      );
 
-      return <>{
-        timeRangeByType.map((matchedRange, mapIndex) =>
-          <Fragment key={mapIndex}>
-            <TimeInputDiv
-              index={mapIndex}
-              handleTempHour={handleHour}
-              startOrEnd="start"
-              timeType={timeType}
-              defaultValue={dayjs(matchedRange.start, 'HH:mm:ss')}
-            />
-            <TimeInputDiv
-              index={mapIndex}
-              handleTempHour={handleHour}
-              startOrEnd="end"
-              timeType={timeType}
-              defaultValue={dayjs(matchedRange.end, 'HH:mm:ss')}
-            />
-          </Fragment>
-        )
-      }</>
-    }
+      if (timeRangeByType && !isFromAdd) {
+        return <>{
+          timeRangeByType.map((matchedRange, mapIndex) =>
+            <Fragment key={mapIndex}>
+              {renderTimeInputDivs(timeType, mapIndex, dayjs(matchedRange.start, 'HH:mm:ss'), dayjs(matchedRange.end, 'HH:mm:ss'))}
+            </Fragment>
+          )
+        }</>
+      }
 
-    return <>
-      <TimeInputDiv
-        index={index}
-        handleTempHour={handleHour}
-        startOrEnd="start"
-        timeType={timeType}
-        defaultValue={null}
-      />
-      <TimeInputDiv
-        index={index}
-        handleTempHour={handleHour}
-        startOrEnd="end"
-        timeType={timeType}
-        defaultValue={null}
-      />
-    </>
-  };
-
+      return <>
+        {renderTimeInputDivs(timeType, index, null, null)}
+      </>
+    },
+    [setHours]
+  );
   // eslint-disable-next-line prefer-const
   let [timeInputDivsBreak, setTimeInputDivsBreak] = useState([
     timeInputDivSet("휴게", 0)
@@ -149,7 +105,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     timeInputDivSet("의무", 0)
   ]);
   // eslint-disable-next-line prefer-const
-  let [timeInputDivWork, setTimeInputDivWork] = useState(
+  let [timeInputDivWork] = useState(
     timeInputDivSet("근무", 0)
   );
   // eslint-disable-next-line prefer-const
@@ -159,10 +115,10 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
   const [alignments, setAlignments] = useState<string[]>(dataToBeModified ? dataToBeModified.alignments.work : []);
   const [dayHolidays, setDayHolidays] = useState<string[]>(dataToBeModified ? DAYS.filter(day => !dataToBeModified.alignments.work.includes(day)) : []);
   const [holidayOnOff, setHolidayOnOff] = useState<"on" | "off">("on");
-  const [data, setData] = useImmer<DataType>({
+  const [data, setData] = useImmer<DataType>(dataToBeModified ? dataToBeModified.contents : {
     id: 0,
     name: "",
-    type: dataToBeModified ? dataToBeModified.contents.type : "일반",
+    type: "일반",
     workDayType: {
       mon: '무급',
       tue: '무급',
@@ -177,28 +133,50 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     end: [],
     companyId: user.companyId
   });
-  useEffect(() => {
-    if (dataToBeModified) {
-      setData(dataToBeModified.contents);
 
-      const tempHours = {
+
+  useEffect(() => {
+    console.log("useEffect")
+    if (dataToBeModified) {
+      const getTimeRangeByType = (timeRangeType: string[], start: string[], end: string[], targetType: string) => {
+        const matchedRanges = [];
+
+        for (let i = 0; i < timeRangeType.length; i += 1) {
+          if (timeRangeType[i] === targetType) {
+            matchedRanges.push({ start: start[i], end: end[i] });
+          }
+        }
+
+        return matchedRanges;
+      }
+
+      const types = ["근무", "휴게", "의무", "승인"];
+      const tempHours: Record<"근무" | "휴게" | "의무" | "승인", DefaultHour[]> = {
         "근무": [{ start: '', end: '' }],
         "휴게": [{ start: '', end: '' }],
         "의무": [{ start: '', end: '' }],
         "승인": [{ start: '', end: '' }],
       };
 
-      tempHours["근무"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "근무").length === 0 ? [{ start: '', end: '' }] : getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "근무");
-      tempHours["휴게"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "휴게").length === 0 ? [{ start: '', end: '' }] : getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "휴게");
-      tempHours["의무"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "의무").length === 0 ? [{ start: '', end: '' }] : getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "의무");
-      tempHours["승인"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "승인").length === 0 ? [{ start: '', end: '' }] : getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "승인");
+      types.forEach(type => {
+        const matchedRanges = getTimeRangeByType(
+          dataToBeModified.contents.timeRangeType,
+          dataToBeModified.contents.start,
+          dataToBeModified.contents.end,
+          type
+        );
+
+        if (matchedRanges.length !== 0) {
+          tempHours[type] = matchedRanges;
+        }
+
+      });
 
       setHours(tempHours);
       setCurrentTimeInputDivIndex((draft) => {
         draft["휴게"] = tempHours["휴게"].length - 1;
         draft["의무"] = tempHours["의무"].length - 1;
       });
-
       setIsChecked({
         근무: true,
         휴게: tempHours["휴게"][0].start.length !== 0,
@@ -206,30 +184,25 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
         승인: tempHours["승인"][0].start.length !== 0,
       })
 
-
       const keys = Object.keys(tempHours);
       keys.forEach(key => {
-        if (tempHours[key][0].start.length === 0) {
-          statusReset = { ...statusReset, [key]: true };
-          setStatusReset((draft) => { draft[key] = true });
-
+        if (tempHours[key][0].start.length !== 0) {
           switch (key) {
             case "휴게":
-              setTimeInputDivsBreak([timeInputDivSet("휴게", 0)]);
+              setTimeInputDivsBreak([timeInputDivSet("휴게", 0, tempHours["휴게"])]);
               break;
             case "승인":
-              setTimeInputDivApproved(timeInputDivSet("승인", 0));
+              setTimeInputDivApproved(timeInputDivSet("승인", 0, tempHours["승인"]));
               break;
             case "의무":
-              setTimeInputDivsCompulsory([timeInputDivSet("의무", 0)]);
+              setTimeInputDivsCompulsory([timeInputDivSet("의무", 0, tempHours["의무"])]);
               break;
             default:
           }
         }
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [dataToBeModified, setCurrentTimeInputDivIndex, setHours, setIsChecked, timeInputDivSet]);
 
   const addTimeInputDiv = (divKind: "휴게" | "의무") => {
     setCurrentTimeInputDivIndex((draft) => {
@@ -240,34 +213,17 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     })
 
     if (divKind === "휴게") {
-      setTimeInputDivsBreak([...timeInputDivsBreak, timeInputDivSet("휴게", currentTimeInputDivIndex["휴게"] + 1, true)]);
+      setTimeInputDivsBreak([...timeInputDivsBreak, timeInputDivSet("휴게", currentTimeInputDivIndex["휴게"] + 1)]);
     } else {
-      setTimeInputDivsCompulsory([...timeInputDivsCompulsory, timeInputDivSet("의무", currentTimeInputDivIndex["의무"] + 1, true)]);
+      setTimeInputDivsCompulsory([...timeInputDivsCompulsory, timeInputDivSet("의무", currentTimeInputDivIndex["의무"] + 1)]);
     }
   };
   const handleCheckboxChange = (type: "휴게" | "승인" | "의무") => {
+    console.log("handleCheckboxChange triggered")
     if (isChecked[type]) {
       setHours((draft) => {
         draft[type] = [{ start: '', end: '' }];
       });
-      // setData((draft) => {
-      //   if (draft.timeRangeType.includes(type)) {
-      //     const indexArr: number[] = [];
-
-      //     for (let i = 0; i < draft.timeRangeType.length; i += 1) {
-      //       if (draft.timeRangeType[i] === type) {
-      //         indexArr.push(i);
-      //       }
-      //     }
-
-      //     for (let i = indexArr.length - 1; i >= 0; i -= 1) {
-      //       draft.timeRangeType.splice(indexArr[i], 1);
-      //       draft.start.splice(indexArr[i], 1);
-      //       draft.end.splice(indexArr[i], 1);
-      //     }
-      //   }
-      // })
-
       if (type === "휴게" || type === "의무") {
         setCurrentTimeInputDivIndex((draft) => {
           draft[type] = 0;
@@ -275,9 +231,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       }
 
       isChecked = { ...isChecked, [type]: false };
-
-      statusReset = { ...statusReset, [type]: true };
-      setStatusReset((draft) => { draft[type] = true });
 
       switch (type) {
         case "휴게":
@@ -326,51 +279,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     event.preventDefault();
 
     dataToBeSent = data;
-
-    // if (hours["근무"][0].start !== '' && hours["근무"][0].end === '') {
-    //   const index = dataToBeSent.timeRangeType.indexOf("근무");
-    //   const arrayToBeUpdated = [...dataToBeSent.start];
-    //   arrayToBeUpdated[index] = hours["근무"][0].start;
-    //   dataToBeSent = { ...dataToBeSent, start: arrayToBeUpdated };
-    // } else if (hours["근무"][0].start === '' && hours["근무"][0].end !== '') {
-    //   const index = dataToBeSent.timeRangeType.indexOf("근무");
-    //   const arrayToBeUpdated = [...dataToBeSent.end];
-    //   arrayToBeUpdated[index] = hours["근무"][0].end;
-    //   dataToBeSent = { ...dataToBeSent, end: arrayToBeUpdated };
-    // } else if (hours["근무"][0].start !== '' && hours["근무"][0].end !== '') {
-    //   const index = dataToBeSent.timeRangeType.indexOf("근무");
-    //   const arrayToBeUpdatedStart = [...dataToBeSent.start];
-    //   const arrayToBeUpdatedEnd = [...dataToBeSent.end];
-    //   arrayToBeUpdatedStart[index] = hours["근무"][0].start;
-    //   arrayToBeUpdatedEnd[index] = hours["근무"][0].end;
-    //   dataToBeSent = { ...dataToBeSent, start: arrayToBeUpdatedStart };
-    //   dataToBeSent = { ...dataToBeSent, end: arrayToBeUpdatedEnd };
-    // }
-
-
-
-
-    // if (hours.휴게.start !== '') {
-    //   dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "휴게"] };
-    //   dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.휴게.start] };
-    //   dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.휴게.end] };
-    // }
-
-    // if (hours.의무.start !== '') {
-    //   dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "의무"] };
-    //   dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.의무.start] };
-    //   dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.의무.end] };
-
-    // }
-
-
-    // if (hours.승인.start !== '' || hours.승인.end !== '') {
-    //   dataToBeSent = { ...dataToBeSent, timeRangeType: [...dataToBeSent.timeRangeType, "승인"] };
-    //   dataToBeSent = { ...dataToBeSent, start: [...dataToBeSent.start, hours.승인.start] };
-    //   dataToBeSent = { ...dataToBeSent, end: [...dataToBeSent.end, hours.승인.end] };
-    // }
-
-
 
     const tempTimeRangeType = [];
     const tempStart = [];
@@ -666,4 +574,3 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
 };
 
 export default WorkGroupEnrollmentPage;
-

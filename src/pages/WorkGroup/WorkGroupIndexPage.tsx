@@ -2,10 +2,31 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import WorkGroupListPage from './WorkGroupListPage';
-import WorkGroupEnrollmentPage, { DataType } from './WorkGroupEnrollmentPage';
+import WorkGroupEnrollmentPage from './WorkGroupEnrollmentPage';
 import DistributionIndexPage from './DistributionIndexPage';
 import { useState, SyntheticEvent, FC } from 'react';
 import CustomTabPanel from 'src/components/workGroup/CustomTabPanel';
+
+type WorkDayTypeType = {
+    mon: "근무" | "유급" | "무급";
+    tue: "근무" | "유급" | "무급";
+    wed: "근무" | "유급" | "무급";
+    thu: "근무" | "유급" | "무급";
+    fri: "근무" | "유급" | "무급";
+    sat: "근무" | "유급" | "무급";
+    sun: "근무" | "유급" | "무급";
+}
+
+export type DataType = {
+    id: number,
+    name: string;
+    type: "일반" | "시차";
+    workDayType: WorkDayTypeType,
+    timeRangeType: string[],
+    start: string[],
+    end: string[],
+    companyId: number
+}
 
 export type DataToBeModifiedType = {
     id: number;
@@ -42,7 +63,7 @@ const WorkGroupIndexPage: FC = () => {
                 </Tabs>
             </Box>
             <CustomTabPanel value={currentTabIndex} index={0}>
-                {isWorkGroupListHidden ? <WorkGroupEnrollmentPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} dataToBeModified={dataToBeModified} setDataToBeModified={setDataToBeModified} /> : <WorkGroupListPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} setDataToBeModified={setDataToBeModified} setWorkGroupSimple={setWorkGroupSimple}/>}
+                {isWorkGroupListHidden ? <WorkGroupEnrollmentPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} dataToBeModified={dataToBeModified} setDataToBeModified={setDataToBeModified} /> : <WorkGroupListPage setIsWorkGroupListHidden={setIsWorkGroupListHidden} setDataToBeModified={setDataToBeModified} setWorkGroupSimple={setWorkGroupSimple} />}
             </CustomTabPanel>
             <CustomTabPanel value={currentTabIndex} index={1}>
                 <DistributionIndexPage workGroupSimple={workGroupSimple} />
@@ -52,4 +73,3 @@ const WorkGroupIndexPage: FC = () => {
 };
 
 export default WorkGroupIndexPage;
-
