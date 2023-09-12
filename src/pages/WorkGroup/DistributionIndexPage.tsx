@@ -117,7 +117,7 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
             <Grid xs={2}>
                 <Box sx={{ width: '100%' }}>
                     <Stack spacing={2}>
-                        {workGroupSimple.length !== 0 && workGroupSimple.map((item, index) => <WorkGroupCard key={index} id={item.id} name={item.name} type={item.type} numOfMembers={item.numOfMembers} handleSelectedWorkGroup={handleSelectedWorkGroup} />)}
+                        {workGroupSimple.length !== 0 && workGroupSimple.map((item, index) => <WorkGroupCard key={index} id={item.id} name={item.name} type={item.type} numOfMembers={item.numOfMembers} isSelected={item.id === selectedWorkGroup.id} handleSelectedWorkGroup={handleSelectedWorkGroup} />)}
                     </Stack>
                 </Box>
             </Grid>

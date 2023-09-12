@@ -139,7 +139,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
     }
 
 
-    const updateDistribution = async (selectedUserIds: number[], selectedWorkGroupId?: number) => {
+    const updateDistribution = async (selectedUserIds: number[], selectedWorkGroupId?: number, applyNow?: boolean) => {
         if (isDistributed) {
             // 배포 해제
             if (!selectedWorkGroupId) {
@@ -163,19 +163,20 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
             // 근로제 변경
             else {
                 try {
-                    const response = await loginAxios.put('/api/workgroups/distribution', {
+                    const response = await loginAxios.put(`/api/workgroups/distribution/${applyNow}`, {
                         userIds: selectedUserIds,
                         workGroupId: selectedWorkGroupId
                     });
                     if (response.status === 200) {
                         alert("근로제 변경되었습니다.");
+                        setUserListWrappedFiltered(userListWrappedFiltered.filter((user) => !selectedUserIds.includes(user.id)));
                     } else {
                         // Handle other status codes
                     }
                 } catch (error) {
                     // Handle errors
                     console.error('An error occurred:', error);
-                }
+                } 
             }
 
         }
@@ -202,7 +203,6 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
             }
 
         }
-
     }
 
     return (
@@ -264,9 +264,13 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                             <Typography component={"div"}>
                                 <Button variant="outlined" onClick={() => setIsModalOpened(false)} sx={{ marginRight: "10px" }}>취소</Button>
                                 <Button variant="outlined" onClick={() => {
-                                    updateDistribution(selectedUserIds, selectedWorkGroup.id);
+                                    updateDistribution(selectedUserIds, selectedWorkGroup.id, false);
                                     setIsModalOpened(false);
-                                }}>변경</Button>
+                                }}>변경(정산: 내일부터 적용)</Button>
+                                <Button variant="outlined" onClick={() => {
+                                    updateDistribution(selectedUserIds, selectedWorkGroup.id, true);
+                                    setIsModalOpened(false);
+                                }}>변경(정산: 오늘부터 적용)</Button>
                             </Typography>
 
                         </Box> : <Box sx={style}>

@@ -140,16 +140,20 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     </>
   };
 
-  const [timeInputDivsBreak, setTimeInputDivsBreak] = useState([
+  // eslint-disable-next-line prefer-const
+  let [timeInputDivsBreak, setTimeInputDivsBreak] = useState([
     timeInputDivSet("휴게", 0)
   ]);
-  const [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
+  // eslint-disable-next-line prefer-const
+  let [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
     timeInputDivSet("의무", 0)
   ]);
-  const [timeInputDivWork, setTimeInputDivWork] = useState(
+  // eslint-disable-next-line prefer-const
+  let [timeInputDivWork, setTimeInputDivWork] = useState(
     timeInputDivSet("근무", 0)
   );
-  const [timeInputDivApproved, setTimeInputDivApproved] = useState(
+  // eslint-disable-next-line prefer-const
+  let [timeInputDivApproved, setTimeInputDivApproved] = useState(
     timeInputDivSet("승인", 0)
   );
   const [alignments, setAlignments] = useState<string[]>(dataToBeModified ? dataToBeModified.alignments.work : []);
@@ -184,19 +188,49 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
         "승인": [{ start: '', end: '' }],
       };
 
-      tempHours["근무"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "근무");
-      tempHours["휴게"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "휴게");
-      tempHours["의무"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "의무");
-      tempHours["승인"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "승인");
+      tempHours["근무"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "근무").length === 0 ? [{ start: '', end: '' }] : getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "근무");
+      tempHours["휴게"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "휴게").length === 0 ? [{ start: '', end: '' }] : getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "휴게");
+      tempHours["의무"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "의무").length === 0 ? [{ start: '', end: '' }] : getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "의무");
+      tempHours["승인"] = getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "승인").length === 0 ? [{ start: '', end: '' }] : getTimeRangeByType(dataToBeModified.contents.timeRangeType, dataToBeModified.contents.start, dataToBeModified.contents.end, "승인");
 
       setHours(tempHours);
       setCurrentTimeInputDivIndex((draft) => {
         draft["휴게"] = tempHours["휴게"].length - 1;
         draft["의무"] = tempHours["의무"].length - 1;
       });
+
+      setIsChecked({
+        근무: true,
+        휴게: tempHours["휴게"][0].start.length !== 0,
+        의무: tempHours["의무"][0].start.length !== 0,
+        승인: tempHours["승인"][0].start.length !== 0,
+      })
+
+
+      const keys = Object.keys(tempHours);
+      keys.forEach(key => {
+        if (tempHours[key][0].start.length === 0) {
+          statusReset = { ...statusReset, [key]: true };
+          setStatusReset((draft) => { draft[key] = true });
+
+          switch (key) {
+            case "휴게":
+              setTimeInputDivsBreak([timeInputDivSet("휴게", 0)]);
+              break;
+            case "승인":
+              setTimeInputDivApproved(timeInputDivSet("승인", 0));
+              break;
+            case "의무":
+              setTimeInputDivsCompulsory([timeInputDivSet("의무", 0)]);
+              break;
+            default:
+          }
+        }
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
   const addTimeInputDiv = (divKind: "휴게" | "의무") => {
     setCurrentTimeInputDivIndex((draft) => {
       draft[divKind] += 1;
@@ -213,10 +247,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
   };
   const handleCheckboxChange = (type: "휴게" | "승인" | "의무") => {
     if (isChecked[type]) {
-      console.log(`${type} un-checked`)
-      // produce(hours, (draft) => {
-      //   draft[type] = [{ start: '', end: '' }];
-      // });
       setHours((draft) => {
         draft[type] = [{ start: '', end: '' }];
       });
@@ -261,8 +291,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
           break;
         default:
       }
-    } else {
-      console.log(`${type} checked`)
     }
 
     setIsChecked((draft) => { draft[type] = !draft[type] });
@@ -569,7 +597,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                   <span>휴게시간</span>
                 </Grid>
                 <Grid xs={1}>
-                  <Checkbox defaultChecked onChange={() => handleCheckboxChange("휴게")} />
+                  <Checkbox onChange={() => handleCheckboxChange("휴게")} checked={isChecked.휴게} />
                 </Grid>
                 {isChecked.휴게 ? <Grid xs={8}>
                   <div>휴게시간 설정을 사용합니다.</div>
@@ -589,7 +617,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                   <span>의무근로시간대</span>
                 </Grid>
                 <Grid xs={1}>
-                  <Checkbox defaultChecked onChange={() => handleCheckboxChange("의무")} />
+                  <Checkbox onChange={() => handleCheckboxChange("의무")} checked={isChecked.의무} />
                 </Grid>
                 {isChecked.의무 ? <Grid xs={8}>
                   <div>의무근로시간대 설정을 사용합니다.</div>
@@ -612,7 +640,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                   <span>승인근로시간대</span>
                 </Grid>
                 <Grid xs={1}>
-                  <Checkbox defaultChecked onChange={() => handleCheckboxChange("승인")} />
+                  <Checkbox onChange={() => handleCheckboxChange("승인")} checked={isChecked.승인} />
                 </Grid>
                 {isChecked.승인 ? <Grid xs={8}>
                   <div>승인근로시간대 설정을 사용합니다.</div>

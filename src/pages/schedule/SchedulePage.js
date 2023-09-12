@@ -360,7 +360,7 @@ export default function SchedulePage() {
                         <TableCell align="left">{formatTimeToTime(overTime)}</TableCell>
 
                         <TableCell align="left">
-                          {workState === '정상근무' ? (
+                          {workState === '정상처리' ? (
                             <Stack direction="row" alignItems="center" spacing={1}>
                               <Label color="info">정상처리</Label>
                             </Stack>

@@ -54,6 +54,8 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
   const [workingTime, setWorkingTime] = useState(formatTime(userData.workingTime));
   const [overTime, setOverTime] = useState(formatTime(userData.overTime));
   const [workState, setWorkState] = useState(userData.workState);
+  const [workGroupStartTime, setWorkGroupStartTime] = useState(null);
+  const [workGroupEndTime, setWorkGroupEndTime] = useState(null);
 
   const [confirmEditOpen, setConfirmEditOpen] = useState(false);
 
@@ -128,8 +130,6 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     }
   };
 
-  const isDutyType = () => {};
-
   const handleWarningModalOpen = () => {
     setWarningModalOpen(true);
   };
@@ -155,6 +155,10 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     const workIndexes = [];
     const dutyIndexes = [];
     let approvedIndex = 0;
+    let minworkIndex = 0;
+    let maxworkIndex = 0;
+    let groupStart = 0;
+    let groupEnd = 0;
 
     timeRangeTypes.forEach((type, index) => {
       if (type === '휴게') {
@@ -169,11 +173,19 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     });
 
     const startInMinutes = start[0] * 60 + start[1];
-    const endInMinutes = end[0] * 60 + end[1];
+    let endInMinutes = end[0] * 60 + end[1];
     const startapproved = startTimes[approvedIndex][0] * 60 + startTimes[approvedIndex][1];
-    const endapproved = endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
+    let endapproved = 0;
+    // endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
+    if (startapproved > endapproved) {
+      endapproved += 1440;
+    }
 
-    // 총 근무 시간을 계산하기 위한 변수를 초기화합니다.
+    if (endInMinutes < startInMinutes) {
+      endInMinutes += 24 * 60; // 하루에 해당하는 분을 더해줌
+    }
+
+    // 총 근무 시간을 계산하기 위한 변수를 초기화합니다
     let totalWorkingTimeInMinutes = endInMinutes - startInMinutes; // 소정 근무 시간
     let totalOverTimeInMinutes = 0;
 
@@ -181,9 +193,11 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     dutyIndexes.forEach((i) => {
       const startduty = startTimes[i][0] * 60 + startTimes[i][1];
       const endduty = endTimes[i][0] * 60 + endTimes[i][1];
-      console.log('의무 시간 검사');
 
-      if (startduty < startInMinutes || endduty > endInMinutes) {
+      if (
+        (startduty < startInMinutes && startInMinutes < endduty) ||
+        (startduty < endInMinutes && endInMinutes < endduty)
+      ) {
         handleWarningModalOpen();
       }
     });
@@ -202,16 +216,98 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     workIndexes.forEach((i) => {
       const startwork = startTimes[i][0] * 60 + startTimes[i][1];
       const endwork = endTimes[i][0] * 60 + endTimes[i][1];
-      if (startwork === startInMinutes && endInMinutes >= startapproved && endInMinutes <= endapproved) {
-        totalOverTimeInMinutes = endInMinutes - endwork;
-        if (totalOverTimeInMinutes >= 0) {
-          totalWorkingTimeInMinutes -= totalOverTimeInMinutes;
-        } else {
-          totalOverTimeInMinutes = 0;
-        }
+      if (startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] > startwork) {
+        minworkIndex = i;
+      }
+      if (startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1] < startwork) {
+        maxworkIndex = i;
+      }
+      if (endInMinutes - startInMinutes < endwork - startwork) {
+        totalOverTimeInMinutes = 0;
+        setWorkState('근태이상');
+      } else {
+        setWorkState('정상처리');
       }
     });
+    const time =
+      endTimes[workIndexes[0]][0] * 60 +
+      endTimes[workIndexes[0]][1] -
+      startTimes[workIndexes[0]][0] * 60 +
+      startTimes[workIndexes[0]][1];
+    const differ = endInMinutes - startInMinutes - time;
+    if (startapproved <= endInMinutes && endInMinutes <= endapproved) {
+      totalOverTimeInMinutes = differ;
+    } else if (endapproved < endInMinutes) {
+      totalOverTimeInMinutes = endapproved - startInMinutes - time;
+    } else if (endInMinutes < startapproved) {
+      totalOverTimeInMinutes = 0;
+    }
 
+    if (startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] > startInMinutes) {
+      totalOverTimeInMinutes -= startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] - startInMinutes;
+    }
+
+    if (workIndexes.length === 1) {
+      groupStart = startTimes[workIndexes[0]][0] * 60 + startTimes[workIndexes[0]][1];
+      groupEnd = endTimes[workIndexes[0]][0] * 60 + endTimes[workIndexes[0]][1];
+    } else {
+      if (
+        startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] <= startInMinutes &&
+        startInMinutes <= startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1]
+      ) {
+        groupStart = startInMinutes;
+        groupEnd =
+          startInMinutes +
+          (endTimes[workIndexes[0]][0] * 60 +
+            endTimes[workIndexes[0]][1] -
+            startTimes[workIndexes[0]][0] * 60 +
+            startTimes[workIndexes[0]][1]);
+      } else if (startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] > startInMinutes) {
+        groupStart = startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1];
+        groupEnd = endTimes[minworkIndex][0] * 60 + endTimes[minworkIndex][1];
+      } else if (startInMinutes > startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1]) {
+        groupStart = startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1];
+        groupEnd = endTimes[maxworkIndex][0] * 60 + endTimes[maxworkIndex][1];
+      }
+    }
+
+    const startwork = startTimes[workIndexes[0]][0] * 60 + startTimes[workIndexes[0]][1];
+    const endwork = endTimes[workIndexes[0]][0] * 60 + endTimes[workIndexes[0]][1];
+
+    if (endwork < startapproved) {
+      totalOverTimeInMinutes -= startapproved - endwork;
+    }
+
+    if (endInMinutes - startInMinutes > endwork - startwork) {
+      totalWorkingTimeInMinutes -= endInMinutes - startInMinutes - (endwork - startwork);
+    }
+
+    if (
+      (startInMinutes > endTimes[maxworkIndex][0] * 60 + endTimes[maxworkIndex][1] &&
+        endInMinutes > endTimes[maxworkIndex][0] * 60 + endTimes[maxworkIndex][1]) ||
+      (startInMinutes < startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] &&
+        endInMinutes < startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1])
+    ) {
+      totalWorkingTimeInMinutes = 0;
+    }
+
+    if (Number.isNaN(totalWorkingTimeInMinutes)) {
+      totalWorkingTimeInMinutes = 0;
+    }
+    if (startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1] < startInMinutes) {
+      setWorkState('근태이상');
+    }
+    if (endTimes[minworkIndex][0] * 60 + endTimes[minworkIndex][1] > endInMinutes) {
+      setWorkState('근태이상');
+    }
+
+    if (totalOverTimeInMinutes < 0) {
+      totalOverTimeInMinutes = 0;
+    }
+
+    if (totalWorkingTimeInMinutes < 0) {
+      totalWorkingTimeInMinutes = 0;
+    }
     // 총 근무 시간을 시간과 분으로 변환하여 workingTime 상태를 업데이트합니다.
     const workingTimeHours = Math.floor(totalWorkingTimeInMinutes / 60);
     const workingTimeMinutes = totalWorkingTimeInMinutes % 60;
@@ -220,42 +316,54 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     const overTimeHours = Math.floor(totalOverTimeInMinutes / 60);
     const overTimeMinutes = totalOverTimeInMinutes % 60;
 
+    const groupStartHours = Math.floor(groupStart / 60);
+    const groupStartMinutes = groupStart % 60;
+
+    const groupEndHours = Math.floor(groupEnd / 60);
+    const groupEndMinutes = groupEnd % 60;
+
     // workingTime 상태를 업데이트합니다.
     setWorkingTime(`${workingTimeHours.toString().padStart(2, '0')}:${workingTimeMinutes.toString().padStart(2, '0')}`);
     setOverTime(`${overTimeHours.toString().padStart(2, '0')}:${overTimeMinutes.toString().padStart(2, '0')}`);
+    setWorkGroupStartTime(
+      `${groupStartHours.toString().padStart(2, '0')}:${groupStartMinutes.toString().padStart(2, '0')}`
+    );
+    setWorkGroupEndTime(`${groupEndHours.toString().padStart(2, '0')}:${groupEndMinutes.toString().padStart(2, '0')}`);
   };
 
   // 유급 휴무 계산 로직
   const calculatePaidDayType = () => {
     // 소정 근무 시간은 무조건 00:00으로 설정
     setWorkingTime('00:00');
+    if (userData.startWork !== null) {
+      // startTime과 endTime을 분 단위로 변환하여 계산
+      const startTimeParts = startTime.split(':').map(Number);
+      const endTimeParts = endTime.split(':').map(Number);
 
-    // startTime과 endTime을 분 단위로 변환하여 계산
-    const startTimeParts = startTime.split(':').map(Number);
-    const endTimeParts = endTime.split(':').map(Number);
+      const startTimeInMinutes = startTimeParts[0] * 60 + startTimeParts[1];
+      const endTimeInMinutes = endTimeParts[0] * 60 + endTimeParts[1];
 
-    const startTimeInMinutes = startTimeParts[0] * 60 + startTimeParts[1];
-    const endTimeInMinutes = endTimeParts[0] * 60 + endTimeParts[1];
+      // 초과 근무 시간 계산
+      let overTimeInMinutes = endTimeInMinutes - startTimeInMinutes;
 
-    // 초과 근무 시간 계산
-    let overTimeInMinutes = endTimeInMinutes - startTimeInMinutes;
+      // endTime이 startTime보다 이전인 경우에는 하루가 더해져야 함
+      if (endTimeInMinutes < startTimeInMinutes) {
+        overTimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해줌
+      }
 
-    // endTime이 startTime보다 이전인 경우에는 하루가 더해져야 함
-    if (endTimeInMinutes < startTimeInMinutes) {
-      overTimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해줌
+      // 음수인 경우 계산을 조정해줌
+      if (overTimeInMinutes < 0) {
+        overTimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해주고
+        overTimeInMinutes -= 60; // 1시간에 해당하는 분을 빼줌
+      }
+
+      // 분을 시간과 분으로 변환하여 설정
+      const overTimeHours = Math.floor(overTimeInMinutes / 60);
+      const overTimeMinutes = overTimeInMinutes % 60;
+
+      setOverTime(`${overTimeHours.toString().padStart(2, '0')}:${overTimeMinutes.toString().padStart(2, '0')}`);
+      setWorkState('정상처리');
     }
-
-    // 음수인 경우 계산을 조정해줌
-    if (overTimeInMinutes < 0) {
-      overTimeInMinutes += 24 * 60; // 하루에 해당하는 분을 더해주고
-      overTimeInMinutes -= 60; // 1시간에 해당하는 분을 빼줌
-    }
-
-    // 분을 시간과 분으로 변환하여 설정
-    const overTimeHours = Math.floor(overTimeInMinutes / 60);
-    const overTimeMinutes = overTimeInMinutes % 60;
-
-    setOverTime(`${overTimeHours.toString().padStart(2, '0')}:${overTimeMinutes.toString().padStart(2, '0')}`);
   };
 
   // 무급 휴무 정산 로직
@@ -432,24 +540,20 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                     },
                   }}
                 >
-                  {/* <MenuItem key={selectedStartTime} value={selectedStartTime}>
-                    {selectedStartTime}
-                  </MenuItem> */}
+                  {Array.from({ length: 24 * 2 }).map((_, index) => {
+                    const hours = Math.floor(index / 2);
+                    const minutes = (index % 2) * 30;
+                    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
-                  {userData.timeRangeType.split(', ').map((type, index) => {
-                    if (type === '근무') {
-                      const [hours, minutes] = userData.start.split(', ')[index].split(':');
-                      const timeString = `${hours}:${minutes}`;
-                      console.log(timeString);
-
-                      return (
-                        <MenuItem key={timeString} value={timeString}>
-                          {timeString}
-                        </MenuItem>
-                      );
-                    }
-                    return null;
+                    return (
+                      <MenuItem key={timeString} value={timeString}>
+                        {timeString}
+                      </MenuItem>
+                    );
                   })}
+                  <MenuItem key={`24:00`} value={`24:00`}>
+                    00:00
+                  </MenuItem>
                 </TextField>
 
                 <TextField
@@ -462,6 +566,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   margin="normal"
                   style={textStyle} // 좌우 여백 설정
                   SelectProps={{
+                    renderValue: () => endTime,
                     MenuProps: {
                       getContentAnchorEl: null,
                       anchorOrigin: {
@@ -496,7 +601,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   name="workStart"
                   label="계약출근시간"
                   fullWidth
-                  value={formatDateTimeToTime(userData.startWork)}
+                  value={workGroupStartTime}
                   margin="normal"
                   InputProps={{
                     readOnly: true, // 읽기 전용으로 설정
@@ -508,7 +613,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                   name="workEnd"
                   label="계약퇴근시간"
                   fullWidth
-                  value={formatDateTimeToTime(userData.leaveWork)}
+                  value={workGroupEndTime}
                   margin="normal"
                   InputProps={{
                     readOnly: true, // 읽기 전용으로 설정
