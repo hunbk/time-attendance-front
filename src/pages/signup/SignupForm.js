@@ -122,6 +122,9 @@ export default function SignupForm() {
         label="생일"
         value={newUser.birthday}
         onChange={handleDateChange}
+        openTo="year"
+        views={['year', 'month', 'day']}
+        format="YYYY.MM.DD"
         slotProps={{
           textField: {
             margin: 'dense',
