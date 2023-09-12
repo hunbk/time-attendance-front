@@ -309,12 +309,12 @@ export default function PrivilegeAdd() {
   return (
     <>
       <Helmet>
-        <title>관리자 추가</title>
+        <title>권한 관리</title>
       </Helmet>
       <Container maxWidth="xl">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            사원 목록
+            권한 설정
           </Typography>
         </Stack>
         <Card>
@@ -501,6 +501,7 @@ export default function PrivilegeAdd() {
         </Card>
         <Box display="flex" justifyContent="flex-end" mt={2}>
           <Button
+            sx = {{mr:1}}
             onClick={() => {
               if (modalSelected !== null && modalSelected.length !== 0) {
                 handleSaveConfirmOpen();
@@ -511,8 +512,9 @@ export default function PrivilegeAdd() {
             }}
             variant="contained"
           >
-            추가
+            권한 부여
           </Button>
+
           <Button
             onClick={() => {
               resetFilterAndSelection();
