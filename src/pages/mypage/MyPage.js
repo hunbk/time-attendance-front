@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Box, Container, Grid, LinearProgress, Stack, Typography } from '@mui/material';
+
 import {
   addDays,
   startOfWeek,
@@ -12,14 +13,12 @@ import {
 } from 'date-fns';
 
 import { Helmet } from 'react-helmet-async';
-import AttendanceWidgetSummary from './AttendanceWidgetSummary';
+import { useAuthState } from '../../context/AuthProvider';
+import loginAxios from '../../api/loginAxios';
 
 import WorkGroupInfo from './WorkGroupInfo';
 import WeeklyWorkChart from './WeeklyWorkChart';
 import TimeRecordList from './TimeRecordList';
-import { useAuthState } from '../../context/AuthProvider';
-import loginAxios from '../../api/loginAxios';
-import dayjs from 'dayjs';
 
 export default function MyPage() {
   const [loading, setLoading] = useState(true);
@@ -31,59 +30,56 @@ export default function MyPage() {
 
   const { user } = useAuthState();
 
-  useEffect(() => {
-    const today = new Date();
-    const startWeek = startOfWeek(today, { weekStartsOn: 1 }); // 주의 시작일 (월요일)
-    const endWeek = endOfWeek(today, { weekStartsOn: 1 }); // 주의 종료일 (일요일)
-    const startMonth = startOfMonth(today);
-    const endMonth = endOfMonth(today);
-
-    fetchWorkGroupData();
-    fetchWeekData(startWeek, endWeek);
-    fetchTimeRecordData(startMonth, endMonth);
-  }, []);
-
   // 사용자의 근로그룹 정보 요청 API
-  const fetchWorkGroupData = async () => {
+  const fetchWorkGroupData = useCallback(async () => {
     const response = await loginAxios.get(`/api/users/${user.userId}/workgroup`);
     if (response.status === 200) {
       setWorkGroupData(response.data);
-      setLoading(false);
     }
-  };
+  }, [user.userId]);
 
   // 사용자의 주간 근무기록 요청 API(정산기록)
-  const fetchWeekData = async (start, end) => {
-    const response = await loginAxios.get(`/api/users/${user.userId}/time-records/weekly`, {
-      params: { startDate: format(start, 'yyyy-MM-dd') },
-    });
+  const fetchWeekData = useCallback(
+    async (start, end) => {
+      const response = await loginAxios.get(`/api/users/${user.userId}/time-records/weekly`, {
+        params: { startDate: format(start, 'yyyy-MM-dd') },
+      });
 
-    try {
-      if (response.data) {
-        const filledData = fillMissingDates(response.data.list, format(start, 'yyyy-MM-dd'), format(end, 'yyyy-MM-dd'));
-        setWeeklyWorkData(filledData);
-        setSelectedWeek({ start, end });
+      try {
+        if (response.data) {
+          const filledData = fillMissingDates(
+            response.data.list,
+            format(start, 'yyyy-MM-dd'),
+            format(end, 'yyyy-MM-dd')
+          );
+          setWeeklyWorkData(filledData);
+          setSelectedWeek({ start, end });
+        }
+      } catch {
+        throw new Error('주간 근무기록 요청 에러');
       }
-    } catch {
-      throw new Error('주간 근무기록 요청 에러');
-    }
-  };
+    },
+    [user.userId]
+  );
 
   // 출퇴근기록 요청 API
-  const fetchTimeRecordData = async (start, end) => {
-    const response = await loginAxios.get(`/api/users/${user.userId}/time-records`, {
-      params: { startDate: format(start, 'yyyy-MM-dd'), endDate: format(end, 'yyyy-MM-dd') },
-    });
+  const fetchTimeRecordData = useCallback(
+    async (start, end) => {
+      const response = await loginAxios.get(`/api/users/${user.userId}/time-records`, {
+        params: { startDate: format(start, 'yyyy-MM-dd'), endDate: format(end, 'yyyy-MM-dd') },
+      });
 
-    try {
-      if (response.data) {
-        setTimeRecordData(response.data.list);
-        setSelectedTimeRecordDate({ start, end });
+      try {
+        if (response.data) {
+          setTimeRecordData(response.data.list);
+          setSelectedTimeRecordDate({ start, end });
+        }
+      } catch {
+        throw new Error('출퇴근기록 요청 에러');
       }
-    } catch {
-      throw new Error('출퇴근기록 요청 에러');
-    }
-  };
+    },
+    [user.userId]
+  );
 
   // 주간 근무기록 이동 함수
   const updateWeek = (direction) => {
@@ -131,6 +127,31 @@ export default function MyPage() {
   const handleTimeRecordSearch = () => {
     fetchTimeRecordData(selectedTimeRecordDate.start, selectedTimeRecordDate.end);
   };
+
+  const fetchAll = useCallback(async () => {
+    const today = new Date();
+    const startWeek = startOfWeek(today, { weekStartsOn: 1 });
+    const endWeek = endOfWeek(today, { weekStartsOn: 1 });
+    const startMonth = startOfMonth(today);
+    const endMonth = endOfMonth(today);
+
+    try {
+      await Promise.all([
+        fetchWorkGroupData(),
+        fetchWeekData(startWeek, endWeek),
+        fetchTimeRecordData(startMonth, endMonth),
+      ]);
+
+      setLoading(false);
+    } catch (error) {
+      console.error('API 요청 중 에러 발생: ', error);
+      // 추가적으로 사용자에게 에러 상황을 알리는 로직이 필요할 수 있습니다.
+    }
+  }, [fetchTimeRecordData, fetchWeekData, fetchWorkGroupData]);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   return (
     <>
