@@ -10,12 +10,12 @@ const icon = (name) => <SvgColor src={`/assets/icons/navbar/${name}.svg`} sx={{ 
 // icon: 표시할 아이콘
 // roles: 어떤 권한에게 표시할 것인지 정보
 const navConfig = [
-  {
-    title: 'dashboard',
-    path: '/dashboard/app',
-    icon: icon('ic_analytics'),
-    roles: ['USER', 'HR', 'FO', 'MNG', 'ADMIN'],
-  },
+  // {
+  //   title: 'dashboard',
+  //   path: '/dashboard/app',
+  //   icon: icon('ic_analytics'),
+  //   roles: ['USER', 'HR', 'FO', 'MNG', 'ADMIN'],
+  // },
   {
     title: '마이페이지',
     path: '/dashboard/mypage',

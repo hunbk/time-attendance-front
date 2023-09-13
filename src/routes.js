@@ -45,9 +45,8 @@ export default function Router() {
       path: '/dashboard', // 메인 페이지 및 하위 경로. 특정 경로는 회사 관리자(ADMIN)만 접근 가능
       element: authenticated ? <DashboardLayout /> : <Navigate to="/login" replace />,
       children: [
-        { element: <Navigate to="/dashboard/app" />, index: true },
-        // 메인 페이지
-        { path: 'app', element: <DashboardAppPage /> },
+        { element: <Navigate to="/dashboard/mypage" />, index: true },
+        // { path: 'app', element: <DashboardAppPage /> },
         // {
         //   path: 'holiday',
         //   element: checkPermission(userRole, ['HR', 'ADMIN']) ? <HolidayPage /> : <Navigate to="/403" />,
