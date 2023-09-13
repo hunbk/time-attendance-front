@@ -12,8 +12,8 @@ import axios from 'axios';
 export default function LoginForm() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('test@test.com'); // 로그인 TEST용 email(나중에 삭제 해야함)
-  const [password, setPassword] = useState('test1234'); // 로그인 TEST용 password(나중에 삭제 해야함)
+  const [email, setEmail] = useState('user1@email.com'); // 로그인 TEST용 email(나중에 삭제 해야함)
+  const [password, setPassword] = useState('123'); // 로그인 TEST용 password(나중에 삭제 해야함)
   const [showPassword, setShowPassword] = useState(false);
 
   // 로그인 상태 변경을 위한 AuthDispatch 가져오기
@@ -42,6 +42,7 @@ export default function LoginForm() {
 
         // 메인화면으로 이동
         navigate('/');
+        enqueueSnackbar(`${userInfo.name}님 환영합니다!`, { variant: 'info' });
       }
     } catch (error) {
       if (error.response) {
