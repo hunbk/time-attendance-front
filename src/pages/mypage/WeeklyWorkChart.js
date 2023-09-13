@@ -73,10 +73,17 @@ export default function WeeklyWorkChart({ title, subheader, workData, selectedWe
       },
     },
     yaxis: {
+      min: 0,
+      max: 8,
+      tickAmount: 8,
       labels: {
         formatter(val) {
           return Math.round(val); // 반올림
         },
+      },
+      title: {
+        text: '시간',
+        rotate: 0,
       },
     },
     tooltip: {

@@ -253,7 +253,7 @@ export default function TimeRecordList({
                     <TableCell align="center">
                       {row.workState === '정상처리' ? (
                         <Label color="info">정상처리</Label>
-                      ) : workState === '근태이상' ? (
+                      ) : row.workState === '근태이상' ? (
                         <Label color="error">근태이상</Label>
                       ) : (
                         <Label color="default">미처리</Label>
