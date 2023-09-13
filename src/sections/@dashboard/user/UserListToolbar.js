@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 // component
 import Iconify from '../../../components/iconify';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PersonIcon from '@mui/icons-material/Person';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
@@ -59,20 +59,40 @@ UserListToolbar.propTypes = {
 };
 
 export default function UserListToolbar({ numSelected, filterName, onFilterName, onSearch, onFilterUsers, users }) {
+
   // 각 필터 옵션에 대한 동작 함수들
   const handleFilterOption1 = () => {
     // 필터 옵션 1에 대한 동작을 수행
-    const filteredUsers = users.filter((user) => user.role === 'ADMIN');
-    setFilterUsers(filteredUsers);
-    privilegeFilterUsers();
+    onFilterUsers(users);
+    
   };
 
   const handleFilterOption2 = () => {
     // 필터 옵션 2에 대한 동작을 수행
-    const filteredUsers = users.filter((user) => user.role === 'USER');
-    setFilterUsers(filteredUsers);
-    privilegeFilterUsers();
+    const filteredUsers = users.filter((user) => user.role === 'ADMIN');
+    onFilterUsers(filteredUsers);
+    
   };
+
+  const handleFilterOption3 = () => {
+    const filteredUsers = users.filter((user) => user.role === 'MNG');
+    onFilterUsers(filteredUsers);
+  }
+
+  const handleFilterOption4 = () => {
+    const filteredUsers = users.filter((user) => user.role === 'HR');
+    onFilterUsers(filteredUsers);
+  }
+
+  const handleFilterOption5 = () => {
+    const filteredUsers = users.filter((user) => user.role === 'FO');
+    onFilterUsers(filteredUsers);
+  }
+
+  const handleFilterOption6 = () => {
+    const filteredUsers = users.filter((user) => user.role === 'USER');
+    onFilterUsers(filteredUsers);
+  }
 
   const filterOptionMappings = {
     '전체 조회': { icon: <GroupsIcon sx={{ fontSize: 17 }} />, color: 'default' },
@@ -86,10 +106,10 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName,
   const filterOptions = [
     { label: '전체 조회', action: handleFilterOption1 },
     { label: '최고 권한자', action: handleFilterOption2 },
-    { label: '총괄 책임자', action: handleFilterOption1 },
-    { label: '인사 관리자', action: handleFilterOption2 },
-    { label: '재무 관리자', action: handleFilterOption1 },
-    { label: '일반 권한자', action: handleFilterOption2 },
+    { label: '총괄 책임자', action: handleFilterOption3 },
+    { label: '인사 관리자', action: handleFilterOption4 },
+    { label: '재무 관리자', action: handleFilterOption5 },
+    { label: '일반 권한자', action: handleFilterOption6 },
   ];
 
   // 현재 선택된 필터 옵션을 상태로 관리
@@ -133,12 +153,9 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName,
     }
   };
 
-  const [filterUsers, setFilterUsers] = useState(users);
-
-  const privilegeFilterUsers = () => {
-    onFilterUsers(filterUsers);
-  };
-
+  useEffect(()=> {
+    onFilterUsers(users);
+  },[]);
 
   return (
     <StyledRoot

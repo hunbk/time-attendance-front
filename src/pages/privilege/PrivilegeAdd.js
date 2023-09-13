@@ -48,7 +48,7 @@ import { useAuthState } from '../../context/AuthProvider';
 
 const LIST_HEAD = [
   { id: 'name', label: '이름', alignRight: false },
-  { id: 'dept', label: '부서', alignRight: false },
+  // { id: 'dept', label: '부서', alignRight: false },
   { id: 'position', label: '직급', alignRight: false },
   { id: 'userId', label: '사원번호', alignRight: false },
   { id: 'hireDate', label: '입사일', alignRight: false },
@@ -58,7 +58,7 @@ const LIST_HEAD = [
 
 const MODAL_HEAD = [
   { id: 'name', label: '이름', alignRight: false },
-  { id: 'dept', label: '부서', alignRight: false },
+  // { id: 'dept', label: '부서', alignRight: false },
   { id: 'position', label: '직급', alignRight: false },
   { id: 'userId', label: '사원번호', alignRight: false },
   { id: 'role', label: '권한', alignRight: false },
@@ -118,6 +118,7 @@ export default function PrivilegeAdd() {
   const getUserList = async () => {
     const res = await loginAxios.get(`/api/users?companyId=${user.companyId}`); // 추후에 2는 ${user.companyId로 교체}
     setUsers(res.data);
+    setFilteredModalUsers(res.data);
   };
 
   useEffect(() => {
@@ -142,11 +143,11 @@ export default function PrivilegeAdd() {
 
   const [selectedAdminType, setSelectedAdminType] = useState('USER'); // selectedAdminType 상태 추가
 
-  const [filteredModalUsers, setFilteredModalUsers] = useState(users);
+  const [filteredModalUsers, setFilteredModalUsers] = useState([]);
 
   const [confirmEditOpen, setConfirmEditOpen] = useState(false);
 
-  const filterUser = applySortFilter(users, getComparator(order, orderBy), modalFilterName);
+  const filterUser = applySortFilter(filteredModalUsers, getComparator(order, orderBy), modalFilterName);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -290,9 +291,9 @@ export default function PrivilegeAdd() {
     setSelectedAdminType('USER');
   };
 
-  const handleFilterButtonClick = (event) => {
-    setUsers(event.target.value);
-  }
+  const handleFilterButtonClick = (filteredUsers) => {
+    setFilteredModalUsers(filteredUsers);
+  };
 
   const emptyModalRows = modalPage > 0 ? Math.max(0, (1 + modalPage) * rowsModalPerPage - users.length) : 0;
 
@@ -324,7 +325,7 @@ export default function PrivilegeAdd() {
             onFilterName={handleModalFilterByName}
             onSearch={handleModalSearch}
             onFilterUsers={handleFilterButtonClick}
-            users = {users}
+            users={users}
           />
           <Scrollbar>
             <TableContainer>
@@ -343,7 +344,7 @@ export default function PrivilegeAdd() {
                   {filterUser
                     .slice(modalPage * rowsModalPerPage, modalPage * rowsModalPerPage + rowsModalPerPage)
                     .map((row) => {
-                      const { name, dept, position, userId, userCode, hireDate, role } = row;
+                      const { name, position, userId, userCode, hireDate, role } = row;
 
                       const selectedModalUser = modalSelected.indexOf(userId) !== -1;
 
@@ -365,7 +366,7 @@ export default function PrivilegeAdd() {
                             </Stack>
                           </TableCell>
 
-                          <TableCell align="center">{dept}</TableCell>
+                          {/* <TableCell align="center">{dept}</TableCell> */}
 
                           <TableCell align="center">{position}</TableCell>
 
@@ -488,7 +489,7 @@ export default function PrivilegeAdd() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={users.length}
+            count={filteredModalUsers.length}
             rowsPerPage={rowsModalPerPage}
             page={modalPage}
             onPageChange={handleModalChangePage}
@@ -670,9 +671,9 @@ export default function PrivilegeAdd() {
                               </Typography>
                             </Stack>
                           </TableCell>
-                          <TableCell align="center">{userRole.dept}</TableCell>
+                          {/* <TableCell align="center">{userRole.dept}</TableCell> */}
                           <TableCell align="center">{userRole.position}</TableCell>
-                          <TableCell align="center">{userRole.userId}</TableCell>
+                          <TableCell align="center">{userRole.userCode}</TableCell>
                           <TableCell align="center">
                             {(() => {
                               switch (userRole.role) {
@@ -756,8 +757,6 @@ export default function PrivilegeAdd() {
                     }
                     return null;
                   })}
-
-                  
                 </TableBody>
               </Table>
             </TableContainer>
