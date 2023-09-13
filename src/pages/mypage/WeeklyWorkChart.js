@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
 import ReactApexChart from 'react-apexcharts';
 // @mui
-import { Card, CardHeader, Box, CardContent, Typography, Grid, IconButton } from '@mui/material';
+import { Card, Box, CardContent, Typography, Grid, IconButton } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-// components
+
 import { useChart } from '../../components/chart';
 import { fDate } from '../../utils/formatTime';
 
@@ -37,7 +37,7 @@ const days = ['일', '월', '화', '수', '목', '금', '토'];
 const formatDateWithDay = (dateString) => {
   const date = new Date(dateString);
   const day = days[date.getDay()];
-  return `${dateString}(${day})`;
+  return `${fDate(dateString, 'MM.dd')}(${day})`;
 };
 
 export default function WeeklyWorkChart({ title, subheader, workData, selectedWeek, updateWeek, ...other }) {
@@ -58,23 +58,29 @@ export default function WeeklyWorkChart({ title, subheader, workData, selectedWe
   const chartOptions = useChart({
     chart: {
       type: 'bar',
-      // stacked: true, // Stacked 설정 추가
     },
-    // plotOptions: { bar: { columnWidth: '20%' } },
+    plotOptions: { bar: { columnWidth: '40%' } },
     fill: { type: 'solid' },
     labels: chartLabels,
     xaxis: {
       type: 'category',
-      // labels: {
-      //   datetimeFormatter: {
-      //     year: 'yyyy',
-      //     month: "MMM 'yy",
-      //     day: 'dd MMM',
-      //     hour: 'HH:mm',
-      //   },
-      // },
+      labels: {
+        style: {
+          colors: ['black', 'black', 'black', 'black', 'black', '#2065D1', '#FF4842'],
+          fontSize: '14px',
+          fontWeight: 400,
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        formatter(val) {
+          return Math.round(val); // 반올림
+        },
+      },
     },
     tooltip: {
+      enabled: true,
       shared: true,
       intersect: false,
       y: {
