@@ -152,25 +152,18 @@ const PrivilegeModal = ({ open, onClose, editUserId }) => {
                   onChange={handleAccessLevel}
                   margin="normal"
                   style={textFieldStyle} // 좌우 여백 설정
-                 
                 >
-                  <MenuItem value="인사 관리" >
-                    인사 관리
-                  </MenuItem>
-                  <MenuItem value="재무 관리" >
-                    재무 관리
-                  </MenuItem>
-                  <MenuItem value="사원" >
-                    사원
-                  </MenuItem>
+                  <MenuItem value="인사 관리">인사 관리</MenuItem>
+                  <MenuItem value="재무 관리">재무 관리</MenuItem>
+                  <MenuItem value="사원">사원</MenuItem>
                 </TextField>
 
                 <DialogActions>
+                  <Button onClick={handleClose}>
+                    취소
+                  </Button>
                   <Button variant="contained" onClick={handleConfirmEditOpen}>
                     수정
-                  </Button>
-                  <Button variant="outlined" onClick={handleClose}>
-                    취소
                   </Button>
                 </DialogActions>
               </TableBody>
@@ -187,11 +180,11 @@ const PrivilegeModal = ({ open, onClose, editUserId }) => {
             {accessLevel === '사원' && <DialogContentText>사원으로 권한을 변경하시겠습니까?</DialogContentText>}
           </DialogContent>
           <DialogActions>
+            <Button onClick={handleConfirmEditClose}>
+              취소
+            </Button>
             <Button onClick={handleConfirmEdit} variant="contained">
               확인
-            </Button>
-            <Button onClick={handleConfirmEditClose} variant="outlined">
-              취소
             </Button>
           </DialogActions>
         </Dialog>
@@ -206,7 +199,7 @@ const PrivilegeModal = ({ open, onClose, editUserId }) => {
           sx={{ width: 400 }}
         >
           <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-            권한이 수정되었습니다!
+            권한이 변경되었습니다!
           </Alert>
         </Snackbar>
       </Dialog>
