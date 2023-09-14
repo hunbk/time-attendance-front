@@ -499,33 +499,35 @@ export default function PrivilegeAdd() {
               `현재 페이지: ${modalPage + 1} / 전체 페이지: ${Math.ceil(count / rowsModalPerPage)}`
             }
           />
-        </Card>
-        <Box display="flex" justifyContent="flex-end" mt={2}>
-          <Button
-            sx = {{mr:1}}
-            onClick={() => {
-              if (modalSelected !== null && modalSelected.length !== 0) {
-                handleSaveConfirmOpen();
-              } else {
-                // modalSelected가 null일 때 경고창 띄우기
-                handleOpenNullSnackbar();
-              }
-            }}
-            variant="contained"
-          >
-            권한 부여
-          </Button>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 , marginBottom:1, marginTop:3}}>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                resetFilterAndSelection();
+                handleCloseSaveSnackbar();
+              }}
+            >
+              취소
+            </Button>
 
-          <Button
-            onClick={() => {
-              resetFilterAndSelection();
-              handleCloseSaveSnackbar();
-            }}
-            variant="outlined"
-          >
-            취소
-          </Button>
+            <Button
+              sx={{ mr: 1 }}
+              onClick={() => {
+                if (modalSelected !== null && modalSelected.length !== 0) {
+                  handleSaveConfirmOpen();
+                } else {
+                  // modalSelected가 null일 때 경고창 띄우기
+                  handleOpenNullSnackbar();
+                }
+              }}
+              variant="contained"
+            >
+              권한 부여
+            </Button>
+          </DialogActions>
         </Box>
+        </Card>
       </Container>
 
       <DialogActions>
@@ -572,6 +574,16 @@ export default function PrivilegeAdd() {
         <DialogActions>
           <Button
             onClick={() => {
+              setSaveConfirmOpen(false);
+              handleCloseAdminModal();
+              handleSaveConfirmOpen();
+              handleConfirmEditClose();
+            }}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={() => {
               resetSelectedAdminType();
               setModalSelected([]);
               updateAdminType();
@@ -582,17 +594,6 @@ export default function PrivilegeAdd() {
             variant="contained"
           >
             확인
-          </Button>
-          <Button
-            onClick={() => {
-              setSaveConfirmOpen(false);
-              handleCloseAdminModal();
-              handleSaveConfirmOpen();
-              handleConfirmEditClose();
-            }}
-            variant="outlined"
-          >
-            취소
           </Button>
         </DialogActions>
       </Dialog>
@@ -605,9 +606,9 @@ export default function PrivilegeAdd() {
         }}
         minWidth="sm"
       >
-        <DialogTitle>관리자 권한 부여</DialogTitle>
+        <DialogTitle>관리자 권한 변경</DialogTitle>
         <DialogContent>
-          <Typography>선택한 사원들에게 어떤 권한을 부여하시겠습니까?</Typography>
+          <Typography>어떤 권한으로 변경하시겠습니까?</Typography>
 
           {/* 드롭다운 메뉴 */}
           <Select
@@ -765,20 +766,19 @@ export default function PrivilegeAdd() {
         <DialogActions>
           <Button
             onClick={() => {
+              setSaveConfirmOpen(false);
+              resetSelectedAdminType();
+            }}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={() => {
               handleConfirmEditOpen();
             }}
             variant="contained"
           >
-            추가
-          </Button>
-          <Button
-            onClick={() => {
-              setSaveConfirmOpen(false);
-              resetSelectedAdminType();
-            }}
-            variant="outlined"
-          >
-            취소
+            변경
           </Button>
         </DialogActions>
       </Dialog>
@@ -805,11 +805,9 @@ export default function PrivilegeAdd() {
         </DialogContent>
 
         <DialogActions>
+          <Button onClick={handleConfirmEditClose}>취소</Button>
           <Button onClick={handleSaveConfirmClose} variant="contained">
             확인
-          </Button>
-          <Button onClick={handleConfirmEditClose} variant="outlined">
-            취소
           </Button>
         </DialogActions>
       </Dialog>
