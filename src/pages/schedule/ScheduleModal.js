@@ -11,14 +11,24 @@ import {
   Alert,
   TableContainer,
   Stack,
+  Select,
+  Card,
+  ButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+  Typography,
+  Avatar,
+  InputLabel,
+  FormControl,
 } from '@mui/material';
 // components
+import dayjs from 'dayjs';
 
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
 import Label from '../../components/label';
+import { TimePicker } from '@mui/x-date-pickers';
 
 // LoginAxios
 import loginAxios from '../../api/loginAxios';
@@ -45,6 +55,33 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     }
     return `-`;
   };
+
+  const formatTimetoko = (time) => {
+    const [hours, minutes] = time.split(':');
+    const formatTime = `${hours}시간 ${minutes}분`;
+    return formatTime;
+  };
+
+  function addTimes(time1, time2) {
+    const [hours1, minutes1] = time1.split(':').map(Number);
+    const [hours2, minutes2] = time2.split(':').map(Number);
+
+    // 시간과 분을 합산합니다.
+    let totalHours = hours1 + hours2;
+    let totalMinutes = minutes1 + minutes2;
+
+    // 분이 60 이상인 경우 시간에 반영하고 분을 보정합니다.
+    if (totalMinutes >= 60) {
+      totalHours += Math.floor(totalMinutes / 60);
+      totalMinutes %= 60;
+    }
+
+    // 시간과 분을 "00:00" 형식으로 변환합니다.
+    const formattedHours = String(totalHours).padStart(2, '0');
+    const formattedMinutes = String(totalMinutes).padStart(2, '0');
+
+    return `${formattedHours}:${formattedMinutes}`;
+  }
 
   // 로그인 한 유저 정보
   const { user } = useAuthState();
@@ -142,175 +179,233 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     selectDayType();
   }, [startTime, endTime]);
 
+  const timeRangeTypes = userData.timeRangeType.split(', ');
+  const breakIndexes = [];
+  const workIndexes = [];
+  const dutyIndexes = [];
+  let approvedIndex = 0;
+  const startTimes = userData.start.split(', ').map((time) => time.split(':').map(Number));
+  const endTimes = userData.end.split(', ').map((time) => time.split(':').map(Number));
+  const calStartTimes = [];
+  const calEndTimes = [];
+  let isOver = true;
+
+  timeRangeTypes.forEach((type, i) => {
+    calStartTimes.push(startTimes[i][0] * 60 + startTimes[i][1]);
+    calEndTimes.push(endTimes[i][0] * 60 + endTimes[i][1]);
+    if (calStartTimes[i] > calEndTimes[i]) {
+      calEndTimes[i] += 1440;
+      isOver = false;
+    }
+    if (type === '휴게') {
+      breakIndexes.push(i);
+    } else if (type === '근무') {
+      workIndexes.push(i);
+    } else if (type === '승인') {
+      approvedIndex = i;
+    } else if (type === '의무') {
+      dutyIndexes.push(i);
+    }
+  });
+
   // 정상 근무 계산 로직
   const calculateWorkDayType = () => {
     // 'start'와 'end' 시간을 배열로 파싱합니다.
-    const startTimes = userData.start.split(', ').map((time) => time.split(':').map(Number));
-    const endTimes = userData.end.split(', ').map((time) => time.split(':').map(Number));
-    const timeRangeTypes = userData.timeRangeType.split(', ');
-    const start = startTime.split(':').map(Number);
-    const end = endTime.split(':').map(Number);
 
-    const breakIndexes = [];
-    const workIndexes = [];
-    const dutyIndexes = [];
-    let approvedIndex = 0;
+    const start = startTime.split(':').map(Number); // 내가 입력한 시간
+    const end = endTime.split(':').map(Number); // 내가 입력한 시간
+    setWorkState('정상처리');
+
     let minworkIndex = 0;
     let maxworkIndex = 0;
     let groupStart = 0;
     let groupEnd = 0;
+    let startForWorkingTime = 0;
+    let endForWorkingTime = 0;
 
-    timeRangeTypes.forEach((type, index) => {
-      if (type === '휴게') {
-        breakIndexes.push(index);
-      } else if (type === '근무') {
-        workIndexes.push(index);
-      } else if (type === '승인') {
-        approvedIndex = index;
-      } else if (type === '의무') {
-        dutyIndexes.push(index);
+    let totalBreakTime = 0;
+    let totalWorkingTime = 0; // 소정 근무 시간
+    let totalOverTimeInMinutes = 0;
+    let fixWorkingTime = calEndTimes[workIndexes[0]] - calStartTimes[workIndexes[0]]; // 소정 고정 시간
+    let fixBreakTime = 0;
+    const calWorkStart = start[0] * 60 + start[1]; // 출근 시간
+    let calWorkEnd = end[0] * 60 + end[1]; // 퇴근 시간
+    const startapproved = startTimes[approvedIndex][0] * 60 + startTimes[approvedIndex][1]; // 승인근로시작
+    const endapproved = endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
+    if (calWorkEnd < calWorkStart) {
+      calWorkEnd += 1440; // 하루에 해당하는 분을 더해줌
+    }
+
+    // 휴게 시간 관련 로직
+    breakIndexes.forEach((i) => {
+      fixBreakTime += calEndTimes[i] - calStartTimes[i];
+      if (calWorkStart <= calStartTimes[i] && calEndTimes[i] <= calWorkEnd) {
+        totalBreakTime += calEndTimes[i] - calStartTimes[i];
+      } else if (calStartTimes[i] < calWorkStart && calEndTimes[i] <= calWorkEnd) {
+        totalBreakTime += calEndTimes[i] - calWorkStart;
+      } else if (calWorkStart <= calStartTimes[i] && calWorkEnd < calEndTimes[i]) {
+        totalBreakTime += calWorkEnd - calStartTimes[i];
       }
     });
 
-    const startInMinutes = start[0] * 60 + start[1];
-    let endInMinutes = end[0] * 60 + end[1];
-    const startapproved = startTimes[approvedIndex][0] * 60 + startTimes[approvedIndex][1];
-    let endapproved = 0;
-    // endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
-    if (startapproved > endapproved) {
-      endapproved += 1440;
-    }
-
-    if (endInMinutes < startInMinutes) {
-      endInMinutes += 24 * 60; // 하루에 해당하는 분을 더해줌
-    }
-
-    // 총 근무 시간을 계산하기 위한 변수를 초기화합니다
-    let totalWorkingTimeInMinutes = endInMinutes - startInMinutes; // 소정 근무 시간
-    let totalOverTimeInMinutes = 0;
-
     // 의무 시간 관련 로직
     dutyIndexes.forEach((i) => {
-      const startduty = startTimes[i][0] * 60 + startTimes[i][1];
-      const endduty = endTimes[i][0] * 60 + endTimes[i][1];
-
       if (
-        (startduty < startInMinutes && startInMinutes < endduty) ||
-        (startduty < endInMinutes && endInMinutes < endduty)
+        (calStartTimes[i] < calWorkStart && calWorkStart < calEndTimes[i]) ||
+        (calStartTimes[i] < calWorkEnd && calWorkEnd < calEndTimes[i])
       ) {
         handleWarningModalOpen();
       }
     });
 
-    // 휴게 시간 관련 로직
-    breakIndexes.forEach((i) => {
-      const startbreak = startTimes[i][0] * 60 + startTimes[i][1];
-      const endbreak = endTimes[i][0] * 60 + endTimes[i][1];
-
-      if (startbreak >= startInMinutes && endbreak <= endInMinutes) {
-        totalWorkingTimeInMinutes -= endbreak - startbreak;
-      }
-    });
-
-    // 승인 시간 관련 로직
-    workIndexes.forEach((i) => {
-      const startwork = startTimes[i][0] * 60 + startTimes[i][1];
-      const endwork = endTimes[i][0] * 60 + endTimes[i][1];
-      if (startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] > startwork) {
-        minworkIndex = i;
-      }
-      if (startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1] < startwork) {
-        maxworkIndex = i;
-      }
-      if (endInMinutes - startInMinutes < endwork - startwork) {
-        totalOverTimeInMinutes = 0;
-        setWorkState('근태이상');
+    if (isOver) {
+      if (workIndexes.length === 1) {
+        workIndexes.forEach((i) => {
+          if (calWorkStart <= calStartTimes[i]) {
+            startForWorkingTime = calStartTimes[i];
+          } else if (calStartTimes[i] < calWorkStart) {
+            startForWorkingTime = calWorkStart;
+            setWorkState('근태이상');
+          }
+          if (calEndTimes[i] <= calWorkEnd) {
+            endForWorkingTime = calEndTimes[i];
+          } else if (calEndTimes[i] > calWorkEnd) {
+            endForWorkingTime = calWorkEnd;
+            setWorkState('근태이상');
+          }
+        });
       } else {
-        setWorkState('정상처리');
+        // 최대 최소 시간 찾기
+        workIndexes.forEach((i) => {
+          if (calStartTimes[minworkIndex] > calStartTimes[i]) {
+            minworkIndex = i;
+          }
+          if (calStartTimes[maxworkIndex] < calStartTimes[i]) {
+            maxworkIndex = i;
+          }
+        });
+        if (calWorkStart < calStartTimes[minworkIndex]) {
+          startForWorkingTime = calStartTimes[minworkIndex];
+        } else {
+          startForWorkingTime = calWorkStart;
+        }
+        if (startForWorkingTime + fixWorkingTime <= calWorkEnd) {
+          endForWorkingTime = startForWorkingTime + fixWorkingTime;
+        } else {
+          endForWorkingTime = calWorkEnd;
+          setWorkState('근태이상');
+        }
       }
-    });
-    const time =
-      endTimes[workIndexes[0]][0] * 60 +
-      endTimes[workIndexes[0]][1] -
-      startTimes[workIndexes[0]][0] * 60 +
-      startTimes[workIndexes[0]][1];
-    const differ = endInMinutes - startInMinutes - time;
-    if (startapproved <= endInMinutes && endInMinutes <= endapproved) {
-      totalOverTimeInMinutes = differ;
-    } else if (endapproved < endInMinutes) {
-      totalOverTimeInMinutes = endapproved - startInMinutes - time;
-    } else if (endInMinutes < startapproved) {
-      totalOverTimeInMinutes = 0;
+    } else {
+      //
     }
 
-    if (startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] > startInMinutes) {
-      totalOverTimeInMinutes -= startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] - startInMinutes;
+    fixWorkingTime -= fixBreakTime;
+    console.log(`총 초과 시간 : ${totalOverTimeInMinutes}`);
+    // 승인 시간 관련 로직
+    if (startapproved <= endapproved) {
+      if (startapproved <= calWorkEnd && calWorkEnd <= endapproved) {
+        totalOverTimeInMinutes += calWorkEnd - startapproved;
+        console.log(`초과 시간 1-1 : ${totalOverTimeInMinutes}`);
+      } else if (endapproved < calWorkEnd) {
+        totalOverTimeInMinutes += endapproved - startapproved;
+        console.log(`초과 시간 1-2 : ${totalOverTimeInMinutes}`);
+      } else if (calWorkEnd < startapproved) {
+        totalOverTimeInMinutes = 0;
+        console.log(`초과 시간 1-3 : ${totalOverTimeInMinutes}`);
+      }
+
+      if (startapproved <= calWorkStart && calWorkStart <= endapproved) {
+        totalOverTimeInMinutes -= calWorkStart - startapproved;
+        console.log(`초과 시간 빼기 1: ${totalOverTimeInMinutes}`);
+      }
+    } else {
+      if (!isOver) {
+        calWorkEnd -= 1440;
+      }
+      if (startapproved <= calWorkEnd && calWorkEnd <= 0) {
+        totalOverTimeInMinutes += calWorkEnd - startapproved;
+        console.log(`초과 시간 2-1 : ${totalOverTimeInMinutes}`);
+      } else if (calWorkEnd >= 0 && calWorkEnd <= endapproved) {
+        totalOverTimeInMinutes += calWorkEnd + (1440 - startapproved);
+        console.log(`초과 시간 2-2 : ${totalOverTimeInMinutes}`);
+      } else if (endapproved < calWorkEnd) {
+        totalOverTimeInMinutes += endapproved + (1440 - startapproved);
+        console.log(`초과 시간 2-3 : ${totalOverTimeInMinutes}`);
+      } else if (calWorkEnd < startapproved) {
+        totalOverTimeInMinutes = 0;
+        console.log(`초과 시간 2-4 : ${totalOverTimeInMinutes}`);
+      }
+
+      if (startapproved <= calWorkStart && calWorkStart <= 0) {
+        totalOverTimeInMinutes -= calWorkStart - startapproved;
+        console.log(`초과 시간 빼기 2-1 : ${totalOverTimeInMinutes}`);
+      } else if (calWorkStart >= 0 && calWorkStart <= endapproved) {
+        totalOverTimeInMinutes -= calWorkStart + (1440 - startapproved);
+        console.log(`초과 시간 빼기 2-2 : ${totalOverTimeInMinutes}`);
+      }
+
+      if (!isOver) {
+        calWorkEnd += 1440;
+      }
     }
 
+    // 그룹 시작 시간
     if (workIndexes.length === 1) {
       groupStart = startTimes[workIndexes[0]][0] * 60 + startTimes[workIndexes[0]][1];
       groupEnd = endTimes[workIndexes[0]][0] * 60 + endTimes[workIndexes[0]][1];
     } else {
       if (
-        startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] <= startInMinutes &&
-        startInMinutes <= startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1]
+        startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] <= calWorkStart &&
+        calWorkStart <= startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1]
       ) {
-        groupStart = startInMinutes;
+        groupStart = calWorkStart;
         groupEnd =
-          startInMinutes +
+          calWorkStart +
           (endTimes[workIndexes[0]][0] * 60 +
             endTimes[workIndexes[0]][1] -
             startTimes[workIndexes[0]][0] * 60 +
             startTimes[workIndexes[0]][1]);
-      } else if (startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] > startInMinutes) {
+      } else if (startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] > calWorkStart) {
         groupStart = startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1];
         groupEnd = endTimes[minworkIndex][0] * 60 + endTimes[minworkIndex][1];
-      } else if (startInMinutes > startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1]) {
+      } else if (calWorkStart > startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1]) {
         groupStart = startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1];
         groupEnd = endTimes[maxworkIndex][0] * 60 + endTimes[maxworkIndex][1];
       }
     }
 
-    const startwork = startTimes[workIndexes[0]][0] * 60 + startTimes[workIndexes[0]][1];
-    const endwork = endTimes[workIndexes[0]][0] * 60 + endTimes[workIndexes[0]][1];
+    totalWorkingTime = endForWorkingTime - startForWorkingTime - totalBreakTime;
 
-    if (endwork < startapproved) {
-      totalOverTimeInMinutes -= startapproved - endwork;
-    }
+    console.log(`최종 초과 시간 : ${totalOverTimeInMinutes}`);
+    console.log(`최종 근무 시간 : ${totalWorkingTime}`);
 
-    if (endInMinutes - startInMinutes > endwork - startwork) {
-      totalWorkingTimeInMinutes -= endInMinutes - startInMinutes - (endwork - startwork);
-    }
-
-    if (
-      (startInMinutes > endTimes[maxworkIndex][0] * 60 + endTimes[maxworkIndex][1] &&
-        endInMinutes > endTimes[maxworkIndex][0] * 60 + endTimes[maxworkIndex][1]) ||
-      (startInMinutes < startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] &&
-        endInMinutes < startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1])
-    ) {
-      totalWorkingTimeInMinutes = 0;
-    }
-
-    if (Number.isNaN(totalWorkingTimeInMinutes)) {
-      totalWorkingTimeInMinutes = 0;
-    }
-    if (startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1] < startInMinutes) {
-      setWorkState('근태이상');
-    }
-    if (endTimes[minworkIndex][0] * 60 + endTimes[minworkIndex][1] > endInMinutes) {
-      setWorkState('근태이상');
+    if (Number.isNaN(totalWorkingTime)) {
+      totalWorkingTime = 0;
     }
 
     if (totalOverTimeInMinutes < 0) {
       totalOverTimeInMinutes = 0;
+      console.log(`초과 시간이 음수일때 : ${totalOverTimeInMinutes}`);
     }
 
-    if (totalWorkingTimeInMinutes < 0) {
-      totalWorkingTimeInMinutes = 0;
+    if (totalWorkingTime < 0) {
+      totalWorkingTime = 0;
+    }
+
+    if (totalWorkingTime + totalOverTimeInMinutes < fixWorkingTime) {
+      let total = 0;
+      total = totalWorkingTime + totalOverTimeInMinutes;
+      totalWorkingTime = total;
+      totalOverTimeInMinutes = 0;
+      setWorkState('근태이상');
+    } else if (totalWorkingTime >= fixWorkingTime) {
+      totalOverTimeInMinutes += totalWorkingTime - fixWorkingTime;
+      totalWorkingTime = fixWorkingTime;
     }
     // 총 근무 시간을 시간과 분으로 변환하여 workingTime 상태를 업데이트합니다.
-    const workingTimeHours = Math.floor(totalWorkingTimeInMinutes / 60);
-    const workingTimeMinutes = totalWorkingTimeInMinutes % 60;
+    const workingTimeHours = Math.floor(totalWorkingTime / 60);
+    const workingTimeMinutes = totalWorkingTime % 60;
 
     // 초과 시간을 시간과 분으로 변환하여 workingTime 상태를 업데이트합니다.
     const overTimeHours = Math.floor(totalOverTimeInMinutes / 60);
@@ -372,6 +467,13 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     setOverTime('00:00');
   };
 
+  const showNullTime = (time) => {
+    if (time === '-') {
+      return '00:00';
+    }
+    return time;
+  };
+
   const modalStyle = {
     // 팝업창의 넓이를 원하는 값으로 지정합니다. 필요에 따라 변경할 수 있습니다.
     display: 'flex',
@@ -380,10 +482,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
   };
 
   const textStyle = {
-    display: 'inline-block',
-    marginLeft: '20px',
-    marginRight: '10px',
-    width: '40%',
+    width: '100%',
   };
 
   return (
@@ -399,264 +498,214 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
           },
         }}
       >
-        <DialogTitle>사용자 정보 수정</DialogTitle>
+        <DialogTitle>
+          <Typography variant="h5">근태 기록 수정</Typography>
+          <Typography variant="subtitle2">{userData.date}의 정보입니다.</Typography>
+        </DialogTitle>
+
         <DialogContent dividers>
-          <TableContainer>
-            <Table sx={{ minHeight: 500, display: 'flex', alignItems: 'start', justifyContent: 'start' }}>
-              <TableBody>
-                <TextField
-                  name="date"
-                  label="근무일자"
-                  fullWidth
-                  value={userData.date}
-                  margin="normal"
-                  style={textStyle} // 좌우 여백 설정
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                />
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <Card
+              style={{
+                display: 'flex',
+                flex: '0.8',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '4px 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <Avatar />
+                  <DialogTitle>
+                    {userData.name} {userData.position}
+                    <Typography variant="body2">{userData.userCode}</Typography>
+                  </DialogTitle>
+                </div>
+                {/* 버튼 그룹 */}
+                <div style={{ display: 'flex', justifyContent: 'center ' }}>
+                  <ButtonGroup>
+                    <Button variant="outlined" color="primary" disabled={workState !== '정상처리'}>
+                      정상처리
+                    </Button>
+                    <Button variant="outlined" color="error" disabled={workState !== '근태이상'}>
+                      근태이상
+                    </Button>
+                  </ButtonGroup>
+                </div>
+              </div>
+            </Card>
 
-                <TextField
-                  name="id"
-                  label="사원번호"
-                  fullWidth
-                  value={userData.userCode}
-                  margin="normal"
-                  style={textStyle} // 좌우 여백 설정
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                />
+            <Card style={{ marginLeft: '15px', flex: '1', boxShadow: '4px 4px 6px rgba(0, 0, 0, 0.1)' }}>
+              <DialogTitle style={{ fontSize: '17px' }}>
+                {userData.workGroupName}
+                <Typography variant="subtitle2" style={{ marginBottom: '15px' }}>
+                  {userData.workGroupType}근로제
+                </Typography>
+                <Card style={{ backgroundColor: '#F2F2F2' }}>
+                  <div style={{ margin: '8px' }}>
+                    <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
+                      근무시간 : {workGroupStartTime} ~ {workGroupEndTime}
+                    </Typography>
+                    <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
+                      휴식시간 :{' '}
+                      {`${startTimes[breakIndexes[0]][0].toString().padStart(2, '0')}:${startTimes[breakIndexes[0]][1]
+                        .toString()
+                        .padStart(2, '0')}`}{' '}
+                      ~{' '}
+                      {`${endTimes[breakIndexes[0]][0].toString().padStart(2, '0')}:${endTimes[breakIndexes[0]][1]
+                        .toString()
+                        .padStart(2, '0')}`}
+                    </Typography>
+                    <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
+                      의무근로시간 :{' '}
+                      {`${startTimes[dutyIndexes[0]][0].toString().padStart(2, '0')}:${startTimes[dutyIndexes[0]][1]
+                        .toString()
+                        .padStart(2, '0')}`}{' '}
+                      ~{' '}
+                      {`${endTimes[dutyIndexes[0]][0].toString().padStart(2, '0')}:${endTimes[dutyIndexes[0]][1]
+                        .toString()
+                        .padStart(2, '0')}`}
+                    </Typography>
+                    <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
+                      승인근로시간 :{' '}
+                      {`${startTimes[approvedIndex][0].toString().padStart(2, '0')}:${startTimes[approvedIndex][1]
+                        .toString()
+                        .padStart(2, '0')}`}{' '}
+                      ~{' '}
+                      {`${endTimes[approvedIndex][0].toString().padStart(2, '0')}:${endTimes[approvedIndex][1]
+                        .toString()
+                        .padStart(2, '0')}`}
+                    </Typography>
+                  </div>
+                </Card>
+              </DialogTitle>
+            </Card>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <Card
+              style={{
+                marginTop: '15px',
+                flex: 1,
+                backgroundColor: '#E0ECF8',
+                boxShadow: '4px 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <DialogTitle style={{ textAlign: 'center' }}>
+                소정근무시간
+                <Typography variant="body1">{formatTimetoko(workingTime)}</Typography>
+              </DialogTitle>
+            </Card>
+            <Card
+              style={{
+                marginTop: '15px',
+                marginLeft: '15px',
+                flex: 1,
+                backgroundColor: '#F5F6CE',
+                boxShadow: '4px 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <DialogTitle style={{ textAlign: 'center' }}>
+                연장근무시간
+                <Typography variant="body1">{formatTimetoko(overTime)}</Typography>
+              </DialogTitle>
+            </Card>
+            <Card
+              style={{
+                marginTop: '15px',
+                marginLeft: '15px',
+                flex: 1,
+                backgroundColor: '#E3F6CE',
+                boxShadow: '4px 4px 6px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <DialogTitle style={{ textAlign: 'center' }}>
+                총 근무시간
+                <Typography variant="body1">{formatTimetoko(addTimes(workingTime, overTime))}</Typography>
+              </DialogTitle>
+            </Card>
+          </div>
 
-                <TextField
-                  name="name"
-                  label="이름"
-                  fullWidth
-                  value={userData.name}
-                  margin="normal"
-                  style={textStyle} // 좌우 여백 설정
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                />
+          <Card style={{ marginTop: '15px', minHeight: '100px', boxShadow: '4px 4px 6px rgba(0, 0, 0, 0.1)' }}>
+            <DialogTitle sx={{ display: 'flex', alignContent: 'center', height: 30 }}>
+              <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', marginRight: '35px' }}>
+                출퇴근 시간
+              </Typography>
+            </DialogTitle>
 
-                {/* <TextField
-                  name="depart"
-                  label="부서"
-                  fullWidth
-                  value={userData.dept}
-                  margin="normal"
-                  style={textStyle} // 좌우 여백 설정
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                /> */}
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50 }}>
+              <TimePicker
+                readOnly
+                ampm = {false}
+                label=""
+                value={dayjs(showNullTime(formatDateTimeToTime(userData.startWork)), 'HH:mm')}
+                onChange={(time) => setStartTime(formatDateTimeToTime(time))}
+                sx={{ width: 135, marginRight: '5px' }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+              ~
+              <TimePicker
+                readOnly
+                ampm = {false}
+                label=""
+                value={dayjs(showNullTime(formatDateTimeToTime(userData.leaveWork)), 'HH:mm')}
+                onChange={(time) => setStartTime(formatDateTimeToTime(time))}
+                sx={{ width: 135, marginLeft: '5px' }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+            </DialogTitle>
 
-                <TextField
-                  name="rank"
-                  label="직급"
-                  fullWidth
-                  value={userData.position}
-                  margin="normal"
-                  style={textStyle} // 좌우 여백 설정
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                />
+            <DialogTitle sx={{ display: 'flex', alignContent: 'center', height: 30 }}>
+              <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center' }}>
+                근로인정 시간
+              </Typography>
+            </DialogTitle>
 
-                <TextField
-                  name="workingTime"
-                  label="소정근무시간"
-                  fullWidth
-                  value={workingTime}
-                  onChange={handleWorkingTime}
-                  margin="normal"
-                  style={textStyle} // 좌우 여백 설정
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                />
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50 }}>
+              <TimePicker
+                timeSteps={{ minutes: 1 }}
+                ampm = {false}
+                label=""
+                value={dayjs(startTime, 'HH:mm')}
+                onChange={(time) => setStartTime(formatDateTimeToTime(time))}
+                sx={{ width: 135, marginRight: '5px' }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+              ~
+              <TimePicker
+                timeSteps={{ minutes: 1 }}
+                ampm = {false}
+                label=""
+                value={dayjs(endTime, 'HH:mm')}
+                onChange={(time) => setEndTime(formatDateTimeToTime(time))}
+                sx={{ width: 135, marginLeft: '5px' }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+              />
+            </DialogTitle>
+          </Card>
 
-                <TextField
-                  name="overTime"
-                  label="초과근무시간"
-                  fullWidth
-                  value={overTime}
-                  onChange={handleOverTime}
-                  margin="normal"
-                  style={textStyle} // 좌우 여백 설정
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                />
-
-                <TextField
-                  name="workType"
-                  label="근로제 유형"
-                  fullWidth
-                  value={userData.workGroupType}
-                  margin="normal"
-                  InputProps={{
-                    readOnly: true, // 읽기 전용으로 설정
-                  }}
-                  style={textStyle} // 좌우 여백 설정
-                />
-
-                <TextField
-                  name="workState"
-                  label="처리상태"
-                  fullWidth
-                  value={workState}
-                  onChange={handleWorkState}
-                  margin="normal"
-                  InputProps={{
-                    readOnly: true, // 읽기 전용으로 설정
-                  }}
-                  style={textStyle} // 좌우 여백 설정
-                />
-
-                <TextField
-                  name="start"
-                  label="근무인정시작시간"
-                  select
-                  fullWidth
-                  value={startTime}
-                  onChange={handleStartTime}
-                  margin="normal"
-                  style={textStyle} // 좌우 여백 설정
-                  SelectProps={{
-                    renderValue: () => startTime, // 선택한 값을 표시하는 로직
-                    MenuProps: {
-                      getContentAnchorEl: null,
-                      anchorOrigin: {
-                        vertical: 'bottom',
-                        horizontal: 'center',
-                      },
-                      PaperProps: {
-                        style: {
-                          maxHeight: 220, // 원하는 최대 높이로 설정
-                        },
-                      },
-                    },
-                  }}
-                >
-                  {Array.from({ length: 24 * 2 }).map((_, index) => {
-                    const hours = Math.floor(index / 2);
-                    const minutes = (index % 2) * 30;
-                    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-
-                    return (
-                      <MenuItem key={timeString} value={timeString}>
-                        {timeString}
-                      </MenuItem>
-                    );
-                  })}
-                  <MenuItem key={`24:00`} value={`24:00`}>
-                    00:00
-                  </MenuItem>
-                </TextField>
-
-                <TextField
-                  name="end"
-                  label="근무인정종료시간"
-                  select
-                  fullWidth
-                  value={endTime}
-                  onChange={handleEndTime}
-                  margin="normal"
-                  style={textStyle} // 좌우 여백 설정
-                  SelectProps={{
-                    renderValue: () => endTime,
-                    MenuProps: {
-                      getContentAnchorEl: null,
-                      anchorOrigin: {
-                        vertical: 'bottom',
-                        horizontal: 'center',
-                      },
-                      PaperProps: {
-                        style: {
-                          maxHeight: 220, // 원하는 최대 높이로 설정
-                        },
-                      },
-                    },
-                  }}
-                >
-                  {Array.from({ length: 24 * 2 }).map((_, index) => {
-                    const hours = Math.floor(index / 2);
-                    const minutes = (index % 2) * 30;
-                    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-
-                    return (
-                      <MenuItem key={timeString} value={timeString}>
-                        {timeString}
-                      </MenuItem>
-                    );
-                  })}
-                  <MenuItem key={`24:00`} value={`24:00`}>
-                    00:00
-                  </MenuItem>
-                </TextField>
-
-                <TextField
-                  name="workStart"
-                  label="계약출근시간"
-                  fullWidth
-                  value={workGroupStartTime}
-                  margin="normal"
-                  InputProps={{
-                    readOnly: true, // 읽기 전용으로 설정
-                  }}
-                  style={textStyle} // 좌우 여백 설정
-                />
-
-                <TextField
-                  name="workEnd"
-                  label="계약퇴근시간"
-                  fullWidth
-                  value={workGroupEndTime}
-                  margin="normal"
-                  InputProps={{
-                    readOnly: true, // 읽기 전용으로 설정
-                  }}
-                  style={textStyle} // 좌우 여백 설정
-                />
-
-                <TextField
-                  name="실제출근시작"
-                  label="실제출근시간"
-                  fullWidth
-                  value={formatDateTimeToTime(userData.startWork)}
-                  margin="normal"
-                  InputProps={{
-                    readOnly: true, // 읽기 전용으로 설정
-                  }}
-                  style={textStyle} // 좌우 여백 설정
-                />
-
-                <TextField
-                  name="실제출근종료"
-                  label="실제퇴근시간"
-                  fullWidth
-                  value={formatDateTimeToTime(userData.leaveWork)}
-                  margin="normal"
-                  InputProps={{
-                    readOnly: true, // 읽기 전용으로 설정
-                  }}
-                  style={textStyle} // 좌우 여백 설정
-                />
-
-                {/* 필요한 다른 입력 필드들 추가 */}
-                <DialogActions>
-                  <Button variant="contained" onClick={handleConfirmEditOpen}>
-                    수정
-                  </Button>
-                  <Button variant="outlined" onClick={handleClose}>
-                    취소
-                  </Button>
-                </DialogActions>
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <DialogActions style={{ marginTop: '15px', marginBottom: '15px' }}>
+            <Button onClick={handleClose}>취소</Button>
+            <Button variant="contained" onClick={handleConfirmEditOpen}>
+              수정
+            </Button>
+          </DialogActions>
         </DialogContent>
 
         {/* 수정 확인 다이얼로그 */}
@@ -664,6 +713,9 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
           <DialogTitle>수정 확인</DialogTitle>
           <DialogContent>선택한 정보를 수정하시겠습니까?</DialogContent>
           <DialogActions>
+            <Button onClick={handleConfirmEditClose} color="primary">
+              취소
+            </Button>
             <Button
               onClick={() => {
                 handleConfirmEdit();
@@ -671,10 +723,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
               color="secondary"
               variant="contained"
             >
-              수정
-            </Button>
-            <Button onClick={handleConfirmEditClose} color="primary" variant="outlined">
-              취소
+              확인
             </Button>
           </DialogActions>
         </Dialog>
