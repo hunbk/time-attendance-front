@@ -26,18 +26,23 @@ import 'dayjs/locale/ko';
 const StyledMaterialDesignContent = styled(MaterialDesignContent)(() => ({
   '&.notistack-MuiContent-default': {
     backgroundColor: '#212B36',
+    fontWeight: 'bold',
   },
   '&.notistack-MuiContent-info': {
     backgroundColor: '#1890FF',
+    fontWeight: 'bold',
   },
   '&.notistack-MuiContent-success': {
-    backgroundColor: '#54D62C',
+    backgroundColor: '#229A16',
+    fontWeight: 'bold',
   },
   '&.notistack-MuiContent-warning': {
-    backgroundColor: '#FFC107',
+    backgroundColor: '#ff9800',
+    fontWeight: 'bold',
   },
   '&.notistack-MuiContent-error': {
     backgroundColor: '#FF4842',
+    fontWeight: 'bold',
   },
 }));
 
