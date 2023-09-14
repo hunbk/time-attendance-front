@@ -483,11 +483,12 @@ export default function SchedulePage() {
         <DialogTitle>삭제 확인</DialogTitle>
         <DialogContent>선택한 항목을 정말 삭제하시겠습니까?</DialogContent>
         <DialogActions>
-          <Button onClick={handleDelete} color="error">
-            삭제
-          </Button>
+          
           <Button onClick={handleDeleteConfirmClose} color="primary">
             취소
+          </Button>
+          <Button onClick={handleDelete} color="error" variant='contained'>
+            삭제
           </Button>
         </DialogActions>
       </Dialog>

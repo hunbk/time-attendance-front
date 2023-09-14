@@ -7,7 +7,7 @@ import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { Button } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import koLocale from 'date-fns/locale/ko';
+import ko from 'date-fns/locale/ko';
 
 const DateBox1 = styled.div`
   display: flex;
@@ -81,7 +81,7 @@ const BasicModal = ({ onClose }) => {
   );
 };
 
-const Calendar = ({ startDate, endDate, setStartDate, setEndDate}) => {
+const Calendar = ({ startDate, endDate, setStartDate, setEndDate }) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleCloseModal = () => {
@@ -105,10 +105,10 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate}) => {
   //     setShowModal(true);
   //   }
   // };
-  
+
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={koLocale}>
-      <div style={{ display: 'flex'}}>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
+      <div style={{ display: 'flex' }}>
         <DateBox1>
           <StyledDatePicker
             shouldCloseOnSelect
@@ -117,7 +117,6 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate}) => {
             value={startDate}
             onChange={setStartDate}
             closeOnScroll
-            // onChange={handleStartDateChange}
             maxDate={endDate}
           />
         </DateBox1>
@@ -130,7 +129,6 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate}) => {
             value={endDate}
             onChange={setEndDate}
             closeOnScroll
-            // onChange={handleEndDateChange}
             minDate={startDate}
             maxDate={new Date().getTime() - 24 * 60 * 60 * 1000}
           />

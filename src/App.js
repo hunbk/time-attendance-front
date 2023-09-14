@@ -13,7 +13,6 @@ import ScrollToTop from './components/scroll-to-top';
 import { AuthProvider } from './context/AuthProvider';
 
 import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
 
 // ----------------------------------------------------------------------
 
@@ -21,7 +20,7 @@ export default function App() {
   dayjs.locale('ko');
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='ko'>
       <HelmetProvider>
         <AuthProvider>
           <BrowserRouter>
