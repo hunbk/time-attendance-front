@@ -5,7 +5,6 @@ import DashboardLayout from './layouts/dashboard';
 import SimpleLayout from './layouts/simple';
 
 // 사용자 페이지
-import DashboardAppPage from './pages/DashboardAppPage';
 import MyPage from './pages/mypage/MyPage';
 import WorkGroupIndexPage from './pages/workgroup/WorkGroupIndexPage';
 import PrivilegePage from './pages/privilege/PrivilegePage';
@@ -57,34 +56,34 @@ export default function Router() {
         },
         {
           path: 'workgroups',
-          element: checkPermission(userRole, ['HR', 'MNG', 'ADMIN']) ? <WorkGroupIndexPage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['HR', 'MNG', 'ADMIN']) ? <WorkGroupIndexPage /> : <Navigate to="/404" />,
         },
         {
           path: 'privilege',
-          element: checkPermission(userRole, ['HR', 'MNG', 'ADMIN']) ? <PrivilegePage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['HR', 'MNG', 'ADMIN']) ? <PrivilegePage /> : <Navigate to="/404" />,
         },
         {
           path: 'privilegeAdd',
-          element: checkPermission(userRole, ['ADMIN']) ? <PrivilegeAdd /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['ADMIN']) ? <PrivilegeAdd /> : <Navigate to="/404" />,
         },
         {
           path: 'company',
-          element: checkPermission(userRole, ['ADMIN']) ? <CompanySettingPage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['ADMIN']) ? <CompanySettingPage /> : <Navigate to="/404" />,
         },
         {
           path: 'schedule',
-          element: checkPermission(userRole, ['FO', 'MNG', 'ADMIN']) ? <SchedulePage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['FO', 'MNG', 'ADMIN']) ? <SchedulePage /> : <Navigate to="/404" />,
         },
       ],
     },
     {
       path: '/admin', // 서비스 관리자 페이지. 서비스 관리자(SUPERADMIN)만 접근 가능한 경로
-      element: checkPermission(userRole, ['SUPERADMIN']) ? <DashboardLayout /> : <Navigate to="/403" />,
+      element: checkPermission(userRole, ['SUPERADMIN']) ? <DashboardLayout /> : <Navigate to="/404" />,
       children: [
         { path: '', element: <AdminPage /> },
         {
           path: 'company',
-          element: checkPermission(userRole, ['SUPERADMIN']) ? <CompanyPage /> : <Navigate to="/403" />,
+          element: checkPermission(userRole, ['SUPERADMIN']) ? <CompanyPage /> : <Navigate to="/404" />,
         },
       ],
     },
@@ -101,7 +100,7 @@ export default function Router() {
       children: [
         // { element: <Navigate to="/dashboard/app" />, index: true }, // 버그발생
         { path: '404', element: <Page404 /> },
-        { path: '403', element: <Page403 /> },
+        // { path: '403', element: <Page403 /> },
         { path: '*', element: <Navigate to="/404" /> },
       ],
     },
@@ -109,10 +108,10 @@ export default function Router() {
       path: '*',
       element: <Navigate to="/404" replace />,
     },
-    {
-      path: '403',
-      element: <Navigate to="/403" replace />,
-    },
+    // {
+    //   path: '403',
+    //   element: <Navigate to="/403" replace />,
+    // },
   ]);
 
   return routes;

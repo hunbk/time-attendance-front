@@ -18,7 +18,7 @@ const StyledContent = styled('div')(({ theme }) => ({
 
 // ----------------------------------------------------------------------
 
-export default function Page404() {
+export default function Page500() {
   return (
     <>
       <Helmet>
@@ -27,13 +27,12 @@ export default function Page404() {
 
       <Container>
         <StyledContent sx={{ textAlign: 'center', alignItems: 'center' }}>
-          <Box component="img" src="/assets/illustrations/404.png" sx={{ height: 200, mx: 'auto', my: 5 }} />
+          <Box component="img" src="/assets/illustrations/500.png" sx={{ height: 200, mx: 'auto', my: 5 }} />
 
-          <Typography variant="h3" paragraph>
-            해당 페이지를 찾지 못했습니다 😅
-          </Typography>
-          <Typography variant="subtitle1" paragraph sx={{ color: 'text.secondary' }}>
-            주소가 잘못되었거나 더 이상 제공되지 않는 페이지입니다.
+          <Typography variant="h3">죄송합니다.</Typography>
+          <Typography variant="subtitle1">현재 서비스 접속이 원활하지 않습니다.</Typography>
+          <Typography variant="subtitle1" paragraph>
+            페이지를 새로고침 하거나, 잠시 후 다시 시도해주세요.
           </Typography>
           {/* TODO: 다른 페이지 추천 링크 */}
 
