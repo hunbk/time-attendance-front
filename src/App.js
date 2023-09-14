@@ -20,7 +20,7 @@ export default function App() {
   dayjs.locale('ko');
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='ko'>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <HelmetProvider>
         <AuthProvider>
           <BrowserRouter>
