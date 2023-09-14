@@ -106,7 +106,7 @@ export default function WeeklyWorkChart({ title, subheader, workData, selectedWe
   });
 
   return (
-    <Card {...other}>
+    <Card {...other} sx={{ minHeight: 400 }}>
       <CardContent>
         <Grid container justifyContent="space-between" alignItems="center">
           <Grid item>
@@ -130,7 +130,7 @@ export default function WeeklyWorkChart({ title, subheader, workData, selectedWe
       </CardContent>
 
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <ReactApexChart type="bar" series={chartData} options={chartOptions} height={250} />
+        <ReactApexChart type="bar" series={chartData} options={chartOptions} height={260} />
       </Box>
     </Card>
   );

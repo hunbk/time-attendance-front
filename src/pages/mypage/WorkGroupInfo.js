@@ -13,7 +13,7 @@ export default function WorkGroupInfo({ data }) {
   // 미배포 사용자
   if (data.workGroupId === null) {
     return (
-      <Card>
+      <Card sx={{ minHeight: 400 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             나의 근로그룹
@@ -45,7 +45,7 @@ export default function WorkGroupInfo({ data }) {
   });
 
   return (
-    <Card>
+    <Card sx={{ minHeight: 400 }}>
       {/* <CardHeader title="나의 근로그룹" /> */}
       <CardContent>
         <Typography variant="h6" gutterBottom>
@@ -57,7 +57,7 @@ export default function WorkGroupInfo({ data }) {
               근로그룹명
             </Typography>
             <Label variant="soft" color="default">
-              {data.name}
+              {data.name ?? '없음'}
             </Label>
           </Grid>
           <Grid item xs={12} sm={6} md={12}>
@@ -65,7 +65,7 @@ export default function WorkGroupInfo({ data }) {
               근로제 종류
             </Typography>
             <Label variant="soft" color={data.type === '일반' ? 'default' : 'info'}>
-              {data.type}근로제
+              {data.type ? `${data.type}근로제` : '없음'}
             </Label>
           </Grid>
           <Grid item xs={12} sm={6} md={12}>
