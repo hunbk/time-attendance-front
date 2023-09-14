@@ -18,7 +18,8 @@ import CompanyPage from './pages/admin/company/CompanyPage';
 
 // 에러 페이지
 import Page404 from './pages/Page404';
-import Page403 from './pages/Page403';
+// import Page403 from './pages/Page403';
+import Page500 from './pages/Page500';
 
 // context
 import { useAuthState } from './context/AuthProvider';
@@ -100,6 +101,7 @@ export default function Router() {
       children: [
         // { element: <Navigate to="/dashboard/app" />, index: true }, // 버그발생
         { path: '404', element: <Page404 /> },
+        { path: '500', element: <Page500 /> },
         // { path: '403', element: <Page403 /> },
         { path: '*', element: <Navigate to="/404" /> },
       ],
