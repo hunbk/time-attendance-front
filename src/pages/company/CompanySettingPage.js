@@ -17,6 +17,7 @@ import { Helmet } from 'react-helmet-async';
 import { useAuthState } from '../../context/AuthProvider';
 import loginAxios from '../../api/loginAxios';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { enqueueSnackbar } from 'notistack';
 
 const dropzoneStyle = {
   border: '1px dashed rgba(145, 158, 171, 0.5)',
@@ -74,6 +75,7 @@ export default function CompanySettingPage() {
       const response = await loginAxios.patch(`/api/companies/${user.companyId}/code`);
       if (response.status === 200) {
         setAuthCode(response.data.code);
+        enqueueSnackbar('코드가 재발급 되었습니다.', { variant: 'success' });
       }
     } catch (error) {
       console.error('Failed to reissue auth code:', error);
@@ -89,6 +91,7 @@ export default function CompanySettingPage() {
       new Blob([JSON.stringify({ name, imageAction })], { type: 'application/json' })
     ); // 회사 정보 JSON 객체로 추가
     await loginAxios.patch(`/api/companies/${user.companyId}`, formData);
+    enqueueSnackbar('저장되었습니다.', { variant: 'success' });
   };
 
   // 회사 로고 이미지 삭제 함수
@@ -150,11 +153,11 @@ export default function CompanySettingPage() {
             </Card>
           </Grid>
           <Grid item xs={12} md={8} lg={8}>
-            <Card>
+            <Card sx={{ minHeight: 300, display: 'flex', flexDirection: 'column' }}>
               <CardHeader title={'회사 정보'} />
-              <Box sx={{ p: 3 }}>
+              <Box sx={{ p: 3, flexGrow: 1 }}>
                 <Grid container spacing={1} alignItems="center">
-                  <Grid item xs={8}>
+                  <Grid item xs={6}>
                     <Tooltip title="인증코드는 재발급만 가능합니다." placement="top" arrow>
                       <TextField
                         label="인증코드"
@@ -168,6 +171,7 @@ export default function CompanySettingPage() {
                             <IconButton
                               onClick={() => {
                                 navigator.clipboard.writeText(authCode);
+                                enqueueSnackbar('클립보드에 복사되었습니다!', { variant: 'success' });
                               }}
                             >
                               <ContentCopyIcon />
@@ -193,7 +197,7 @@ export default function CompanySettingPage() {
                   onChange={(event) => setName(event.target.value)}
                 />
               </Box>
-              <Box sx={{ p: 2, textAlign: 'right' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', p: 2 }}>
                 <Button variant="contained" onClick={handleSave}>
                   저장
                 </Button>
