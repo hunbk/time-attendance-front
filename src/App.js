@@ -20,6 +20,7 @@ import { SnackbarProvider, MaterialDesignContent, closeSnackbar } from 'notistac
 import { AuthProvider } from './context/AuthProvider';
 
 import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
 
 // 스낵바 디자인
 const StyledMaterialDesignContent = styled(MaterialDesignContent)(() => ({
