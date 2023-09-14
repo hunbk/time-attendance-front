@@ -44,6 +44,7 @@ import loginAxios from '../../api/loginAxios';
 
 // 유저 상태
 import { useAuthState } from '../../context/AuthProvider';
+import { forEach } from 'lodash';
 // ----------------------------------------------------------------------
 
 const LIST_HEAD = [
@@ -116,9 +117,10 @@ export default function PrivilegeAdd() {
   const [users, setUsers] = useState([]);
   // 회사 목록 조회 API
   const getUserList = async () => {
-    const res = await loginAxios.get(`/api/users?companyId=${user.companyId}`); // 추후에 2는 ${user.companyId로 교체}
-    setUsers(res.data);
-    setFilteredModalUsers(res.data);
+    const res = await loginAxios.get(`/api/users?companyId=${user.companyId}`);
+    const filteredData = res.data.filter(userData => userData.userId !== user.userId)
+    setUsers(filteredData);
+    setFilteredModalUsers(filteredData);
   };
 
   useEffect(() => {

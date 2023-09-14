@@ -402,6 +402,9 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     } else if (totalWorkingTime >= fixWorkingTime) {
       totalOverTimeInMinutes += totalWorkingTime - fixWorkingTime;
       totalWorkingTime = fixWorkingTime;
+    } else if (totalWorkingTime + totalOverTimeInMinutes >= fixWorkingTime && totalWorkingTime < fixWorkingTime){
+      totalWorkingTime = fixWorkingTime;
+      totalOverTimeInMinutes -= fixWorkingTime;
     }
     // 총 근무 시간을 시간과 분으로 변환하여 workingTime 상태를 업데이트합니다.
     const workingTimeHours = Math.floor(totalWorkingTime / 60);
@@ -542,7 +545,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                 <Typography variant="subtitle2" style={{ marginBottom: '15px' }}>
                   {userData.workGroupType}근로제
                 </Typography>
-                <Card style={{ backgroundColor: '#F2F2F2' }}>
+                <Card style={{ backgroundColor: '#F2F2F2', boxShadow: '4px 4px 6px rgba(0, 0, 0, 0.1)' }}>
                   <div style={{ margin: '8px' }}>
                     <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
                       근무시간 : {workGroupStartTime} ~ {workGroupEndTime}
@@ -633,14 +636,14 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
               </Typography>
             </DialogTitle>
 
-            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50 }}>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50, marginBottom:3}}>
               <TimePicker
                 readOnly
                 ampm = {false}
                 label=""
                 value={dayjs(showNullTime(formatDateTimeToTime(userData.startWork)), 'HH:mm')}
                 onChange={(time) => setStartTime(formatDateTimeToTime(time))}
-                sx={{ width: 135, marginRight: '5px' }}
+                sx={{ width: 125, marginRight: '5px',boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -654,7 +657,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                 label=""
                 value={dayjs(showNullTime(formatDateTimeToTime(userData.leaveWork)), 'HH:mm')}
                 onChange={(time) => setStartTime(formatDateTimeToTime(time))}
-                sx={{ width: 135, marginLeft: '5px' }}
+                sx={{ width: 125, marginLeft: '5px',boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -663,20 +666,20 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
               />
             </DialogTitle>
 
-            <DialogTitle sx={{ display: 'flex', alignContent: 'center', height: 30 }}>
+            <DialogTitle sx={{ display: 'flex', alignContent: 'center', height: 30}}>
               <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center' }}>
                 근로인정 시간
               </Typography>
             </DialogTitle>
 
-            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50 }}>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50, marginBottom:2 }}>
               <TimePicker
                 timeSteps={{ minutes: 1 }}
                 ampm = {false}
                 label=""
                 value={dayjs(startTime, 'HH:mm')}
                 onChange={(time) => setStartTime(formatDateTimeToTime(time))}
-                sx={{ width: 135, marginRight: '5px' }}
+                sx={{ width: 125, marginRight: '5px',boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -690,7 +693,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
                 label=""
                 value={dayjs(endTime, 'HH:mm')}
                 onChange={(time) => setEndTime(formatDateTimeToTime(time))}
-                sx={{ width: 135, marginLeft: '5px' }}
+                sx={{ width: 125, marginLeft: '5px',boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
                 slotProps={{
                   textField: {
                     size: 'small',

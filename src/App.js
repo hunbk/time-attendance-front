@@ -64,7 +64,7 @@ export default function App() {
             error: StyledMaterialDesignContent,
           }}
           autoHideDuration={2000}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
           preventDuplicate
           action={action}
         >
