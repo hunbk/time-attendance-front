@@ -178,7 +178,7 @@ export default function MyPage() {
 
             <Grid container spacing={3}>
               {/* 나의 근로그룹 정보 */}
-              <Grid item xs={12} sm={12} md={3}>
+              <Grid item xs={12} sm={12} md={3.5}>
                 <WorkGroupInfo data={workGroupData} />
               </Grid>
 
@@ -201,7 +201,7 @@ export default function MyPage() {
               </Grid> */}
 
               {/* 주간 근무차트 */}
-              <Grid item xs={12} sm={12} md={9}>
+              <Grid item xs={12} sm={12} md={8.5}>
                 <WeeklyWorkChart
                   title="주간 근무차트"
                   subheader={`${user.name}님의 주간 근무시간을 확인합니다.`}
