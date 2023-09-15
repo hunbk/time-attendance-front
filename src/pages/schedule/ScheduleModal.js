@@ -6,12 +6,7 @@ import {
   MenuItem,
   TableBody,
   Modal,
-  TextField,
-  Snackbar,
   Alert,
-  TableContainer,
-  Stack,
-  Select,
   Card,
   ButtonGroup,
   Dialog,
@@ -29,6 +24,7 @@ import dayjs from 'dayjs';
 
 import Label from '../../components/label';
 import { TimePicker } from '@mui/x-date-pickers';
+import { enqueueSnackbar } from 'notistack';
 
 // LoginAxios
 import loginAxios from '../../api/loginAxios';
@@ -36,7 +32,7 @@ import loginAxios from '../../api/loginAxios';
 // 유저 상태
 import { useAuthState } from '../../context/AuthProvider';
 
-const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarChange, getUserList }) => {
+const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
   const formatTime = (time) => {
     if (time !== null) {
       const [hours, minutes] = time.split(':');
@@ -100,7 +96,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
 
   // Snackbar 열기 함수
   const handleOpenSnackbar = () => {
-    onEditSnackbarChange(true);
+    enqueueSnackbar(`수정되었습니다!`,{variant:"success"});
   };
 
   const handleConfirmEditOpen = () => {
@@ -126,6 +122,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
       workState, // workState을 String 형태 그대로 보내기
       settlementId,
     };
+
     await loginAxios.patch('/api/settlements', editedData);
     handleOpenSnackbar();
     handleConfirmEditClose();
@@ -133,25 +130,9 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     onClose();
   };
 
-  const handleStartTime = (event) => {
-    setStartTime(event.target.value);
-  };
-
-  const handleEndTime = (event) => {
-    setEndTime(event.target.value);
-  };
-
-  const handleWorkingTime = (event) => {
-    setWorkingTime(event.target.value);
-  };
-
-  const handleOverTime = (event) => {
-    setOverTime(event.target.value);
-  };
-
-  const handleWorkState = (event) => {
-    setWorkState(event.target.value);
-  };
+  const handleNullSnackbar = () => {
+    enqueueSnackbar(`근로인정 시간이 선택되지 않았습니다!`,{variant:"warning"});
+  }
 
   const handleClose = () => {
     onClose();
@@ -481,10 +462,6 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
     justifyContent: 'center',
   };
 
-  const textStyle = {
-    width: '100%',
-  };
-
   return (
     <Modal open={open} onClose={handleClose} style={modalStyle}>
       <Dialog
@@ -500,7 +477,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
       >
         <DialogTitle>
           <Typography variant="h5">근태 기록 수정</Typography>
-          <Typography variant="subtitle2">{userData.date}의 정보입니다.</Typography>
+          <Typography variant="subtitle2">근무일자 : {userData.date}</Typography>
         </DialogTitle>
 
         <DialogContent dividers>
@@ -718,7 +695,12 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
             </Button>
             <Button
               onClick={() => {
-                handleConfirmEdit();
+                if(startTime === "-" || endTime === "-"){
+                  handleNullSnackbar();
+                  handleConfirmEditClose();
+                }else{
+                  handleConfirmEdit();
+                }
               }}
               color="secondary"
               variant="contained"
