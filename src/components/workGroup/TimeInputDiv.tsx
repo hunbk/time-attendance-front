@@ -25,6 +25,8 @@ const TimeInputDiv: FC<TimeInputDivProps> = ({ index, handleTempHour, startOrEnd
                         required: timeType === "근무" && true,
                     },
                 }}
+                ampm={false}
+                timeSteps={{ minutes: 15 }}
             />
         </DemoContainer>
     );

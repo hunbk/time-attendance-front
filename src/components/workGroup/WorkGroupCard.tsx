@@ -5,7 +5,6 @@ import styled from '@mui/system/styled';
 import { Typography, CardActionArea } from '@mui/material';
 
 const Item = styled('div')(({ theme }) => ({
-    backgroundColor: theme.palette.mode === 'dark' ? '#262B32' : '#fff',
     padding: theme.spacing(1),
     textAlign: 'center',
     borderRadius: 4,

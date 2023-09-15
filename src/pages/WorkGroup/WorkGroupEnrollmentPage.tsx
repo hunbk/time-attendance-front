@@ -24,6 +24,7 @@ import HolidayPayLeave from "../../components/workGroup/HolidayPayLeave";
 import { useAuthState } from '../../context/AuthProvider';
 import { handleDataModification } from 'src/utils/workGroupHandleRequest';
 import { DataType, DataToBeModifiedType } from './WorkGroupIndexPage';
+import { enqueueSnackbar } from 'notistack';
 
 type WorkGroupEnrollmentPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -59,6 +60,18 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
         setHours((draft) => {
           draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
         })
+        // console.log(hours[timeType][index].start);
+        // console.log(hours[timeType][index].end);
+
+        // if (startOrEnd === "end" && value.isBefore(dayjs(hours[timeType][index].start, 'HH:mm:ss'))) {
+        //   console.log("triggered1");
+        //   enqueueSnackbar(`시작시간보다 종료시간이 빠를 수 없습니다.`, { variant: "error" });
+        // } else {
+        //   console.log("triggered2");
+        //   setHours((draft) => {
+        //     draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
+        //   })
+        // }
       }
       const renderTimeInputDivs = (timeType: string, index: number, defaultValueStart: Dayjs, defaultValueEnd: Dayjs) => (
         <>
@@ -101,7 +114,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
   const [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
     timeInputDivSet("의무", 0)
   ]);
-  const [timeInputDivWork] = useState(
+  const [timeInputDivWork, setTimeInputDivWork] = useState(
     timeInputDivSet("근무", 0)
   );
   const [timeInputDivApproved, setTimeInputDivApproved] = useState(
@@ -181,6 +194,9 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       keys.forEach(key => {
         if (tempHours[key][0].start.length !== 0) {
           switch (key) {
+            case "근무":
+              setTimeInputDivWork(timeInputDivSet("근무", 0, tempHours["근무"]));
+              break;
             case "휴게":
               setTimeInputDivsBreak([timeInputDivSet("휴게", 0, tempHours["휴게"])]);
               break;
@@ -300,12 +316,12 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     dataToBeSent = { ...dataToBeSent, end: tempEnd };
 
     if (alignments.length === 0) {
-      alert("근무일은 최소 1일 이상이어야합니다.")
+      enqueueSnackbar(`근무일은 최소 1일 이상이어야합니다.`, { variant: "error" });
     } else {
       console.log(dataToBeSent);
     }
 
-    handleDataModification(dataToBeModified);
+    handleDataModification(dataToBeSent, dataToBeModified && dataToBeModified.id);
   };
 
   return (

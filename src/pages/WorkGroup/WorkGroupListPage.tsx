@@ -67,9 +67,9 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
   const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
   const handleDelete = async (workGroupId: number) => {
-    const isSuccess = await handleRequest('delete', `/api/workgroups/${workGroupId}`);
+    const { status, data }: FetchResultType = await handleRequest('delete', `/api/workgroups/${workGroupId}`);
 
-    if (isSuccess) {
+    if (status === 200) {
       setWorkGroupResponseDtoList(prevList => prevList.filter((workGroupResponseDto) => workGroupResponseDto.id !== workGroupId))
     }
   }
