@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 // @mui
 import { styled, alpha } from '@mui/material/styles';
-import { Box, Link, Button, Drawer, Typography, Avatar } from '@mui/material';
+import { Box, Link, Drawer, Typography, Avatar, IconButton } from '@mui/material';
+import LogoutIcon from '@mui/icons-material/Logout';
 // hooks
 import useResponsive from '../../../hooks/useResponsive';
 // components
@@ -22,12 +23,26 @@ const NAV_WIDTH = 280;
 const StyledAccount = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'flex-start',
   padding: theme.spacing(2, 2.5),
   borderRadius: Number(theme.shape.borderRadius) * 1.5,
   backgroundColor: alpha(theme.palette.grey[500], 0.12),
 }));
 
 // ----------------------------------------------------------------------
+
+// function mapRoleToKorean(role) {
+//   const roleMap = {
+//     USER: '사원',
+//     HR: '인사관리자',
+//     FO: '재무관리자',
+//     MNG: '총괄책임자',
+//     ADMIN: '최고관리자',
+//     SUPERADMIN: '서비스관리자',
+//   };
+
+//   return roleMap[role] || '';
+// }
 
 Nav.propTypes = {
   openNav: PropTypes.bool,
@@ -75,26 +90,26 @@ export default function Nav({ openNav, onCloseNav }) {
       <Box sx={{ mb: 5, mx: 2.5 }}>
         <Link underline="none">
           <StyledAccount>
+            {/* <Box sx={{ display: 'flex', alignItems: 'center', marginRight: 'auto' }}> */}
             <Avatar />
+            {/* </Box> */}
 
             <Box sx={{ ml: 2 }}>
               <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
-                {/* 사용자 이름 */}
                 {user.name}
               </Typography>
-
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {/* 사용자 권한 */}
-                {user.role}
+              <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                {user.position}
               </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', marginLeft: 'auto' }}>
+              <IconButton size="small" onClick={handleLogout}>
+                <LogoutIcon />
+              </IconButton>
             </Box>
           </StyledAccount>
         </Link>
-        <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-          <Button size="small" variant="text" onClick={handleLogout}>
-            로그아웃
-          </Button>
-        </Box>
 
         {/* 출퇴근 버튼 */}
         {user.role !== 'SUPERADMIN' ? <NavWork /> : null}

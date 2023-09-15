@@ -138,6 +138,8 @@ export default function CompanyList({ companies }) {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage="페이지당 목록 수 :"
+        labelDisplayedRows={({ count }) => `현재 페이지: ${page + 1} / 전체 페이지: ${Math.ceil(count / rowsPerPage)}`}
       />
     </>
   );
