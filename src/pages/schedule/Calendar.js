@@ -24,19 +24,6 @@ const Dash = styled.div`
   font-size: 25px;
 `;
 
-const StyledDatePicker = styled(DatePicker)`
-  width: 180px;
-  height: 39px;
-  border-radius: 8px;
-  font-weight: 400;
-  font-size: 17px;
-  line-height: 100%;
-  background-color: transparent;
-  color: #707070;
-  text-align: center;
-  top: -8px;
-`;
-
 const modal = {
   position: 'absolute',
   top: '50%',
@@ -88,29 +75,11 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate }) => {
     setShowModal(false);
   };
 
-  // const handleStartDateChange = (date) => {
-  //   if (date <= endDate) {
-  //     setShowModal(false);
-  //     setStartDate(date);
-  //   } else {
-  //     setShowModal(true);
-  //   }
-  // };
-
-  // const handleEndDateChange = (date) => {
-  //   if (date >= startDate) {
-  //     setShowModal(false);
-  //     setEndDate(date);
-  //   } else {
-  //     setShowModal(true);
-  //   }
-  // };
-
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ko}>
       <div style={{ display: 'flex' }}>
         <DateBox1>
-          <StyledDatePicker
+          <DatePicker
             shouldCloseOnSelect
             label="시작 기간 선택"
             format="yyyy.MM.dd"
@@ -118,11 +87,17 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate }) => {
             onChange={setStartDate}
             closeOnScroll
             maxDate={endDate}
+            slotProps={{
+              textField: {
+                size: 'small',
+              },
+            }}
+            sx={{width:'200px'}}
           />
         </DateBox1>
         <Dash> ~ </Dash>
         <DateBox2>
-          <StyledDatePicker
+          <DatePicker
             shouldCloseOnSelect
             label="종료 기간 선택"
             format="yyyy.MM.dd"
@@ -131,6 +106,12 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate }) => {
             closeOnScroll
             minDate={startDate}
             maxDate={new Date().getTime() - 24 * 60 * 60 * 1000}
+            slotProps={{
+              textField: {
+                size: 'small',
+              },
+            }}
+            sx={{width:'200px'}}
           />
         </DateBox2>
         {showModal && <BasicModal onClose={handleCloseModal} />}

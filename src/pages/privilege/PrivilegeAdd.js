@@ -100,7 +100,7 @@ function applySortFilter(array, comparator, query) {
 
     // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
     queryIds.forEach((queryId) => {
-      const filteredUser = array.find((user) => user.name === queryId);
+      const filteredUser = array.find((user) => user.name.includes(queryId));
       if (filteredUser) {
         filteredUsers.push(filteredUser);
       }
@@ -119,7 +119,7 @@ export default function PrivilegeAdd() {
   // 회사 목록 조회 API
   const getUserList = async () => {
     const res = await loginAxios.get(`/api/users?companyId=${user.companyId}`);
-    const filteredData = res.data.filter(userData => userData.userId !== user.userId)
+    const filteredData = res.data.filter((userData) => userData.userId !== user.userId);
     setUsers(filteredData);
     setFilteredModalUsers(filteredData);
   };
@@ -132,8 +132,6 @@ export default function PrivilegeAdd() {
   const [rowsModalPerPage, setRowsModalPerPage] = useState(5);
   const [modalFilterName, setModalFilterName] = useState('');
   const [modalSelected, setModalSelected] = useState([]);
-  const [saveSnackbar, setSaveSnackbar] = useState(false);
-  const [nullSnackbar, setNullSnackbar] = useState(false);
   const [openAdminModal, setOpenAdminModal] = useState(false);
 
   const [order, setOrder] = useState('asc');
@@ -200,14 +198,13 @@ export default function PrivilegeAdd() {
     setRowsModalPerPage(parseInt(event.target.value, 10));
   };
 
-  const handleModalFilterByName = (event) => {
-    const searchQuery = event.target.value;
-    setModalFilterName(searchQuery);
+  const handleModalFilterByName = (name) => {
+    setModalFilterName(name);
     setModalPage(0);
-    setRowsModalPerPage(5);
+    setRowsModalPerPage(10);
 
     // 검색창에 아무것도 입력하지 않았을 때,
-    if (!searchQuery) {
+    if (!name) {
       setIsModalSearched(false);
       setFilteredModalUsers(users);
     } else {
@@ -224,11 +221,11 @@ export default function PrivilegeAdd() {
   };
 
   const handleOpenSaveSnackbar = () => {
-    enqueueSnackbar(`권한이 변경되었습니다!`,{variant:"success"});
+    enqueueSnackbar(`권한이 변경되었습니다!`, { variant: 'success' });
   };
 
   const handleOpenNullSnackbar = () => {
-    enqueueSnackbar(`사원을 선택해주세요!`,{variant:"warning"});
+    enqueueSnackbar(`사원을 선택해주세요!`, { variant: 'warning' });
   };
 
   const handleModalSearch = (search) => {
@@ -236,7 +233,7 @@ export default function PrivilegeAdd() {
     const searchResult = applySortFilter(users, getComparator(order, orderBy), search);
     setModalFilterName(search);
     setModalPage(0);
-    setRowsModalPerPage(5);
+    setRowsModalPerPage(10);
     setFilteredModalUsers(searchResult);
   };
 
@@ -290,9 +287,9 @@ export default function PrivilegeAdd() {
     setFilteredModalUsers(filteredUsers);
   };
 
-  const emptyModalRows = modalPage > 0 ? Math.max(0, (1 + modalPage) * rowsModalPerPage - users.length) : 0;
+  const emptyModalRows = modalPage > 0 ? Math.max(0, (1 + modalPage) * rowsModalPerPage - filterUser.length) : 0;
 
-  const isModalNotFound = !filteredModalUsers.length && !!modalFilterName;
+  const isModalNotFound = !filterUser.length && modalFilterName;
 
   const modalStyle = {
     // 팝업창의 넓이를 원하는 값으로 지정합니다. 필요에 따라 변경할 수 있습니다.
@@ -324,7 +321,7 @@ export default function PrivilegeAdd() {
           />
           <Scrollbar>
             <TableContainer>
-              <Table>
+              <Table size="small">
                 <UserListHead
                   order={order}
                   orderBy={orderBy}
@@ -450,11 +447,7 @@ export default function PrivilegeAdd() {
                         </TableRow>
                       );
                     })}
-                  {emptyModalRows > 0 && (
-                    <TableRow style={{ height: 53 * emptyModalRows }}>
-                      <TableCell colSpan={6} />
-                    </TableRow>
-                  )}
+               
                 </TableBody>
 
                 {isModalNotFound && (
@@ -463,13 +456,28 @@ export default function PrivilegeAdd() {
                       <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
                         <Paper sx={{ textAlign: 'center', minWidth: 478 }}>
                           <Typography variant="h6" paragraph>
-                            검색결과가 없습니다.
+                            {modalFilterName} 사원을 찾지 못했습니다.
                           </Typography>
-
                           <Typography variant="body2">
-                            다음 검색에 대한 결과를 찾을 수 없습니다.&nbsp;
-                            <strong>&quot;{modalFilterName}&quot;</strong>.
-                            <br /> 사용자의 이름을 다시 한번 확인해주세요.
+                            <strong>{modalFilterName}</strong> 사원에 대한 정보가 없습니다. &nbsp;
+                            <br /> 다시 한번 사원이름을 확인해주세요.
+                          </Typography>
+                        </Paper>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                )}
+
+                {(filterUser.length === 0) &&(!modalFilterName) && (
+                  <TableBody>
+                    <TableRow>
+                      <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
+                        <Paper sx={{ textAlign: 'center', minWidth: 478 }}>
+                          <Typography variant="h6" paragraph>
+                            해당 조건에 대한 결과가 존재하지 않습니다.
+                          </Typography>
+                          <Typography variant="body2">
+                            다시 한번 조건을 확인해주세요.
                           </Typography>
                         </Paper>
                       </TableCell>
@@ -489,38 +497,38 @@ export default function PrivilegeAdd() {
             page={modalPage}
             onPageChange={handleModalChangePage}
             onRowsPerPageChange={handleChangeModalRowsPerPage}
-            labelRowsPerPage="페이지당 사원 수 :"
+            labelRowsPerPage="페이지당 목록 수 :"
             labelDisplayedRows={({ count }) =>
               `현재 페이지: ${modalPage + 1} / 전체 페이지: ${Math.ceil(count / rowsModalPerPage)}`
             }
           />
-        
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 , marginBottom:1, marginTop:3}}>
-          <DialogActions>
-            <Button
-              onClick={() => {
-                resetFilterAndSelection();
-              }}
-            >
-              취소
-            </Button>
 
-            <Button
-              sx={{ mr: 1 }}
-              onClick={() => {
-                if (modalSelected !== null && modalSelected.length !== 0) {
-                  handleSaveConfirmOpen();
-                } else {
-                  // modalSelected가 null일 때 경고창 띄우기
-                  handleOpenNullSnackbar();
-                }
-              }}
-              variant="contained"
-            >
-              권한 부여
-            </Button>
-          </DialogActions>
-        </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, marginBottom: 1, marginTop: 3 }}>
+            <DialogActions>
+              <Button
+                onClick={() => {
+                  resetFilterAndSelection();
+                }}
+              >
+                취소
+              </Button>
+
+              <Button
+                sx={{ mr: 1 }}
+                onClick={() => {
+                  if (modalSelected !== null && modalSelected.length !== 0) {
+                    handleSaveConfirmOpen();
+                  } else {
+                    // modalSelected가 null일 때 경고창 띄우기
+                    handleOpenNullSnackbar();
+                  }
+                }}
+                variant="contained"
+              >
+                권한 부여
+              </Button>
+            </DialogActions>
+          </Box>
         </Card>
       </Container>
 
@@ -612,7 +620,7 @@ export default function PrivilegeAdd() {
           </Select>
           {modalSelected.length > 0 && (
             <TableContainer>
-              <Table>
+              <Table size='small'>
                 <UserListHead
                   order={order}
                   headLabel={MODAL_HEAD}

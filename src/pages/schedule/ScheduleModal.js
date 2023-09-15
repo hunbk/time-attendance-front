@@ -36,7 +36,7 @@ import loginAxios from '../../api/loginAxios';
 // 유저 상태
 import { useAuthState } from '../../context/AuthProvider';
 
-const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarChange, getUserList }) => {
+const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserList }) => {
   const formatTime = (time) => {
     if (time !== null) {
       const [hours, minutes] = time.split(':');
@@ -650,6 +650,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
               <TimePicker
                 readOnly
                 ampm = {false}
+                closeOnSelect
                 label=""
                 value={dayjs(showNullTime(formatDateTimeToTime(userData.startWork)), 'HH:mm')}
                 onChange={(time) => setStartTime(formatDateTimeToTime(time))}
@@ -664,6 +665,7 @@ const ScheduleModal = ({ open, onClose, userData, editSnackbar, onEditSnackbarCh
               <TimePicker
                 readOnly
                 ampm = {false}
+                closeOnSelect
                 label=""
                 value={dayjs(showNullTime(formatDateTimeToTime(userData.leaveWork)), 'HH:mm')}
                 onChange={(time) => setStartTime(formatDateTimeToTime(time))}
