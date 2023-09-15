@@ -22,7 +22,7 @@ import { useImmer } from "use-immer";
 import TimeInputDiv from "../../components/workGroup/TimeInputDiv";
 import HolidayPayLeave from "../../components/workGroup/HolidayPayLeave";
 import { useAuthState } from '../../context/AuthProvider';
-import loginAxios from '../../api/loginAxios';
+import { handleDataModification } from 'src/utils/workGroupHandleRequest';
 import { DataType, DataToBeModifiedType } from './WorkGroupIndexPage';
 
 type WorkGroupEnrollmentPageProps = {
@@ -55,7 +55,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
   });
   const timeInputDivSet = useCallback(
     (timeType: string, index: number, timeRangeByType?: DefaultHour[], isFromAdd?: boolean) => {
-      console.log(`${timeType} triggered`)
       const handleHour = (index: number, startOrEnd: string, timeType: string, value: Dayjs | null) => {
         setHours((draft) => {
           draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
@@ -96,20 +95,16 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     },
     [setHours]
   );
-  // eslint-disable-next-line prefer-const
-  let [timeInputDivsBreak, setTimeInputDivsBreak] = useState([
+  const [timeInputDivsBreak, setTimeInputDivsBreak] = useState([
     timeInputDivSet("휴게", 0)
   ]);
-  // eslint-disable-next-line prefer-const
-  let [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
+  const [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
     timeInputDivSet("의무", 0)
   ]);
-  // eslint-disable-next-line prefer-const
-  let [timeInputDivWork] = useState(
+  const [timeInputDivWork] = useState(
     timeInputDivSet("근무", 0)
   );
-  // eslint-disable-next-line prefer-const
-  let [timeInputDivApproved, setTimeInputDivApproved] = useState(
+  const [timeInputDivApproved, setTimeInputDivApproved] = useState(
     timeInputDivSet("승인", 0)
   );
   const [alignments, setAlignments] = useState<string[]>(dataToBeModified ? dataToBeModified.alignments.work : []);
@@ -134,9 +129,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     companyId: user.companyId
   });
 
-
   useEffect(() => {
-    console.log("useEffect")
     if (dataToBeModified) {
       const getTimeRangeByType = (timeRangeType: string[], start: string[], end: string[], targetType: string) => {
         const matchedRanges = [];
@@ -219,7 +212,6 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     }
   };
   const handleCheckboxChange = (type: "휴게" | "승인" | "의무") => {
-    console.log("handleCheckboxChange triggered")
     if (isChecked[type]) {
       setHours((draft) => {
         draft[type] = [{ start: '', end: '' }];
@@ -290,42 +282,22 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     dataToBeSent = { ...dataToBeSent, end: [] };
 
     // Convert hours array into timeRangeType, start, end arrays
-    if (hours["근무"][0].start.length !== 0) {
-      for (let i = 0; i < hours["근무"].length; i += 1) {
-        tempTimeRangeType.push("근무");
-        tempStart.push(hours["근무"][i].start);
-        tempEnd.push(hours["근무"][i].end);
-      }
-    }
-    if (hours["휴게"][0].start.length !== 0) {
-      for (let i = 0; i < hours["휴게"].length; i += 1) {
-        tempTimeRangeType.push("휴게");
-        tempStart.push(hours["휴게"][i].start);
-        tempEnd.push(hours["휴게"][i].end);
-      }
-    }
-    if (hours["의무"][0].start.length !== 0) {
-      for (let i = 0; i < hours["의무"].length; i += 1) {
-        tempTimeRangeType.push("의무");
-        tempStart.push(hours["의무"][i].start);
-        tempEnd.push(hours["의무"][i].end);
-      }
-    }
-    if (hours["승인"][0].start.length !== 0) {
-      for (let i = 0; i < hours["승인"].length; i += 1) {
-        tempTimeRangeType.push("승인");
-        tempStart.push(hours["승인"][i].start);
-        tempEnd.push(hours["승인"][i].end);
-      }
-    }
+    const keys = ["근무", "휴게", "의무", "승인"];
 
+    keys.forEach(key => {
+      if (hours[key][0].start.length !== 0) {
+        for (let i = 0; i < hours[key].length; i += 1) {
+          tempTimeRangeType.push(key);
+          tempStart.push(hours[key][i].start);
+          tempEnd.push(hours[key][i].end);
+        }
+      }
+    });
 
     // Save that in dataToBeSent object
     dataToBeSent = { ...dataToBeSent, timeRangeType: tempTimeRangeType };
     dataToBeSent = { ...dataToBeSent, start: tempStart };
     dataToBeSent = { ...dataToBeSent, end: tempEnd };
-
-
 
     if (alignments.length === 0) {
       alert("근무일은 최소 1일 이상이어야합니다.")
@@ -333,35 +305,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       console.log(dataToBeSent);
     }
 
-    if (dataToBeModified) {
-      try {
-        const response = await loginAxios.put(`/api/workgroups/${dataToBeModified.id}`, dataToBeSent);
-
-        if (response.status === 200) {
-          alert("수정되었습니다.");
-          window.location.href = "http://localhost:3000/dashboard/workgroups";
-        } else {
-          // Handle other status codes
-        }
-      } catch (error) {
-        // Handle errors
-        console.error('An error occurred:', error);
-      }
-    } else {
-      try {
-        const response = await loginAxios.post('/api/workgroups', dataToBeSent);
-
-        if (response.status === 200) {
-          alert("저장되었습니다.");
-          window.location.href = "http://localhost:3000/dashboard/workgroups";
-        } else {
-          // Handle other status codes
-        }
-      } catch (error) {
-        // Handle errors
-        console.error('An error occurred:', error);
-      }
-    }
+    handleDataModification(dataToBeModified);
   };
 
   return (

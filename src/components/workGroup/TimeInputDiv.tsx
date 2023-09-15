@@ -1,7 +1,7 @@
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { Dayjs } from 'dayjs';
-import { useState } from 'react';
+import { FC, useState } from 'react';
 
 type TimeInputDivProps = {
     index: number,
@@ -11,7 +11,7 @@ type TimeInputDivProps = {
     defaultValue: Dayjs;
 }
 
-const TimeInputDiv: React.FC<TimeInputDivProps> = ({ index, handleTempHour, startOrEnd, timeType, defaultValue }) => {
+const TimeInputDiv: FC<TimeInputDivProps> = ({ index, handleTempHour, startOrEnd, timeType, defaultValue }) => {
     const [value, setValue] = useState<Dayjs | null>(defaultValue);
 
     return (
@@ -24,7 +24,8 @@ const TimeInputDiv: React.FC<TimeInputDivProps> = ({ index, handleTempHour, star
                     textField: {
                         required: timeType === "근무" && true,
                     },
-                }} />
+                }}
+            />
         </DemoContainer>
     );
 }

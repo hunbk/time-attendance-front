@@ -6,7 +6,7 @@ import WorkGroupCardList from "src/components/workGroup/WorkGroupCardList";
 import Grid from '@mui/material/Grid';
 import type { WorkGroupSimpleType } from "./WorkGroupIndexPage";
 import { useAuthState } from '../../context/AuthProvider';
-import loginAxios from '../../api/loginAxios';
+import handleRequest, { FetchResultType } from "src/utils/workGroupHandleRequest";
 
 type WorkGroupListPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -31,7 +31,6 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
   const { user } = useAuthState();
   const [workGroupResponseDtoList, setWorkGroupResponseDtoList] = useState<WorkGroupResponseDtoType[]>([]);
 
-
   useEffect(() => {
     const convertDtoToSimple = (data: WorkGroupResponseDtoType[]) => {
       const tempSimpleArray: WorkGroupSimpleType[] = [];
@@ -49,26 +48,18 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
 
       setWorkGroupSimple(tempSimpleArray);
     }
-    const getData = async () => {
-      try {
-        const response = await loginAxios.get(`/api/workgroups?companyId=${user.companyId}`);
+    const fetchWorkGroups = async () => {
+      const { status, data }: FetchResultType = await handleRequest('get', `/api/workgroups?companyId=${user.companyId}`);
 
-        if (response.status === 200) {
-          const { data } = response;
-          const dataFiltered = data.filter((item: WorkGroupResponseDtoType) => item.name !== "미배포" && item);
-          convertDtoToSimple(dataFiltered);
-          setWorkGroupResponseDtoList(dataFiltered);
-        } else {
-          // Handle other status codes
-        }
-      } catch (error) {
-        // Handle errors
-        console.error('An error occurred:', error);
+      if (status === 200) {
+        const dataFiltered = data.filter((item: WorkGroupResponseDtoType) => item.name !== "미배포" && item);
+        convertDtoToSimple(dataFiltered);
+        setWorkGroupResponseDtoList(dataFiltered);
       }
     }
 
-    getData();
-  }, [setWorkGroupSimple, user.companyId]);
+    fetchWorkGroups();
+  }, [setWorkGroupResponseDtoList, setWorkGroupSimple, user.companyId]);
 
   const alignments: string[] = [];
   const payLeaves: string[] = [];
@@ -76,22 +67,15 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
   const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
   const handleDelete = async (workGroupId: number) => {
-    try {
-      const response = await loginAxios.delete(`/api/workgroups/${workGroupId}`);
+    const isSuccess = await handleRequest('delete', `/api/workgroups/${workGroupId}`);
 
-      if (response.status === 200) {
-        setWorkGroupResponseDtoList(workGroupResponseDtoList.filter((workGroupResponseDto) => workGroupResponseDto.id !== workGroupId))
-      } else {
-        // Handle other status codes
-      }
-    } catch (error) {
-      // Handle errors
-      console.error('An error occurred:', error);
+    if (isSuccess) {
+      setWorkGroupResponseDtoList(prevList => prevList.filter((workGroupResponseDto) => workGroupResponseDto.id !== workGroupId))
     }
   }
 
   const responseDtoToDataType = (workGroupId: number) => {
-    const tempData: DataType = {
+    const defaultData: DataType = {
       id: workGroupId,
       name: "",
       type: "일반",
@@ -110,25 +94,35 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
       companyId: user.companyId
     };
 
-    for (let i = 0; i < workGroupResponseDtoList.length; i += 1) {
-      if (workGroupResponseDtoList[i].id === workGroupId) {
-        tempData.timeRangeType = workGroupResponseDtoList[i].timeRangeType.split(", ");
-        tempData.start = workGroupResponseDtoList[i].start.split(", ");
-        tempData.end = workGroupResponseDtoList[i].end.split(", ");
-        tempData.name = workGroupResponseDtoList[i].name;
-        tempData.type = workGroupResponseDtoList[i].type as "일반" | "시차";
-        const workDaysArr = workGroupResponseDtoList[i].workDays.split(", ") as ("근무" | "유급" | "무급")[];
-        tempData.workDayType.mon = workDaysArr[0] as "근무" | "유급" | "무급";
-        tempData.workDayType.tue = workDaysArr[1] as "근무" | "유급" | "무급";
-        tempData.workDayType.wed = workDaysArr[2] as "근무" | "유급" | "무급";
-        tempData.workDayType.thu = workDaysArr[3] as "근무" | "유급" | "무급";
-        tempData.workDayType.fri = workDaysArr[4] as "근무" | "유급" | "무급";
-        tempData.workDayType.sat = workDaysArr[5] as "근무" | "유급" | "무급";
-        tempData.workDayType.sun = workDaysArr[6] as "근무" | "유급" | "무급";
-        generateAlignments(workDaysArr);
-      }
-    }
-    return tempData;
+    const workGroup = workGroupResponseDtoList.find(dto => dto.id === workGroupId);
+
+    if (!workGroup) return defaultData;
+
+    const {
+      timeRangeType,
+      start,
+      end,
+      name,
+      type,
+      workDays
+    } = workGroup;
+
+    const daysOfWeek = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const workDaysArr = workDays.split(", ") as ("근무" | "유급" | "무급")[];
+
+    daysOfWeek.forEach((day, index) => {
+      defaultData.workDayType[day] = workDaysArr[index] as "근무" | "유급" | "무급";
+    });
+
+    defaultData.timeRangeType = timeRangeType.split(", ");
+    defaultData.start = start.split(", ");
+    defaultData.end = end.split(", ");
+    defaultData.name = name;
+    defaultData.type = type as "일반" | "시차";
+
+    generateAlignments(workDaysArr);
+
+    return defaultData;
   }
 
   const generateAlignments = (workDaysArr: ("근무" | "유급" | "무급")[]) => {

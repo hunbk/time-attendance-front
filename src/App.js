@@ -14,14 +14,17 @@ import { AuthProvider } from './context/AuthProvider';
 
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
-
+import { koKR } from '@mui/x-date-pickers/locales';
 // ----------------------------------------------------------------------
 
 export default function App() {
   dayjs.locale('ko');
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <LocalizationProvider
+      dateAdapter={AdapterDayjs}
+      localeText={koKR.components.MuiLocalizationProvider.defaultProps.localeText}
+    >
       <HelmetProvider>
         <AuthProvider>
           <BrowserRouter>

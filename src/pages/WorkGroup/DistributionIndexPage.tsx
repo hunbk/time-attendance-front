@@ -9,7 +9,7 @@ import { FC, SyntheticEvent, useEffect, useState } from 'react';
 import CustomTabPanel from 'src/components/workGroup/CustomTabPanel';
 import { WorkGroupSimpleType } from './WorkGroupIndexPage';
 import { useAuthState } from '../../context/AuthProvider';
-import loginAxios from '../../api/loginAxios';
+import handleRequest, { FetchResultType } from 'src/utils/workGroupHandleRequest';
 
 type DistributionIndexPageProps = {
     workGroupSimple: WorkGroupSimpleType[];
@@ -69,22 +69,6 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
         setCurrentTabIndex(newValue);
     };
 
-    const getUsers = async () => {
-        try {
-            const response = await loginAxios.get(`/api/users?companyId=${user.companyId}`);
-
-            if (response.status === 200) {
-                const data = response.data as UserResponseDtoType[];
-                wrapIdForUserList(data);
-            } else {
-                // Handle other status codes
-            }
-        } catch (error) {
-            // Handle errors
-            console.error('An error occurred:', error);
-        }
-    }
-
     // Add id property and filter by distribution
     const wrapIdForUserList = (userList: UserResponseDtoType[]) => {
         const tempUserListWrappedD = [];
@@ -109,8 +93,17 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
     }
 
     useEffect(() => {
+        const getUsers = async () => {
+            const { status, data }: FetchResultType = await handleRequest('get', `/api/users?companyId=${user.companyId}`);
+            if (status === 200) {
+                wrapIdForUserList(data as UserResponseDtoType[]);
+            } else {
+                console.error(data);
+            }
+        }
+
         getUsers();
-    }, []);
+    }, [user.companyId]);
 
     return (
         <Grid container spacing={2}>
