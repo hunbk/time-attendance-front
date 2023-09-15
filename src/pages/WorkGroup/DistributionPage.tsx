@@ -1,6 +1,6 @@
-import { FC, useEffect, useState, MouseEvent, ChangeEvent, Dispatch, SetStateAction } from "react";
+import { FC, useState, MouseEvent, Dispatch, SetStateAction } from "react";
 import Grid from '@mui/system/Unstable_Grid';
-import TreeView from '@mui/lab/TreeView';
+import TreeView from '@mui/lab/TreeView'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import TreeItem from '@mui/lab/TreeItem';
@@ -10,7 +10,7 @@ import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
 import { UserResponseDtoWrappedType } from "./DistributionIndexPage";
 import { WorkGroupSimpleType } from "./WorkGroupIndexPage";
-import loginAxios from '../../api/loginAxios';
+import handleRequest, { FetchResultType } from "src/utils/workGroupHandleRequest";
 
 type DistributionPageProps = {
     userListWrappedD: UserResponseDtoWrappedType[];
@@ -42,7 +42,6 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
     const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
     const [selectedUserNames, setSelectedUserNames] = useState<string[]>([]);
     const [userListWrappedFiltered, setUserListWrappedFiltered] = useState<UserResponseDtoWrappedType[]>(null);
-    const [selectedCard, setSelectedCard] = useState(false);
     const handleModalOpen = (event: MouseEvent<HTMLButtonElement>) => {
         if (event.currentTarget.id === "modification") {
             setIsModification(true);
@@ -114,28 +113,23 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         },
     ];
 
+
     const filterByWorkGroup = async (selectedWorkGroupId: number, selectedWorkGroupName: string) => {
-        try {
-            const response = await loginAxios.get(`/api/workgroups/distribution/${selectedWorkGroupId}`);
+        const { status, data }: FetchResultType = await handleRequest('get', `/api/workgroups/distribution/${selectedWorkGroupId}`);
+        if (status === 200) {
+            const tempUserListFiltered: UserResponseDtoWrappedType[] = [];
 
-            if (response.status === 200) {
-                const tempUserListFiltered: UserResponseDtoWrappedType[] = [];
+            userListWrappedD.forEach((user) => {
+                if (data.includes(user.userId)) {
+                    tempUserListFiltered.push(user);
+                }
+            })
 
-                userListWrappedD.forEach((user) => {
-                    if (response.data.includes(user.userId)) {
-                        tempUserListFiltered.push(user);
-                    }
-                })
-
-                setSelectedWorkGroupId(selectedWorkGroupId);
-                setSelectedWorkGroupName(selectedWorkGroupName);
-                setUserListWrappedFiltered(tempUserListFiltered);
-            } else {
-                // Handle other status codes
-            }
-        } catch (error) {
-            // Handle errors
-            console.error('An error occurred:', error);
+            setSelectedWorkGroupId(selectedWorkGroupId);
+            setSelectedWorkGroupName(selectedWorkGroupName);
+            setUserListWrappedFiltered(tempUserListFiltered);
+        } else {
+            console.error(data);
         }
     }
 
@@ -148,38 +142,26 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                 setUserListWrappedD(userListWrappedD.filter((user) => !selectedUserIds.includes(user.id)));
                 setUserListWrappedND([...userListWrappedND, ...userListWrappedD.filter((user) => selectedUserIds.includes(user.id))]);
 
-                try {
-                    const response = await loginAxios.delete(`/api/workgroups/distribution/${selectedUserIds}`);
-
-                    if (response.status === 200) {
-                        alert("배포해제되었습니다.");
-                    } else {
-                        // Handle other status codes
-                    }
-                } catch (error) {
-                    // Handle errors
-                    console.error('An error occurred:', error);
+                const { status, data }: FetchResultType = await handleRequest('delete', `/api/workgroups/distribution/${selectedUserIds}`);
+                if (status === 200) {
+                    alert("배포해제되었습니다.");
+                } else {
+                    console.error(data);
                 }
             }
             // 근로제 변경
             else {
-                try {
-                    const response = await loginAxios.put(`/api/workgroups/distribution/${applyNow}`, {
-                        userIds: selectedUserIds,
-                        workGroupId: selectedWorkGroupId
-                    });
-                    if (response.status === 200) {
-                        alert("근로제 변경되었습니다.");
-                        setUserListWrappedFiltered(userListWrappedFiltered.filter((user) => !selectedUserIds.includes(user.id)));
-                    } else {
-                        // Handle other status codes
-                    }
-                } catch (error) {
-                    // Handle errors
-                    console.error('An error occurred:', error);
-                } 
+                const { status, data }: FetchResultType = await handleRequest('put', `/api/workgroups/distribution/${applyNow}`, {
+                    userIds: selectedUserIds,
+                    workGroupId: selectedWorkGroupId
+                });
+                if (status === 200) {
+                    alert("근로제 변경되었습니다.");
+                    setUserListWrappedFiltered(userListWrappedFiltered.filter((user) => !selectedUserIds.includes(user.id)));
+                } else {
+                    console.error(data);
+                }
             }
-
         }
         // 배포
         else {
@@ -187,24 +169,18 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
             setUserListWrappedND(userListWrappedND.filter((user) => !selectedUserIds.includes(user.id)));
             setUserListWrappedD([...userListWrappedD, ...userListWrappedND.filter((user) => selectedUserIds.includes(user.id))]);
 
-            try {
-                const response = await loginAxios.post('/api/workgroups/distribution', {
-                    userIds: selectedUserIds,
-                    workGroupId: selectedWorkGroupId
-                });
-
-                if (response.status === 200) {
-                    alert("배포되었습니다.");
-                } else {
-                    // Handle other status codes
-                }
-            } catch (error) {
-                // Handle errors
-                console.error('An error occurred:', error);
+            const { status, data }: FetchResultType = await handleRequest('post', '/api/workgroups/distribution', {
+                userIds: selectedUserIds,
+                workGroupId: selectedWorkGroupId
+            });
+            if (status === 200) {
+                alert("배포되었습니다.");
+            } else {
+                console.error(data);
             }
-
         }
     }
+
 
     return (
         <Grid container spacing={2}>
