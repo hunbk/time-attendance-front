@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { useState } from 'react';
 // @mui
 import { styled, alpha } from '@mui/material/styles';
-import { Toolbar, Typography, OutlinedInput, InputAdornment, Button } from '@mui/material';
+import { Toolbar, Typography, OutlinedInput, InputAdornment, Button, Box } from '@mui/material';
 // component
 import Iconify from '../../../components/iconify';
 import Calendar from '../../../pages/schedule/Calendar';
@@ -47,9 +47,7 @@ SettleListToolbar.propTypes = {
 
 export default function SettleListToolbar({
   numSelected,
-  filterName,
   onFilterName,
-  onSearch,
   startDate,
   endDate,
   setStartDate,
@@ -57,21 +55,20 @@ export default function SettleListToolbar({
 }) {
   const [selectedStartDate, setSelectedStartDate] = useState(startDate);
   const [selectedEndDate, setSelectedEndDate] = useState(endDate);
+  const [searchUser, setSearchUser] = useState('');
+
+  const handleInputChange = (event) => {
+    setSearchUser(event.target.value);
+  }
+
+  const handleSearch = () => {
+    onFilterName(searchUser);
+  }
 
   const handleApplyDate = () => {
     setStartDate(selectedStartDate);
     setEndDate(selectedEndDate);
     // 추가적인 로직이 필요하다면 여기에 추가할 수 있습니다.
-  };
-
-  // 엔터 키를 눌렀을 때 검색을 처리하는 함수
-  const handleSearchKeyPress = (event) => {
-    if (event.key === 'Enter') {
-      // 엔터 키를 누르면, onSearch 함수를 호출하여 현재 검색어 값을 전달합니다.
-      if (filterName.trim() !== '') {
-        onSearch(filterName);
-      }
-    }
   };
 
   return (
@@ -97,22 +94,24 @@ export default function SettleListToolbar({
               setEndDate={setSelectedEndDate} // 수정된 부분
             />
 
-            <Button onClick={handleApplyDate} variant="outlined" sx={{ height: 40, width: 70, marginLeft: 2 }}>
+            <Button onClick={handleApplyDate} variant="contained" sx={{ height: 40, width: 70, marginLeft: 2 }}>
               적용
             </Button>
           </div>
-
+        <Box sx={{display:'flex', alignItems:'center'}}>
           <StyledSearch
-            value={filterName}
-            onChange={onFilterName}
-            onKeyDown={handleSearchKeyPress}
+            value={searchUser}
+            onChange={handleInputChange}
             placeholder="사원의 이름을 적어주세요."
             startAdornment={
               <InputAdornment position="start">
                 <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
               </InputAdornment>
             }
+            size='small'
           />
+          <Button variant="contained" sx={{ height: 40, width: 70, marginLeft: 2 }} onClick={handleSearch}>검색</Button>
+          </Box>
         </>
       )}
     </StyledRoot>

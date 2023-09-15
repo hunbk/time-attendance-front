@@ -80,20 +80,9 @@ function applySortFilter(array, comparator, query) {
     return a[1] - b[1];
   });
   if (query) {
-    // 콤마(,)로 구분된 id들을 배열로 변환
-    const queryIds = query.split(',').map((id) => id.trim());
-
-    // 필터링된 사용자 목록을 저장할 배열
-    const filteredUsers = [];
     // 각 id에 대해 사용자를 조회하여 필터링된 배열에 추가
-    queryIds.forEach((queryId) => {
-      const filteredUser = array.find((_user) => _user.name === queryId);
-      if (filteredUser) {
-        filteredUsers.push(filteredUser);
-      }
-    });
-
-    return filteredUsers;
+    const filteredUser = array.filter((_user) => _user.name.includes(query));
+    return filteredUser;
   }
   return stabilizedThis.map((el) => el[0]);
 }
@@ -111,6 +100,7 @@ export default function SchedulePage() {
     const end = endDate.toISOString().substring(0, 10);
     const res = await loginAxios.get(`/api/settlements?companyId=${user.companyId}&start=${start}&end=${end}`);
     setUsers(res.data);
+    setFilteredUsers(res.data);
   };
 
   useEffect(() => {
@@ -129,9 +119,7 @@ export default function SchedulePage() {
 
   const [filterName, setFilterName] = useState('');
 
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-
-  const [deleteSnackbar, setDeleteSnackbar] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [filteredUsers, setFilteredUsers] = useState(users);
 
@@ -194,21 +182,19 @@ export default function SchedulePage() {
     setRowsPerPage(parseInt(event.target.value, 10));
   };
 
-  const handleFilterByName = (event) => {
-    const searchQuery = event.target.value;
-    setFilterName(searchQuery);
+  const handleFilterByName = (name) => {
+    setFilterName(name);
     setPage(0);
-    setRowsPerPage(5);
 
     // 검색창에 아무것도 입력하지 않았을 때는 전체 목록을 보여줍니다.
-    if (searchQuery !== null || searchQuery === '') {
+    if (name !== null || name === '') {
       setIsSearched(false); // 검색 버튼을 누르지 않은 경우이므로 isSearched 상태를 false로 설정합니다.
       setFilteredUsers(users); // 전체 목록을 보여주기 위해 filteredUsers 상태를 USERLIST로 초기화합니다.
     } else {
       // 검색 버튼을 눌렀을 때만 실시간으로 결과가 나오도록 로직을 실행합니다.
       if (isSearched) {
-        const filteredUsers = users.filter(user => user.name === searchQuery);
-        setFilteredUsers(filteredUsers)
+        const filteredUsers = users.filter((user) => user.name.includes(name));
+        setFilteredUsers(filteredUsers);
       }
     }
   };
@@ -219,28 +205,13 @@ export default function SchedulePage() {
     return date.toLocaleDateString(); // 날짜 형식으로 출력
   };
 
-  const handleSearch = (searchQuery) => {
-    setIsSearched(true); // 검색 버튼을 눌렀을 때에만 결과값을 표시하기 위해 상태를 업데이트합니다.
+  const isNotFound = !filteredUsers.filter((user) => user.name.includes(filterName)).length && !!filterName;
 
-    // 검색어를 기반으로 사용자 목록을 필터링합니다.
-    const searchResult = applySortFilter(users, getComparator(order, orderBy), searchQuery);
-
-    // 필터링된 결과를 화면에 표시하기 위해 filteredUsers 상태를 업데이트합니다.
-    setFilterName(searchQuery); // 검색어를 입력창에 표시하기 위해 filterName 상태를 업데이트합니다.
-    setPage(0); // 현재 페이지를 0으로 초기화합니다.
-    setRowsPerPage(5); // rowsPerPage를 초기 값으로 설정합니다.
-    setFilteredUsers(searchResult);
-  };
-
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - users.length) : 0;
-
-  const isNotFound = !filteredUsers.length && !!filterName;
-
-  const filterUser = applySortFilter(users, getComparator(order, orderBy), filterName);
+  const filterUser = applySortFilter(filteredUsers, getComparator(order, orderBy), filterName);
 
   // Snackbar 열기 함수
   const handleOpenSnackbar = () => {
-    enqueueSnackbar(`삭제되었습니다!`, {variant:"error"});
+    enqueueSnackbar(`삭제되었습니다!`, { variant: 'error' });
   };
 
   const handleOpenModal = () => {
@@ -252,10 +223,11 @@ export default function SchedulePage() {
     handleCloseMenu();
   };
 
+
   const formatTimeToTime = (time) => {
-    if(time !== null){
-    const [hours, minutes] = time.split(':');
-    return `${hours}:${minutes}`;
+    if (time !== null) {
+      const [hours, minutes] = time.split(':');
+      return `${hours}:${minutes}`;
     }
     return `-`;
   };
@@ -280,9 +252,7 @@ export default function SchedulePage() {
         <Card>
           <SettleListToolbar
             numSelected={selected.length}
-            filterName={filterName}
             onFilterName={handleFilterByName}
-            onSearch={handleSearch}
             startDate={startDate} // Calendar 컴포넌트로부터 받아온 startDate를 전달합니다.
             endDate={endDate} // Calendar 컴포넌트로부터 받아온 endDate를 전달합니다.
             setStartDate={setStartDate} // Calendar 컴포넌트로부터 받아온 setStartDate를 전달합니다.
@@ -293,7 +263,7 @@ export default function SchedulePage() {
 
           <Scrollbar>
             <TableContainer>
-              <Table>
+              <Table size="small">
                 <SettleListHead
                   order={order}
                   orderBy={orderBy}
@@ -336,14 +306,10 @@ export default function SchedulePage() {
 
                         <TableCell align="left">{workGroupType}</TableCell>
 
-                        <TableCell align="left">
-                          {formatTimeToTime(startTime)}
-                        </TableCell>
+                        <TableCell align="left">{formatTimeToTime(startTime)}</TableCell>
 
-                        <TableCell align="left">
-                          {formatTimeToTime(endTime)}
-                        </TableCell>
-                       
+                        <TableCell align="left">{formatTimeToTime(endTime)}</TableCell>
+
                         <TableCell align="left">{formatTimeToTime(workingTime)}</TableCell>
 
                         <TableCell align="left">{formatTimeToTime(overTime)}</TableCell>
@@ -366,7 +332,7 @@ export default function SchedulePage() {
 
                         <TableCell align="right">
                           <IconButton
-                            size="large"
+                            size="normal"
                             color="inherit"
                             onClick={(event) => {
                               handleOpenMenu(event, row);
@@ -379,11 +345,6 @@ export default function SchedulePage() {
                       </TableRow>
                     );
                   })}
-                  {emptyRows > 0 && (
-                    <TableRow style={{ height: 53 * emptyRows }}>
-                      <TableCell colSpan={6} />
-                    </TableRow>
-                  )}
                 </TableBody>
 
                 {isNotFound && (
@@ -396,13 +357,34 @@ export default function SchedulePage() {
                           }}
                         >
                           <Typography variant="h6" paragraph>
-                            해당 사원을 찾지 못했습니다.
+                            {filterName} 사원을 찾지 못했습니다.
                           </Typography>
 
                           <Typography variant="body2">
-                            해당 사원에 대한 정보가 없습니다. &nbsp;
-                            <strong>&quot;{filterName}&quot;</strong>.
-                            <br /> 다시 한번 검색어를 확인해주세요.
+                            <strong>{filterName}</strong> 사원에 대한 정보가 없습니다. &nbsp;
+                            <br /> 다시 한번 사원이름을 확인해주세요.
+                          </Typography>
+                        </Paper>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                )}
+
+                {filteredUsers.filter((user) => user.name.includes(filterName)).length===0 && (!filterName) && (
+                  <TableBody>
+                    <TableRow>
+                      <TableCell align="center" colSpan={10} sx={{ py: 3 }}>
+                        <Paper
+                          sx={{
+                            textAlign: 'center',
+                          }}
+                        >
+                          <Typography variant="h6" paragraph>
+                            해당 목록이 존재하지 않습니다.
+                          </Typography>
+
+                          <Typography variant="body2">
+                            다시 한번 조건을 확인해주세요.
                           </Typography>
                         </Paper>
                       </TableCell>
@@ -416,12 +398,12 @@ export default function SchedulePage() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={users.length}
+            count={filteredUsers.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage="페이지당 사원 수 :"
+            labelRowsPerPage="페이지당 목록 수 :"
             labelDisplayedRows={({ count }) =>
               `현재 페이지: ${page + 1} / 전체 페이지: ${Math.ceil(count / rowsPerPage)}`
             }
@@ -452,11 +434,11 @@ export default function SchedulePage() {
           수정
         </MenuItem>
 
-        <ScheduleModal 
-        open={scheduleModalOpen} 
-        onClose={handleCloseModal} 
-        userData={userData} 
-        getUserList={getUserList}
+        <ScheduleModal
+          open={scheduleModalOpen}
+          onClose={handleCloseModal}
+          userData={userData}
+          getUserList={getUserList}
         />
 
         <MenuItem onClick={handleDeleteConfirmOpen} sx={{ color: 'error.main' }}>
@@ -470,16 +452,14 @@ export default function SchedulePage() {
         <DialogTitle>삭제 확인</DialogTitle>
         <DialogContent>선택한 항목을 정말 삭제하시겠습니까?</DialogContent>
         <DialogActions>
-          
           <Button onClick={handleDeleteConfirmClose} color="primary">
             취소
           </Button>
-          <Button onClick={handleDelete} color="error" variant='contained'>
+          <Button onClick={handleDelete} color="error" variant="contained">
             삭제
           </Button>
         </DialogActions>
       </Dialog>
-
     </>
   );
 }

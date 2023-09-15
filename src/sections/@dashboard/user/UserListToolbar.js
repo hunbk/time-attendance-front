@@ -11,6 +11,8 @@ import {
   Menu,
   MenuItem,
   Stack,
+  Box,
+  Button,
 } from '@mui/material';
 // component
 import Iconify from '../../../components/iconify';
@@ -59,40 +61,37 @@ UserListToolbar.propTypes = {
 };
 
 export default function UserListToolbar({ numSelected, filterName, onFilterName, onSearch, onFilterUsers, users }) {
-
   // 각 필터 옵션에 대한 동작 함수들
   const handleFilterOption1 = () => {
     // 필터 옵션 1에 대한 동작을 수행
     onFilterUsers(users);
-    
   };
 
   const handleFilterOption2 = () => {
     // 필터 옵션 2에 대한 동작을 수행
     const filteredUsers = users.filter((user) => user.role === 'ADMIN');
     onFilterUsers(filteredUsers);
-    
   };
 
   const handleFilterOption3 = () => {
     const filteredUsers = users.filter((user) => user.role === 'MNG');
     onFilterUsers(filteredUsers);
-  }
+  };
 
   const handleFilterOption4 = () => {
     const filteredUsers = users.filter((user) => user.role === 'HR');
     onFilterUsers(filteredUsers);
-  }
+  };
 
   const handleFilterOption5 = () => {
     const filteredUsers = users.filter((user) => user.role === 'FO');
     onFilterUsers(filteredUsers);
-  }
+  };
 
   const handleFilterOption6 = () => {
     const filteredUsers = users.filter((user) => user.role === 'USER');
     onFilterUsers(filteredUsers);
-  }
+  };
 
   const filterOptionMappings = {
     '전체 조회': { icon: <GroupsIcon sx={{ fontSize: 17 }} />, color: 'default' },
@@ -115,6 +114,15 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName,
   // 현재 선택된 필터 옵션을 상태로 관리
   const [selectedFilter, setSelectedFilter] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [searchUser, setSearchUser] = useState('');
+
+  const handleInputChange = (event) => {
+    setSearchUser(event.target.value);
+  };
+
+  const handleSearch = () => {
+    onFilterName(searchUser);
+  };
 
   // 필터링 버튼 클릭 시 메뉴 열기
   const handleClick = (event) => {
@@ -143,19 +151,9 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName,
     </div>
   );
 
-  // 엔터 키를 눌렀을 때 검색을 처리하는 함수
-  const handleSearchKeyPress = (event) => {
-    if (event.key === 'Enter') {
-      // 엔터 키를 누르면, onSearch 함수를 호출하여 현재 검색어 값을 전달합니다.
-      if (filterName.trim() !== '') {
-        onSearch(filterName);
-      }
-    }
-  };
-
-  useEffect(()=> {
+  useEffect(() => {
     onFilterUsers(users);
-  },[]);
+  }, []);
 
   return (
     <StyledRoot
@@ -184,17 +182,26 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName,
           {numSelected} 명이 선택되었습니다.
         </Typography>
       ) : (
-        <StyledSearch
-          value={filterName}
-          onChange={onFilterName}
-          onKeyDown={handleSearchKeyPress}
-          placeholder="사원의 이름을 입력해주세요."
-          startAdornment={
-            <InputAdornment position="start">
-              <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
-            </InputAdornment>
-          }
-        />
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <StyledSearch
+            value={searchUser}
+            onChange={handleInputChange}
+            placeholder="사원의 이름을 입력해주세요."
+            startAdornment={
+              <InputAdornment position="start">
+                <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
+              </InputAdornment>
+            }
+            size="small"
+          />
+          <Button
+            variant="contained"
+            sx={{ height: 40, width: 70, marginLeft: 2 }}
+            onClick={handleSearch}
+          >
+            검색
+          </Button>
+        </Box>
       )}
     </StyledRoot>
   );
