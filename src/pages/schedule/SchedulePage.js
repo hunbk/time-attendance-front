@@ -25,6 +25,7 @@ import {
   DialogContent,
 } from '@mui/material';
 // components
+import { enqueueSnackbar } from 'notistack';
 import Label from '../../components/label';
 import Iconify from '../../components/iconify';
 import Scrollbar from '../../components/scrollbar';
@@ -146,12 +147,6 @@ export default function SchedulePage() {
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  const [editSnackbar, setEditSnackbar] = useState(false);
-
-  const handleEditSnackbarChange = (newValue) => {
-    setEditSnackbar(newValue);
-  };
-
   const handleDeleteConfirmOpen = () => {
     setDeleteConfirmOpen(true);
     handleCloseMenu();
@@ -245,13 +240,7 @@ export default function SchedulePage() {
 
   // Snackbar 열기 함수
   const handleOpenSnackbar = () => {
-    setDeleteSnackbar(true);
-  };
-
-  // Snackbar 닫기 함수
-  const handleCloseSnackbar = () => {
-    setDeleteSnackbar(false);
-    setEditSnackbar(false);
+    enqueueSnackbar(`삭제되었습니다!`, {variant:"error"});
   };
 
   const handleOpenModal = () => {
@@ -467,8 +456,6 @@ export default function SchedulePage() {
         open={scheduleModalOpen} 
         onClose={handleCloseModal} 
         userData={userData} 
-        editSnackbar={editSnackbar} 
-        onEditSnackbarChange={handleEditSnackbarChange} 
         getUserList={getUserList}
         />
 
@@ -493,35 +480,6 @@ export default function SchedulePage() {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={deleteSnackbar}
-        autoHideDuration={2000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-        sx={{ width: 400 }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          삭제되었습니다!
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-          open={editSnackbar}
-          autoHideDuration={2000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
-          }}
-          sx={{ width: 400 }}
-        >
-          <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-            수정되었습니다!
-          </Alert>
-        </Snackbar>
     </>
   );
 }
