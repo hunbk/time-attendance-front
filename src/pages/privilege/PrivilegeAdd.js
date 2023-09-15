@@ -38,6 +38,7 @@ import Label from '../../components/label';
 import Scrollbar from '../../components/scrollbar';
 // sections
 import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
+import { enqueueSnackbar } from 'notistack';
 
 // LoginAxios
 import loginAxios from '../../api/loginAxios';
@@ -222,20 +223,12 @@ export default function PrivilegeAdd() {
     onClose();
   };
 
-  const handleCloseSaveSnackbar = () => {
-    setSaveSnackbar(false);
-  };
-
   const handleOpenSaveSnackbar = () => {
-    setSaveSnackbar(true);
+    enqueueSnackbar(`권한이 변경되었습니다!`,{variant:"success"});
   };
 
   const handleOpenNullSnackbar = () => {
-    setNullSnackbar(true);
-  };
-
-  const handleCloseNullSnackbar = () => {
-    setNullSnackbar(false);
+    enqueueSnackbar(`사원을 선택해주세요!`,{variant:"warning"});
   };
 
   const handleModalSearch = (search) => {
@@ -507,7 +500,6 @@ export default function PrivilegeAdd() {
             <Button
               onClick={() => {
                 resetFilterAndSelection();
-                handleCloseSaveSnackbar();
               }}
             >
               취소
@@ -531,38 +523,6 @@ export default function PrivilegeAdd() {
         </Box>
         </Card>
       </Container>
-
-      <DialogActions>
-        <Snackbar
-          open={saveSnackbar}
-          autoHideDuration={2500}
-          onClose={handleCloseSaveSnackbar}
-          anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
-          }}
-          sx={{ width: 400 }}
-        >
-          <Alert onClose={handleCloseSaveSnackbar} severity="success" sx={{ width: '100%' }}>
-            권한이 변경되었습니다!
-          </Alert>
-        </Snackbar>
-
-        <Snackbar
-          open={nullSnackbar}
-          autoHideDuration={2000}
-          onClose={handleCloseNullSnackbar}
-          anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
-          }}
-          sx={{ width: 400 }}
-        >
-          <Alert onClose={handleCloseNullSnackbar} severity="error" sx={{ width: '100%' }}>
-            선택한 사원이 없습니다!
-          </Alert>
-        </Snackbar>
-      </DialogActions>
 
       <Dialog open={openAdminModal} onClose={handleCloseAdminModal} minWidth="sm">
         <DialogTitle>경고</DialogTitle>
