@@ -27,7 +27,7 @@ import {
 // components
 import dayjs from 'dayjs';
 
-import Label from '../../components/label';
+import { enqueueSnackbar } from 'notistack';
 import { TimePicker } from '@mui/x-date-pickers';
 
 // LoginAxios
@@ -36,7 +36,7 @@ import loginAxios from '../../api/loginAxios';
 // 유저 상태
 import { useAuthState } from '../../context/AuthProvider';
 
-const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserList }) => {
+const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
   const formatTime = (time) => {
     if (time !== null) {
       const [hours, minutes] = time.split(':');
@@ -100,7 +100,7 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
 
   // Snackbar 열기 함수
   const handleOpenSnackbar = () => {
-    onEditSnackbarChange(true);
+    enqueueSnackbar(`수정되었습니다!`, { variant: 'success' });
   };
 
   const handleConfirmEditOpen = () => {
@@ -126,6 +126,7 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
       workState, // workState을 String 형태 그대로 보내기
       settlementId,
     };
+
     await loginAxios.patch('/api/settlements', editedData);
     handleOpenSnackbar();
     handleConfirmEditClose();
@@ -133,24 +134,8 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
     onClose();
   };
 
-  const handleStartTime = (event) => {
-    setStartTime(event.target.value);
-  };
-
-  const handleEndTime = (event) => {
-    setEndTime(event.target.value);
-  };
-
-  const handleWorkingTime = (event) => {
-    setWorkingTime(event.target.value);
-  };
-
-  const handleOverTime = (event) => {
-    setOverTime(event.target.value);
-  };
-
-  const handleWorkState = (event) => {
-    setWorkState(event.target.value);
+  const handleNullSnackbar = () => {
+    enqueueSnackbar(`근로인정 시간이 선택되지 않았습니다!`, { variant: 'warning' });
   };
 
   const handleClose = () => {
@@ -400,10 +385,10 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
       totalOverTimeInMinutes = 0;
       setWorkState('근태이상');
     } else if (totalWorkingTime + totalOverTimeInMinutes >= fixWorkingTime) {
-      if(totalWorkingTime < fixWorkingTime){
+      if (totalWorkingTime < fixWorkingTime) {
         setWorkState('근태이상');
-      }else if(totalWorkingTime >=fixWorkingTime){
-        totalOverTimeInMinutes += (totalWorkingTime - fixWorkingTime);
+      } else if (totalWorkingTime >= fixWorkingTime) {
+        totalOverTimeInMinutes += totalWorkingTime - fixWorkingTime;
         totalWorkingTime = fixWorkingTime;
       }
     }
@@ -513,7 +498,7 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
       >
         <DialogTitle>
           <Typography variant="h5">근태 기록 수정</Typography>
-          <Typography variant="subtitle2">{userData.date}의 정보입니다.</Typography>
+          <Typography variant="subtitle2">근무일자 : {userData.date}</Typography>
         </DialogTitle>
 
         <DialogContent dividers>
@@ -646,15 +631,15 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
               </Typography>
             </DialogTitle>
 
-            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50, marginBottom:3}}>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50, marginBottom: 3 }}>
               <TimePicker
                 readOnly
-                ampm = {false}
+                ampm={false}
                 closeOnSelect
                 label=""
                 value={dayjs(showNullTime(formatDateTimeToTime(userData.startWork)), 'HH:mm')}
                 onChange={(time) => setStartTime(formatDateTimeToTime(time))}
-                sx={{ width: 125, marginRight: '5px',boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
+                sx={{ width: 125, marginRight: '5px', boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -664,12 +649,12 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
               ~
               <TimePicker
                 readOnly
-                ampm = {false}
+                ampm={false}
                 closeOnSelect
                 label=""
                 value={dayjs(showNullTime(formatDateTimeToTime(userData.leaveWork)), 'HH:mm')}
                 onChange={(time) => setStartTime(formatDateTimeToTime(time))}
-                sx={{ width: 125, marginLeft: '5px',boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
+                sx={{ width: 125, marginLeft: '5px', boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -678,20 +663,20 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
               />
             </DialogTitle>
 
-            <DialogTitle sx={{ display: 'flex', alignContent: 'center', height: 30}}>
+            <DialogTitle sx={{ display: 'flex', alignContent: 'center', height: 30 }}>
               <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center' }}>
                 근로인정 시간
               </Typography>
             </DialogTitle>
 
-            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50, marginBottom:2 }}>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', height: 50, marginBottom: 2 }}>
               <TimePicker
                 timeSteps={{ minutes: 1 }}
-                ampm = {false}
+                ampm={false}
                 label=""
                 value={dayjs(startTime, 'HH:mm')}
                 onChange={(time) => setStartTime(formatDateTimeToTime(time))}
-                sx={{ width: 125, marginRight: '5px',boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
+                sx={{ width: 125, marginRight: '5px', boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -701,11 +686,11 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
               ~
               <TimePicker
                 timeSteps={{ minutes: 1 }}
-                ampm = {false}
+                ampm={false}
                 label=""
                 value={dayjs(endTime, 'HH:mm')}
                 onChange={(time) => setEndTime(formatDateTimeToTime(time))}
-                sx={{ width: 125, marginLeft: '5px',boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
+                sx={{ width: 125, marginLeft: '5px', boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)' }}
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -733,7 +718,12 @@ const ScheduleModal = ({ open, onClose, userData, onEditSnackbarChange, getUserL
             </Button>
             <Button
               onClick={() => {
-                handleConfirmEdit();
+                if (startTime === '-' || endTime === '-') {
+                  handleNullSnackbar();
+                  handleConfirmEditClose();
+                } else {
+                  handleConfirmEdit();
+                }
               }}
               color="secondary"
               variant="contained"
