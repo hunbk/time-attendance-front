@@ -55,9 +55,6 @@ export default function CompanyPage() {
         onClose={() => setShowNewCompanyModal(false)}
         getCompanyList={getCompanyList}
       />
-
-      {/* 스낵바 UI */}
-      <SnackbarProvider maxSnack={1} autoHideDuration={3000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }} />
     </>
   );
 }
