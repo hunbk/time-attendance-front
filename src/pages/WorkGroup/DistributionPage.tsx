@@ -11,6 +11,7 @@ import Modal from '@mui/material/Modal';
 import { UserResponseDtoWrappedType } from "./DistributionIndexPage";
 import { WorkGroupSimpleType } from "./WorkGroupIndexPage";
 import handleRequest, { FetchResultType } from "src/utils/workGroupHandleRequest";
+import { enqueueSnackbar } from "notistack";
 
 type DistributionPageProps = {
     userListWrappedD: UserResponseDtoWrappedType[];
@@ -144,7 +145,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
 
                 const { status, data }: FetchResultType = await handleRequest('delete', `/api/workgroups/distribution/${selectedUserIds}`);
                 if (status === 200) {
-                    alert("배포해제되었습니다.");
+                    enqueueSnackbar(`배포해제되었습니다.`, { variant: "success" });
                 } else {
                     console.error(data);
                 }
@@ -156,7 +157,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                     workGroupId: selectedWorkGroupId
                 });
                 if (status === 200) {
-                    alert("근로제 변경되었습니다.");
+                    enqueueSnackbar(`근로제 변경되었습니다.`, { variant: "success" });
                     setUserListWrappedFiltered(userListWrappedFiltered.filter((user) => !selectedUserIds.includes(user.id)));
                 } else {
                     console.error(data);
@@ -174,13 +175,12 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                 workGroupId: selectedWorkGroupId
             });
             if (status === 200) {
-                alert("배포되었습니다.");
+                enqueueSnackbar(`배포되었습니다.`, { variant: "success" });
             } else {
                 console.error(data);
             }
         }
     }
-
 
     return (
         <Grid container spacing={2}>
@@ -224,6 +224,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                     }}
                     pageSizeOptions={[5, 10, 25]}
                     localeText={customLocaleText}
+                    sx={{ height: "380px" }}
                 />
             </Grid>
             {isDistributed === true ? <Grid xs={2}> </Grid> : <></>}

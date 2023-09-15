@@ -1,5 +1,6 @@
-import { DataToBeModifiedType } from 'src/pages/workgroup/WorkGroupIndexPage';
+import { DataToBeModifiedType, DataType } from 'src/pages/workgroup/WorkGroupIndexPage';
 import loginAxios from '../api/loginAxios';
+import { enqueueSnackbar } from 'notistack';
 
 export type FetchResultType = {
     status: number;
@@ -18,15 +19,16 @@ const handleRequest = async (method: "get" | "post" | "put" | "delete", url: str
 };
 
 const redirectAndAlert = (message: string) => {
-    alert(message);
+    // alert(message);
+    enqueueSnackbar(`${message}`, { variant: "success" });
     window.location.href = "http://localhost:3000/dashboard/workgroups";
 };
 
-export const handleDataModification = async (dataToBeModified: null | DataToBeModifiedType) => {
-    const method = dataToBeModified ? 'put' : 'post';
-    const url = dataToBeModified ? `/api/workgroups/${dataToBeModified.id}` : '/api/workgroups';
+export const handleDataModification = async (dataToBeSent: DataType, dataToBeModifiedId?: number) => {
+    const method = dataToBeModifiedId ? 'put' : 'post';
+    const url = dataToBeModifiedId ? `/api/workgroups/${dataToBeModifiedId}` : '/api/workgroups';
 
-    const { status, data }: FetchResultType = await handleRequest(method, url, dataToBeModified);
+    const { status, data }: FetchResultType = await handleRequest(method, url, dataToBeSent);
 
     if (status === 200) {
         const message = method === 'put' ? '수정되었습니다.' : '저장되었습니다.';

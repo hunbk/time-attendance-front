@@ -1,32 +1,26 @@
-import { Box, Switch } from "@mui/material";
+import { Switch } from "@mui/material";
 import { useState } from "react";
-import loginAxios from '../../api/loginAxios';
+import handleRequest, { FetchResultType } from "src/utils/workGroupHandleRequest";
+import { enqueueSnackbar } from 'notistack';
 
-const SwitchWrapped = ({ id, isOn, numOfMembers, handleClickSnackbar }) => {
+const SwitchWrapped = ({ id, isOn, numOfMembers }) => {
     const [checked, setChecked] = useState<boolean>(isOn);
     const handleActivation = async (workgroupId: number, checked: boolean) => {
-        try {
-            const response = await loginAxios.put(`/api/workgroups/activation/${workgroupId}`);
-
-            if (response.status === 200) {
-                if (checked) {
-                    handleClickSnackbar({ vertical: 'top', horizontal: 'center' }, "success", "비활성화되었습니다.");
-                } else {
-                    handleClickSnackbar({ vertical: 'top', horizontal: 'center' }, "success", "활성화되었습니다.");
-                }
-
+        const { status, data }: FetchResultType = await handleRequest('put', `/api/workgroups/activation/${workgroupId}`);
+        if (status === 200) {
+            if (checked) {
+                enqueueSnackbar(`비활성화되었습니다.`, { variant: "success" });
             } else {
-                // Handle other status codes
+                enqueueSnackbar(`활성화되었습니다.`, { variant: "success" });
             }
-        } catch (error) {
-            // Handle errors
-            console.error('An error occurred:', error);
+        } else {
+            console.error(data);
         }
     }
 
     const handleChange = () => {
         if (checked && numOfMembers > 0) {
-            handleClickSnackbar({ vertical: 'top', horizontal: 'center' }, "error", "배포된 근로자 해제 후 비활성화 가능합니다.");
+            enqueueSnackbar(`배포된 근로자 해제 후 비활성화 가능합니다.`, { variant: "error" });
         } else {
             setChecked(!checked);
             handleActivation(id, checked);

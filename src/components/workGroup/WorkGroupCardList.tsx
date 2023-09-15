@@ -9,14 +9,7 @@ import Popover from '@mui/material/Popover';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { SnackbarOrigin } from '@mui/material/Snackbar';
-import MuiAlert, { AlertColor, AlertProps } from '@mui/material/Alert';
-
-interface State extends SnackbarOrigin {
-    openSnackbar: boolean;
-    severity: AlertColor;
-    message: string;
-}
+import { enqueueSnackbar } from 'notistack';
 
 type WorkGroupCardListProps = {
     workGroupResponseDto: WorkGroupResponseDtoType;
@@ -24,26 +17,7 @@ type WorkGroupCardListProps = {
     handleDelete: (workGroupId: number) => void;
 }
 
-const Alert = forwardRef<HTMLDivElement, AlertProps>(
-    (props, ref) => <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />);
-
 const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, handleModify, handleDelete }) => {
-    const [state, setState] = useState<State>({
-        openSnackbar: false,
-        severity: "success",
-        message: "",
-        vertical: 'top',
-        horizontal: 'center',
-    });
-    const { vertical, horizontal, openSnackbar } = state;
-
-    const handleClickSnackbar = (newState: SnackbarOrigin, severity: AlertColor, message: string) => {
-        setState({ ...newState, openSnackbar: true, severity, message });
-    };
-
-    const handleCloseSnackbar = () => {
-        setState({ ...state, openSnackbar: false });
-    };
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
     const handleClickPopover = (event: MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -53,16 +27,17 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
     };
     const openPopover = Boolean(anchorEl);
     const id = openPopover ? 'simple-popover' : undefined;
-    const timeRangeTypeArr = workGroupResponseDto.timeRangeType.split(", ");
-    const startArr = workGroupResponseDto.start.split(", ");
-    const endArr = workGroupResponseDto.end.split(", ");
 
     let workHour = '';
     let approvedHour = '';
     const breakHours = [];
     const compulsoryHours = [];
 
-    for (let i = 0; i < timeRangeTypeArr.length; i += 1) {
+    const timeRangeTypeArr = workGroupResponseDto.timeRangeType?.split(", ");
+    const startArr = workGroupResponseDto.start?.split(", ");
+    const endArr = workGroupResponseDto.end?.split(", ");
+
+    for (let i = 0; i < timeRangeTypeArr?.length; i += 1) {
         switch (timeRangeTypeArr[i]) {
             case "근무":
                 workHour = `${startArr[i].substring(0, 5)} ~ ${endArr[i].substring(0, 5)}`;
@@ -79,6 +54,8 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
             default:
         }
     }
+
+
 
     const getTotalHours = (timeRange: string[] | string) => {
         // timeRangeArr: ["12:00 ~ 13:00", "16:00 ~ 17:00"],
@@ -122,7 +99,7 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
 
     const workHoursTotal = getTotalHours(workHour);
     const breakHoursTotal = getTotalHours(breakHours);
-    const workDaysArr = workGroupResponseDto.workDays.split(", ");
+    const workDaysArr = workGroupResponseDto.workDays?.split(", ");
     const convertedWorkDays = [];
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
@@ -189,10 +166,10 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
 
                                             <Button sx={{ color: "red" }} onClick={() => {
                                                 if (workGroupResponseDto.numOfMembers > 0) {
-                                                    handleClickSnackbar({ vertical: 'top', horizontal: 'center' }, "error", "배포인원 0명일 때 삭제 가능합니다.");
+                                                    enqueueSnackbar(`배포인원 0명일 때 삭제 가능합니다.`, { variant: "error" });
                                                 } else {
                                                     handleDelete(workGroupResponseDto.id);
-                                                    handleClickSnackbar({ vertical: 'top', horizontal: 'center' }, "success", "삭제되었습니다.");
+                                                    enqueueSnackbar(`삭제되었습니다.`, { variant: "success" });
                                                 }
                                             }}>
                                                 <DeleteIcon fontSize="small" sx={{ marginRight: "10px" }} />
@@ -245,7 +222,6 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                             id={workGroupResponseDto.id}
                                             isOn={workGroupResponseDto.isOn}
                                             numOfMembers={workGroupResponseDto.numOfMembers}
-                                            handleClickSnackbar={handleClickSnackbar}
                                         />
                                     </Typography>
                                 </Grid>
@@ -261,17 +237,6 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                     </Grid>
                 </Grid >
             </Card >
-            <Snackbar
-                anchorOrigin={{ vertical, horizontal }}
-                open={openSnackbar}
-                onClose={handleCloseSnackbar}
-                key={vertical + horizontal}
-                autoHideDuration={1000}
-            >
-                <Alert onClose={handleCloseSnackbar} severity={state.severity} sx={{ width: '100%' }}>
-                    {state.message}
-                </Alert>
-            </Snackbar>
         </Box>);
 }
 
