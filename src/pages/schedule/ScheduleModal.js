@@ -1,34 +1,25 @@
 import { useState, useEffect } from 'react';
 // @mui
 import {
-  Table,
   Button,
-  MenuItem,
-  TableBody,
   Modal,
-  TextField,
-  Snackbar,
-  Alert,
-  TableContainer,
-  Stack,
-  Select,
   Card,
   ButtonGroup,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  DialogContentText,
   Typography,
   Avatar,
-  InputLabel,
-  FormControl,
 } from '@mui/material';
 // components
 import dayjs from 'dayjs';
 
 import { enqueueSnackbar } from 'notistack';
 import { TimePicker } from '@mui/x-date-pickers';
+
+import Swal from 'sweetalert2';
+import './Schedule.css';
 
 // LoginAxios
 import loginAxios from '../../api/loginAxios';
@@ -94,21 +85,50 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
   const [workGroupStartTime, setWorkGroupStartTime] = useState(null);
   const [workGroupEndTime, setWorkGroupEndTime] = useState(null);
 
-  const [confirmEditOpen, setConfirmEditOpen] = useState(false);
-
-  const [warningModalOpen, setWarningModalOpen] = useState(false);
-
-  // Snackbar 열기 함수
-  const handleOpenSnackbar = () => {
-    enqueueSnackbar(`수정되었습니다!`, { variant: 'success' });
+  const handleNullSnackbar = () => {
+    enqueueSnackbar(`근로인정 시간이 선택되지 않았습니다!`, { variant: 'warning' });
   };
+
 
   const handleConfirmEditOpen = () => {
-    setConfirmEditOpen(true);
-  };
-
-  const handleConfirmEditClose = () => {
-    setConfirmEditOpen(false);
+    handleNullSnackbar();
+    if (startTime === '-' || endTime === '-') {
+      Swal.fire({
+        icon: 'error',
+        title: '근로인정 시간이 선택되지 않았습니다!<br>다시 한 번 확인해주세요.',
+        customClass: {
+          container: 'custom-swal',
+        },
+      });
+    } else {
+      Swal.fire({
+        icon: 'info',
+        title: `${userData.name} 사원의 정보를 <br>수정하시겠습니까?`,
+        html: '<strong>수정 작업은 중요하며 정확한 시간을 확인하실 것을 권장합니다.</strong>',
+        showConfirmButton: true,
+        showCancelButton: true,
+        showDenyButton: false,
+        confirmButtonText: `확인`,
+        cancelButtonText: `취소`,
+        reverseButtons: true,
+        customClass: {
+          container: 'custom-swal', // SweetAlert2 팝업의 컨테이너 클래스 설정
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          handleConfirmEdit();
+          Swal.fire({
+            icon: 'success',
+            title: '해당 정보가 수정되었습니다!',
+            timer: 1300,
+            customClass: {
+              container: 'custom-swal',
+            },
+          });
+          onClose();
+        }
+      });
+    }
   };
 
   const handleConfirmEdit = async () => {
@@ -128,14 +148,8 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
     };
 
     await loginAxios.patch('/api/settlements', editedData);
-    handleOpenSnackbar();
-    handleConfirmEditClose();
     getUserList();
     onClose();
-  };
-
-  const handleNullSnackbar = () => {
-    enqueueSnackbar(`근로인정 시간이 선택되지 않았습니다!`, { variant: 'warning' });
   };
 
   const handleClose = () => {
@@ -153,11 +167,14 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
   };
 
   const handleWarningModalOpen = () => {
-    setWarningModalOpen(true);
-  };
-
-  const handleWarningModalClose = () => {
-    setWarningModalOpen(false);
+    Swal.fire({
+      icon: 'warning',
+      title: '의무근로시간에 해당되는 범위입니다!<br>다시 한 번 확인해주세요.',
+      // timer: 1500,
+      customClass: {
+        container: 'custom-swal',
+      },
+    });
   };
 
   useEffect(() => {
@@ -479,10 +496,6 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
     justifyContent: 'center',
   };
 
-  const textStyle = {
-    width: '100%',
-  };
-
   return (
     <Modal open={open} onClose={handleClose} style={modalStyle}>
       <Dialog
@@ -707,41 +720,6 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
             </Button>
           </DialogActions>
         </DialogContent>
-
-        {/* 수정 확인 다이얼로그 */}
-        <Dialog open={confirmEditOpen} onClose={handleConfirmEditClose}>
-          <DialogTitle>수정 확인</DialogTitle>
-          <DialogContent>선택한 정보를 수정하시겠습니까?</DialogContent>
-          <DialogActions>
-            <Button onClick={handleConfirmEditClose} color="primary">
-              취소
-            </Button>
-            <Button
-              onClick={() => {
-                if (startTime === '-' || endTime === '-') {
-                  handleNullSnackbar();
-                  handleConfirmEditClose();
-                } else {
-                  handleConfirmEdit();
-                }
-              }}
-              color="secondary"
-              variant="contained"
-            >
-              확인
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog open={warningModalOpen} onClose={handleWarningModalClose}>
-          <DialogTitle>경고</DialogTitle>
-          <DialogContent>의무 시간에 해당하는 범위가 선택되었습니다.</DialogContent>
-          <DialogActions>
-            <Button onClick={handleWarningModalClose} color="primary" variant="outlined">
-              확인
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Dialog>
     </Modal>
   );
