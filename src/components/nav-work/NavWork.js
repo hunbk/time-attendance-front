@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, ButtonGroup, Skeleton, Typography } from '@mui/material';
+import { Box, Button, ButtonGroup, Skeleton } from '@mui/material';
 import { fDateTime } from '../../utils/formatTime';
 import { enqueueSnackbar } from 'notistack';
 
@@ -79,43 +79,25 @@ export default function NavWork() {
     <Box>
       {loading ? (
         // <CircularProgress />
-        <Skeleton animation="pulse" variant="rounded" width={240} height={30} sx={{ mt: 2 }} />
+        <Skeleton animation="pulse" variant="rounded" width={240} height={71} sx={{ mt: 1 }} />
       ) : (
-        <ButtonGroup sx={{ display: 'flex', justifyContent: 'end', mt: 2 }}>
-          <Button
-            size="small"
-            fullWidth
-            variant="outlined"
-            color="info"
-            startIcon={<AlarmOnIcon />}
-            disabled={isWorked}
-            onClick={handleWorkStart}
-          >
-            출근
+        <ButtonGroup
+          fullWidth
+          size="medium"
+          variant="outlined"
+          color="info"
+          orientation="vertical"
+          sx={{ display: 'flex', justifyContent: 'end', mt: 1 }}
+        >
+          <Button startIcon={workStartTime ? '' : <AlarmOnIcon />} disabled={isWorked} onClick={handleWorkStart}>
+            {workStartTime ? `${fDateTime(workStartTime, 'yy.MM.dd HH:mm')}(출근)` : '출근'}
           </Button>
 
-          <Button
-            size="small"
-            fullWidth
-            variant="outlined"
-            color="info"
-            startIcon={<AlarmOffIcon />}
-            disabled={!isWorked}
-            onClick={handleWorkEnd}
-          >
-            퇴근
+          <Button startIcon={workEndTime ? '' : <AlarmOffIcon />} disabled={!isWorked} onClick={handleWorkEnd}>
+            {workEndTime ? `${fDateTime(workEndTime, 'yy.MM.dd HH:mm')}(퇴근)` : '퇴근'}
           </Button>
         </ButtonGroup>
       )}
-      <Box sx={{ ml: 1 }}>
-        {/* TODO: 디자인 개선할 것 */}
-        <Typography variant="subtitle2">
-          {workStartTime ? `${fDateTime(workStartTime, 'yyyy.MM.dd HH:mm')} (출근)` : null}
-        </Typography>
-        <Typography variant="subtitle2">
-          {workEndTime ? `${fDateTime(workEndTime, 'yyyy.MM.dd HH:mm')} (퇴근)` : null}
-        </Typography>
-      </Box>
     </Box>
   );
 }
