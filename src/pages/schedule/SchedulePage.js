@@ -32,6 +32,8 @@ import Scrollbar from '../../components/scrollbar';
 // sections
 import { SettleListHead, SettleListToolbar } from '../../sections/@dashboard/settlement';
 import ScheduleModal from './ScheduleModal';
+import Swal from 'sweetalert2';
+import './Schedule.css';
 
 // LoginAxios
 import loginAxios from '../../api/loginAxios';
@@ -49,7 +51,7 @@ const TABLE_HEAD = [
   { id: 'start', label: '근무시작시간' },
   { id: 'end', label: '근무종료시간' },
   { id: 'workingTime', label: '소정근무시간' },
-  { id: 'overTime', label: '초과근무시간' },
+  { id: 'overTime', label: '연장근무시간' },
   { id: 'workState', label: '처리상태' },
   { id: '' },
 ];
@@ -136,8 +138,32 @@ export default function SchedulePage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const handleDeleteConfirmOpen = () => {
-    setDeleteConfirmOpen(true);
-    handleCloseMenu();
+    Swal.fire({
+      icon: 'warning',
+      title: '삭제하시겠습니까?',
+      html: '<strong>해당 정보는 차후 정산에 영향을 미칠 수 있습니다.<br>다시 한 번 확인해주세요.</strong>',
+      showConfirmButton: false,
+      showCancelButton: true,
+      showDenyButton: true,
+      denyButtonText: `삭제`,
+      cancelButtonText: `취소`,
+      reverseButtons: true,
+      customClass: {
+        container: 'custom-swal', // SweetAlert2 팝업의 컨테이너 클래스 설정
+      },
+    }).then((result) => {
+      if (result.isDenied) {
+        handleCloseMenu();
+        Swal.fire({
+          icon: 'success',
+          title: '삭제되었습니다!',
+          timer: 1300,
+          customClass:{
+            container:'custom-swal',
+          },
+        });
+      }
+    });
   };
 
   const handleDeleteConfirmClose = () => {
@@ -222,7 +248,6 @@ export default function SchedulePage() {
     setScheduleModalOpen(false);
     handleCloseMenu();
   };
-
 
   const formatTimeToTime = (time) => {
     if (time !== null) {
@@ -370,7 +395,7 @@ export default function SchedulePage() {
                   </TableBody>
                 )}
 
-                {filteredUsers.filter((user) => user.name.includes(filterName)).length===0 && (!filterName) && (
+                {filteredUsers.filter((user) => user.name.includes(filterName)).length === 0 && !filterName && (
                   <TableBody>
                     <TableRow>
                       <TableCell align="center" colSpan={10} sx={{ py: 3 }}>
@@ -383,9 +408,7 @@ export default function SchedulePage() {
                             해당 목록이 존재하지 않습니다.
                           </Typography>
 
-                          <Typography variant="body2">
-                            다시 한번 조건을 확인해주세요.
-                          </Typography>
+                          <Typography variant="body2">다시 한번 조건을 확인해주세요.</Typography>
                         </Paper>
                       </TableCell>
                     </TableRow>
