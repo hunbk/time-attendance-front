@@ -1,4 +1,4 @@
-import { FC, useState, MouseEvent, Dispatch, SetStateAction } from "react";
+import { FC, useState, MouseEvent, Dispatch, SetStateAction, useEffect, useCallback } from "react";
 import Grid from '@mui/system/Unstable_Grid';
 import TreeView from '@mui/lab/TreeView'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -43,6 +43,10 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
     const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
     const [selectedUserNames, setSelectedUserNames] = useState<string[]>([]);
     const [userListWrappedFiltered, setUserListWrappedFiltered] = useState<UserResponseDtoWrappedType[]>(null);
+    const [workGroupChangedInto, setWorkGroupChangedInto] = useState({
+        id: 0,
+        name: '',
+    });
     const handleModalOpen = (event: MouseEvent<HTMLButtonElement>) => {
         if (event.currentTarget.id === "modification") {
             setIsModification(true);
@@ -53,7 +57,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         setIsModalOpened(true);
     };
     const customLocaleText = {
-        noRowsLabel: '조회할 근로제를 선택해주세요.',
+        noRowsLabel: isDistributed ? '조회할 근로제를 선택해주세요.' : '미배포된 근로자가 없습니다.'
     };
 
     const columns: GridColDef<UserResponseDtoWrappedType>[] = [
@@ -114,8 +118,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         },
     ];
 
-
-    const filterByWorkGroup = async (selectedWorkGroupId: number, selectedWorkGroupName: string) => {
+    const filterByWorkGroup = useCallback(async (selectedWorkGroupId: number, selectedWorkGroupName: string) => {
         const { status, data }: FetchResultType = await handleRequest('get', `/api/workgroups/distribution/${selectedWorkGroupId}`);
         if (status === 200) {
             const tempUserListFiltered: UserResponseDtoWrappedType[] = [];
@@ -132,8 +135,15 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         } else {
             console.error(data);
         }
-    }
+    }, []);
 
+    useEffect(() => {
+        if (isDistributed && selectedWorkGroup.id !== 0) {
+            console.log("filterByWorkGroup triggered");
+            filterByWorkGroup(selectedWorkGroup.id, selectedWorkGroup.name);
+        }
+
+    }, [selectedWorkGroup, isDistributed, filterByWorkGroup]);
 
     const updateDistribution = async (selectedUserIds: number[], selectedWorkGroupId?: number, applyNow?: boolean) => {
         if (isDistributed) {
@@ -184,19 +194,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
 
     return (
         <Grid container spacing={2}>
-            {isDistributed === true ? <Grid xs={2}>
-                <TreeView
-                    defaultCollapseIcon={<ExpandMoreIcon />}
-                    defaultExpandIcon={<ChevronRightIcon />}
-                    sx={{ height: 240, flexGrow: 1, maxWidth: 400, overflowY: 'auto' }}
-                    defaultExpanded={["-1"]}
-                >
-                    <TreeItem nodeId="-1" label="근로제">
-                        {workGroupSimple.map((item, index) => <TreeItem key={index} nodeId={`${index}`} label={item.name} onClick={() => { filterByWorkGroup(item.id, item.name) }} />)}
-                    </TreeItem>
-                </TreeView>
-            </Grid> : <></>}
-            <Grid xs={isDistributed === true ? 10 : 12}>
+            <Grid xs={12}>
                 <DataGrid checkboxSelection rows={userListWrappedFiltered !== null ? userListWrappedFiltered : isDistributed ? selectedWorkGroupId !== 0 ? userListWrappedD : [] : userListWrappedND} columns={columns} onRowSelectionModelChange={(selection: number[]) => {
                     setSelectedUserIds(selection);
 
@@ -227,33 +225,53 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                     sx={{ height: "380px" }}
                 />
             </Grid>
-            {isDistributed === true ? <Grid xs={2}> </Grid> : <></>}
-            <Grid xs={isDistributed === true ? 10 : 12} sx={{ display: "flex", justifyContent: "end", margin: "20px 0" }}>
+            <Grid xs={12} sx={{ display: "flex", justifyContent: "end", margin: "20px 0" }}>
                 {isDistributed ? <><Button id="modification" onClick={handleModalOpen} variant="outlined" sx={{ marginRight: "10px" }}>근로제 변경</Button><Button id="deletion" onClick={handleModalOpen} variant="outlined">배포 해제</Button>
                     <Modal
                         open={isModalOpened}
                         onClose={() => setIsModalOpened(false)}
                     >
                         {isModification ? <Box sx={style}>
-                            <Typography variant="body1">
-                                {selectedUserNames.map((name, index) => <span key={`a${index}`}>{name}</span>)}님을 {selectedWorkGroup.name}로 변경하시겠습니까?
-                            </Typography>
 
-                            <Typography component={"div"}>
-                                <Button variant="outlined" onClick={() => setIsModalOpened(false)} sx={{ marginRight: "10px" }}>취소</Button>
-                                <Button variant="outlined" onClick={() => {
-                                    updateDistribution(selectedUserIds, selectedWorkGroup.id, false);
-                                    setIsModalOpened(false);
-                                }}>변경(정산: 내일부터 적용)</Button>
-                                <Button variant="outlined" onClick={() => {
-                                    updateDistribution(selectedUserIds, selectedWorkGroup.id, true);
-                                    setIsModalOpened(false);
-                                }}>변경(정산: 오늘부터 적용)</Button>
-                            </Typography>
+                            <TreeView
+                                defaultCollapseIcon={<ExpandMoreIcon />}
+                                defaultExpandIcon={<ChevronRightIcon />}
+                                sx={{ flexGrow: 1, maxWidth: 400, overflowY: 'auto', marginBottom: "20px" }}
+                                defaultExpanded={["-1"]}
+                            >
+                                <TreeItem nodeId="-1" label="변경할 근로제를 선택해주세요">
+                                    {workGroupSimple.map((item, index) => <TreeItem key={index} nodeId={`${index}`} label={item.name} onClick={() => {
+                                        setWorkGroupChangedInto({
+                                            id: item.id,
+                                            name: item.name,
+                                        })
+                                    }} />)}
+                                </TreeItem>
+                            </TreeView>
+
+                            {workGroupChangedInto.id !== 0 ?
+                                <><Typography variant="body1" component={'div'}>
+                                    {selectedUserNames.map((name, index) => <span key={`a${index}`}>{name}{index !== selectedUserNames.length - 1 ? ', ' : ''}</span>)}님을 <div>{workGroupChangedInto.name}로 변경하시겠습니까?</div>
+                                </Typography>
+
+                                    <Typography component={"div"} sx={{ display: "flex", flexDirection: "column" }}>
+                                        <Button variant="outlined" onClick={() => {
+                                            updateDistribution(selectedUserIds, workGroupChangedInto.id, false);
+                                            setIsModalOpened(false);
+                                        }}>변경(정산: 내일부터 적용)</Button>
+                                        <Button variant="outlined" onClick={() => {
+                                            updateDistribution(selectedUserIds, workGroupChangedInto.id, true);
+                                            setIsModalOpened(false);
+                                        }}>변경(정산: 오늘부터 적용)</Button>
+                                        <Button variant="outlined" onClick={() => {
+                                            setIsModalOpened(false);
+                                            setWorkGroupChangedInto({ id: 0, name: '' });
+                                        }}>취소</Button>
+                                    </Typography></> : <></>}
 
                         </Box> : <Box sx={style}>
-                            <Typography variant="body1">
-                                {selectedUserNames.map((name, index) => <span key={`b${index}`}>{name}</span>)}님을 배포해제하시겠습니까?
+                            <Typography variant="body1" component={'div'}>
+                                {selectedUserNames.map((name, index) => <span key={`b${index}`}>{name}{index !== selectedUserNames.length - 1 ? ', ' : ''}</span>)}님을 <div>배포해제하시겠습니까?</div>
                             </Typography>
                             <Typography sx={{ mt: 2 }} component={"div"}>
                                 <Button variant="outlined" onClick={() => setIsModalOpened(false)}>취소</Button>
@@ -272,8 +290,8 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                             <Typography variant="h6" component="h2">
                                 근로그룹 배포
                             </Typography>
-                            <Typography sx={{ mt: 2 }}>
-                                {selectedUserNames.map((name, index) => <span key={`b${index}`}>{name}</span>)}님을 {selectedWorkGroup.name}으로 배포하시겠습니까?
+                            <Typography sx={{ mt: 2 }} component={'div'}>
+                                {selectedUserNames.map((name, index) => <span key={`b${index}`}>{name}{index !== selectedUserNames.length - 1 ? ', ' : ''}</span>)}님을 <div>{selectedWorkGroup.name}으로 배포하시겠습니까?</div>
 
                                 <Button variant="outlined" onClick={() => setIsModalOpened(false)}>취소</Button>
                                 <Button variant="outlined" onClick={() => {

@@ -16,7 +16,7 @@ const TimeInputDiv: FC<TimeInputDivProps> = ({ index, handleTempHour, startOrEnd
 
     return (
         <DemoContainer components={['TimePicker']}>
-            <TimePicker value={value} onChange={(newValue) => {
+            <TimePicker value={value} onAccept={(newValue) => {
                 setValue(newValue);
                 handleTempHour(index, startOrEnd, timeType, newValue);
             }}
