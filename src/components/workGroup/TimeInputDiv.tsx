@@ -15,7 +15,7 @@ const TimeInputDiv: FC<TimeInputDivProps> = ({ index, handleTempHour, startOrEnd
     const [value, setValue] = useState<Dayjs | null>(defaultValue);
 
     return (
-        <DemoContainer components={['TimePicker']}>
+        <DemoContainer components={['TimePicker']} sx={{ width: "200px", marginRight: "10px" }}>
             <TimePicker value={value} onAccept={(newValue) => {
                 setValue(newValue);
                 handleTempHour(index, startOrEnd, timeType, newValue);

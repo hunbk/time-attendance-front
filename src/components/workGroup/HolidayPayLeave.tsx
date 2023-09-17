@@ -33,14 +33,13 @@ const HolidayPayLeave: React.FC<HolidayPayLeaveProps> = ({ dayHoliday, defaultPa
     const [isPayLeave, setIsPayLeave] = useState<boolean>(defaultPayLeave);
 
     return (
-        <Box sx={{ minWidth: 120 }}>
-            <FormControl fullWidth>
+        <Box sx={{ minWidth: 120, margin: "10px" }}>
+            <FormControl>
                 <FormLabel>
                     {dayHolidayConverter(dayHoliday)}
                 </FormLabel>
                 <Select
                     value={isPayLeave === true ? "payLeave" : "nonPayLeave"}
-                    // label="payLeaveSelect1"
                     onChange={(e) => {
                         if (e.target.value === "payLeave") {
                             setIsPayLeave(true);

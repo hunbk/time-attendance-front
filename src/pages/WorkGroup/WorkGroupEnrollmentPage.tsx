@@ -8,7 +8,6 @@ import {
   Typography,
 } from "@mui/material";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Unstable_Grid2";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -51,6 +50,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     승인: true,
   });
   const [currentTimeInputDivIndex, setCurrentTimeInputDivIndex] = useImmer({
+    근무: 0,
     휴게: 0,
     의무: 0,
   });
@@ -71,7 +71,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
         });
       }
       const renderTimeInputDivs = (timeType: string, index: number, defaultValueStart: Dayjs, defaultValueEnd: Dayjs) => (
-        <>
+        <Box sx={{ display: "inline-flex" }}>
           <TimeInputDiv
             index={index}
             handleTempHour={handleHour}
@@ -86,7 +86,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
             timeType={timeType}
             defaultValue={defaultValueEnd}
           />
-        </>
+        </Box>
       );
 
       if (timeRangeByType && !isFromAdd) {
@@ -111,9 +111,9 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
   const [timeInputDivsCompulsory, setTimeInputDivsCompulsory] = useState([
     timeInputDivSet("의무", 0)
   ]);
-  const [timeInputDivWork, setTimeInputDivWork] = useState(
+  const [timeInputDivsWork, setTimeInputDivsWork] = useState([
     timeInputDivSet("근무", 0)
-  );
+  ]);
   const [timeInputDivApproved, setTimeInputDivApproved] = useState(
     timeInputDivSet("승인", 0)
   );
@@ -192,7 +192,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
         if (tempHours[key][0].start.length !== 0) {
           switch (key) {
             case "근무":
-              setTimeInputDivWork(timeInputDivSet("근무", 0, tempHours["근무"]));
+              setTimeInputDivsWork([timeInputDivSet("근무", 0, tempHours["근무"])]);
               break;
             case "휴게":
               setTimeInputDivsBreak([timeInputDivSet("휴게", 0, tempHours["휴게"])]);
@@ -210,7 +210,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     }
   }, [dataToBeModified, setCurrentTimeInputDivIndex, setHours, setIsChecked, timeInputDivSet]);
 
-  const addTimeInputDiv = (divKind: "휴게" | "의무") => {
+  const addTimeInputDiv = (divKind: "근무" | "휴게" | "의무") => {
     setCurrentTimeInputDivIndex((draft) => {
       draft[divKind] += 1;
     })
@@ -220,16 +220,18 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
 
     if (divKind === "휴게") {
       setTimeInputDivsBreak([...timeInputDivsBreak, timeInputDivSet("휴게", currentTimeInputDivIndex["휴게"] + 1)]);
-    } else {
+    } else if (divKind === "의무") {
       setTimeInputDivsCompulsory([...timeInputDivsCompulsory, timeInputDivSet("의무", currentTimeInputDivIndex["의무"] + 1)]);
+    } else {
+      setTimeInputDivsWork([...timeInputDivsWork, timeInputDivSet("근무", currentTimeInputDivIndex["근무"] + 1)]);
     }
   };
-  const handleCheckboxChange = (type: "휴게" | "승인" | "의무") => {
+  const handleCheckboxChange = (type: "근무" | "휴게" | "승인" | "의무") => {
     if (isChecked[type]) {
       setHours((draft) => {
         draft[type] = [{ start: '', end: '' }];
       });
-      if (type === "휴게" || type === "의무") {
+      if (type === "근무" || type === "휴게" || type === "의무") {
         setCurrentTimeInputDivIndex((draft) => {
           draft[type] = 0;
         })
@@ -238,6 +240,9 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
       isChecked = { ...isChecked, [type]: false };
 
       switch (type) {
+        case "근무":
+          setTimeInputDivsWork([timeInputDivSet("근무", 0)]);
+          break;
         case "휴게":
           setTimeInputDivsBreak([timeInputDivSet("휴게", 0)]);
           break;
@@ -323,14 +328,12 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
 
   return (
     <form onSubmit={submitForm}>
-      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
-        <Grid container spacing={2}>
-          <Grid xs={3}>
-            <span>근로제 그룹명</span>
-          </Grid>
-          <Grid xs={9}>
-            <span>
+      <Box m="20px" sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+        <Box sx={{ flexGrow: 1, display: "flex" }}>
+          <Card sx={{ height: "230px", minWidth: "450px", padding: "10px" }}>
+            <Box>
               <TextField
+                sx={{ margin: "10px" }}
                 variant="outlined"
                 value={data.name}
                 size="small"
@@ -340,193 +343,175 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
                 }}
                 required
               />
-            </span>
-          </Grid>
-          <Grid xs={3}>
-            <span>근로제 선택</span>
-          </Grid>
-          <Grid xs={9}>
-            <span>
-              <FormControl>
+              <FormControl sx={{ margin: "10px" }}>
                 <RadioGroup
                   value={data.type}
                   defaultValue={'일반'}
                   row
-                  onChange={(e) => setData({ ...data, type: e.target.value as "일반" | "시차" })}
+                  onChange={(e) => {
+                    setData({ ...data, type: e.target.value as "일반" | "시차" });
+
+                    if (e.target.value === "일반") {
+                      setTimeInputDivsWork([timeInputDivSet("근무", 0)]);
+                    }
+                  }
+                  }
                 >
                   <FormControlLabel
                     value="일반"
                     control={<Radio />}
-                    label="일반근로제"
+                    label="일반"
                   />
                   <FormControlLabel
                     value="시차"
                     control={<Radio />}
-                    label="시차출퇴근제"
+                    label="시차"
                   />
                 </RadioGroup>
               </FormControl>
-            </span>
-          </Grid>
-          <Grid xs={3}>
-            <span>근로제 알아보기</span>
-          </Grid>
-          <Grid xs={9}>
-            <div>일반근로제: 고정된 근로시간과 정액급여로 근로자와 사업주 사이의 노동 계약 형태를 의미</div>
-            <div>시차출퇴근제: 근로자가 자유로운 출퇴근 시간을 선택할 수 있는 제도로서, 기본 근무시간을 지키면서 유연한 근무 스케줄을 적용하는 형태의 근로 방식</div>
-          </Grid>
-          <Grid xs={3}>
-            <div>근무일지정</div>
-            <div>소정근무일을 지정합니다</div>
-          </Grid>
-          <Grid xs={9} sx={{ display: "flex", flexDirection: "column" }}>
-            <FormControl>
-              <FormLabel>
-                근무일 선택
-              </FormLabel>
-            </FormControl>
-            <ToggleButtonGroup
-              color="primary"
-              value={alignments}
-              onChange={handleToggle}
-            >
-              <ToggleButton value="mon">월</ToggleButton>
-              <ToggleButton value="tue">화</ToggleButton>
-              <ToggleButton value="wed">수</ToggleButton>
-              <ToggleButton value="thu">목</ToggleButton>
-              <ToggleButton value="fri">금</ToggleButton>
-              <ToggleButton value="sat">토</ToggleButton>
-              <ToggleButton value="sun">일</ToggleButton>
-            </ToggleButtonGroup>
-          </Grid>
-          <Grid xs={3}>
-            <div>휴일구분</div>
-            <div>휴일 구분을 지정합니다</div>
-          </Grid>
-          <Grid xs={9}>
-            <FormControl>
-              <FormLabel>
-                휴일구분사용
-              </FormLabel>
-              <RadioGroup
-                value={holidayOnOff}
-                defaultValue="on"
-                row
-                onChange={(e) => {
-                  if (e.target.value === "on") {
-                    setHolidayOnOff("on");
-                  } else {
-                    setHolidayOnOff("off");
+            </Box>
+            <Box sx={{ margin: "10px", display: "flex", flexDirection: "column" }}>
+              <FormControl>
+                <FormLabel>
+                  근무일 선택
+                </FormLabel>
+              </FormControl>
+              <ToggleButtonGroup
+                color="primary"
+                value={alignments}
+                onChange={handleToggle}
+              >
+                <ToggleButton value="mon">월</ToggleButton>
+                <ToggleButton value="tue">화</ToggleButton>
+                <ToggleButton value="wed">수</ToggleButton>
+                <ToggleButton value="thu">목</ToggleButton>
+                <ToggleButton value="fri">금</ToggleButton>
+                <ToggleButton value="sat">토</ToggleButton>
+                <ToggleButton value="sun">일</ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+            <Box sx={{ margin: "10px", height: "230px" }}>
+              <FormControl>
+                <FormLabel>
+                  휴일구분사용
+                </FormLabel>
+                <RadioGroup
+                  value={holidayOnOff}
+                  defaultValue="on"
+                  row
+                  onChange={(e) => {
+                    if (e.target.value === "on") {
+                      setHolidayOnOff("on");
+                    } else {
+                      setHolidayOnOff("off");
 
-                    for (let i = 0; i < DAYS.length; i += 1) {
-                      if (data.workDayType[DAYS[i]] === "유급") {
-                        setData((draft) => {
-                          draft.workDayType[DAYS[i]] = "무급";
-                        })
+                      for (let i = 0; i < DAYS.length; i += 1) {
+                        if (data.workDayType[DAYS[i]] === "유급") {
+                          setData((draft) => {
+                            draft.workDayType[DAYS[i]] = "무급";
+                          })
+                        }
                       }
                     }
-                  }
-                }}
-              >
-                <FormControlLabel value="on" control={<Radio />} label="사용" />
-                <FormControlLabel
-                  value="off"
-                  control={<Radio />}
-                  label="미사용"
-                />
-              </RadioGroup>
-            </FormControl>
+                  }}
+                >
+                  <FormControlLabel value="on" control={<Radio />} label="사용" />
+                  <FormControlLabel
+                    value="off"
+                    control={<Radio />}
+                    label="미사용"
+                  />
+                </RadioGroup>
+              </FormControl>
+            </Box>
+          </Card>
+          <Box sx={{ marginLeft: "10px", marginTop: "10px" }}>
             {holidayOnOff === "on" ? dayHolidays.map((dayHoliday, index) =>
-              <HolidayPayLeave key={dayHoliday + index} dayHoliday={dayHoliday} defaultPayLeave={dataToBeModified ? dataToBeModified.alignments.payLeave.includes(dayHoliday) : false} updateDayHoliday={updateDayHoliday} />
+              <Box key={dayHoliday + index} sx={{ display: "inline-flex" }}>
+                <Card sx={{ marginLeft: "10px", marginBottom: "10px" }}>
+                  <HolidayPayLeave dayHoliday={dayHoliday} defaultPayLeave={dataToBeModified ? dataToBeModified.alignments.payLeave.includes(dayHoliday) : false} updateDayHoliday={updateDayHoliday} />
+                </Card>
+              </Box>
             ) : <></>}
-          </Grid>
-          <Grid xs={3}>
-            <div>시간입력</div>
-            <div>선택적근로시간제 상세시간 및 설정값을 입력합니다.</div>
-          </Grid>
-          <Grid xs={9}>
-            <Card sx={{ minWidth: 275 }}>
-              <Grid container spacing={2}>
-                <Grid xs={3}>
-                  <span>근무시간</span>
-                </Grid>
-                <Grid xs={1}> </Grid>
-                <Grid xs={8}>
-                  <div>
-                    근무시작 및 종료시각을 근로자의 결정으로 선택할 수 있는
-                    시간대를 입력합니다.
-                  </div>
-                  {timeInputDivWork}
-                </Grid>
-                <Grid xs={3}>
-                  <span>휴게시간</span>
-                </Grid>
-                <Grid xs={1}>
-                  <Checkbox onChange={() => handleCheckboxChange("휴게")} checked={isChecked.휴게} />
-                </Grid>
-                {isChecked.휴게 ? <Grid xs={8}>
-                  <div>휴게시간 설정을 사용합니다.</div>
-                  <div>휴게시간 시작시간과 종료시간을 입력합니다.</div>
-                  {timeInputDivsBreak.map((div, index) =>
-                    <div key={`${index}`}>{div}</div>
-                  )}
+          </Box>
+        </Box>
+        <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "start" }}>
+          <Card sx={{ marginTop: "10px", marginRight: "10px", backgroundColor: "#fefefe", height: data.type === "일반" ? "150px" : "", width: "450px", padding: "10px" }}>
+            <Box sx={{ margin: "10px" }}>
+              <Typography variant='subtitle1' sx={{ padding: "9px 0" }} component={'span'}>근무시간</Typography>
+              {data.type === "시차" && <Checkbox onChange={() => handleCheckboxChange("근무")} checked={isChecked.근무} />}
+              {isChecked.근무 ? <>
+                {timeInputDivsWork.map((div, index) =>
+                  <div key={`${index}`}>{div}</div>
+                )}
+                {data.type === "시차" &&
                   <Button
                     onClick={() => {
-                      addTimeInputDiv("휴게");
+                      addTimeInputDiv("근무");
                     }}
                   >
                     <AddIcon sx={{ border: "1px solid" }} />
-                  </Button>
-                </Grid> : <Grid xs={8}> </Grid>}
-                <Grid xs={3}>
-                  <span>의무근로시간대</span>
-                </Grid>
-                <Grid xs={1}>
-                  <Checkbox onChange={() => handleCheckboxChange("의무")} checked={isChecked.의무} />
-                </Grid>
-                {isChecked.의무 ? <Grid xs={8}>
-                  <div>의무근로시간대 설정을 사용합니다.</div>
-                  <div>
-                    업무협조 및 업무특성을 감안하여 반드시 근무해야하는 시간을
-                    입력할 수 있는 시간대를 설정합니다.
-                  </div>
-                  {timeInputDivsCompulsory.map((div, index) =>
-                    <div key={`${index}`}>{div}</div>
-                  )}
-                  <Button
-                    onClick={() => {
-                      addTimeInputDiv("의무");
-                    }}
-                  >
-                    <AddIcon sx={{ border: "1px solid" }} />
-                  </Button>
-                </Grid> : <Grid xs={8}> </Grid>}
-                <Grid xs={3}>
-                  <span>승인근로시간대</span>
-                </Grid>
-                <Grid xs={1}>
-                  <Checkbox onChange={() => handleCheckboxChange("승인")} checked={isChecked.승인} />
-                </Grid>
-                {isChecked.승인 ? <Grid xs={8}>
-                  <div>승인근로시간대 설정을 사용합니다.</div>
-                  <div>
-                    사전에 승인을 받은 경우에만 근로시간으로 인정하는 시간을
-                    입력할 수 있는 시간대를 설정합니다.
-                  </div>
-                  {timeInputDivApproved}
-                </Grid> : <Grid xs={8}> </Grid>}
-              </Grid>
-            </Card>
-          </Grid>
-        </Grid>
+                  </Button>}
+              </> : <></>}
+
+            </Box>
+          </Card>
+          <Card sx={{ marginTop: "10px", marginRight: "10px", backgroundColor: "#fefefe", height: data.type === "일반" ? "150px" : "", width: "450px", padding: "10px" }}>
+            <Box sx={{ margin: "10px" }}>
+              <Typography variant='subtitle1' component={'span'}>승인근로시간</Typography>
+              <Checkbox onChange={() => handleCheckboxChange("승인")} checked={isChecked.승인} />
+              {isChecked.승인 ? <>
+                {timeInputDivApproved}
+              </> : <></>}
+            </Box>
+          </Card>
+        </Box>
+        <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "start" }}>
+          <Card sx={{ marginTop: "10px", marginRight: "10px", backgroundColor: "#fefefe", width: "450px", padding: "10px" }}>
+            <Box sx={{ margin: "10px" }}>
+              <Typography variant='subtitle1' component={'span'}>휴게시간</Typography>
+              <Checkbox onChange={() => handleCheckboxChange("휴게")} checked={isChecked.휴게} />
+              {isChecked.휴게 ? <>
+                {timeInputDivsBreak.map((div, index) =>
+                  <div key={`${index}`}>{div}</div>
+                )}
+                <Button
+                  onClick={() => {
+                    addTimeInputDiv("휴게");
+                  }}
+                >
+                  <AddIcon sx={{ border: "1px solid" }} />
+                </Button>
+              </> : <> </>}
+            </Box>
+          </Card>
+          <Card sx={{ marginTop: "10px", marginRight: "10px", backgroundColor: "#fefefe", width: "450px", padding: "10px" }}>
+            <Box sx={{ margin: "10px" }}>
+              <Typography variant='subtitle1' component={'span'}>의무근로시간</Typography>
+              <Checkbox onChange={() => handleCheckboxChange("의무")} checked={isChecked.의무} />
+              {isChecked.의무 ? <>
+                {timeInputDivsCompulsory.map((div, index) =>
+                  <div key={`${index}`}>{div}</div>
+                )}
+                <Button
+                  onClick={() => {
+                    addTimeInputDiv("의무");
+                  }}
+                >
+                  <AddIcon sx={{ border: "1px solid" }} />
+                </Button>
+              </> : <></>}
+            </Box>
+          </Card>
+        </Box>
         <Typography sx={{ alignSelf: "center", margin: "10px" }} component={"div"}>
           <Button variant="outlined" onClick={handleCancel} sx={{ marginRight: "10px" }}>취소</Button>
           <Button type="submit" variant="contained">
             {dataToBeModified === null ? "저장" : "수정"}
           </Button>
         </Typography>
-      </Box>
-    </form>
+      </Box >
+    </form >
   );
 };
 
