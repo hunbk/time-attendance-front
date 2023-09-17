@@ -22,7 +22,7 @@ export default function Page500() {
   return (
     <>
       <Helmet>
-        <title> 404 Not Found </title>
+        <title> 500 Error </title>
       </Helmet>
 
       <Container>
