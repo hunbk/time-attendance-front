@@ -85,17 +85,12 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
   const [workGroupStartTime, setWorkGroupStartTime] = useState(null);
   const [workGroupEndTime, setWorkGroupEndTime] = useState(null);
 
-  const handleNullSnackbar = () => {
-    enqueueSnackbar(`근로인정 시간이 선택되지 않았습니다!`, { variant: 'warning' });
-  };
-
-
   const handleConfirmEditOpen = () => {
-    handleNullSnackbar();
     if (startTime === '-' || endTime === '-') {
       Swal.fire({
         icon: 'error',
         title: '근로인정 시간이 선택되지 않았습니다!<br>다시 한 번 확인해주세요.',
+        confirmButtonText: '확인',
         customClass: {
           container: 'custom-swal',
         },
@@ -171,6 +166,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       icon: 'warning',
       title: '의무근로시간에 해당되는 범위입니다!<br>다시 한 번 확인해주세요.',
       // timer: 1500,
+      confirmButtonText: '확인',
       customClass: {
         container: 'custom-swal',
       },
