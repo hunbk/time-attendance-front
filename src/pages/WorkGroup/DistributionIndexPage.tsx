@@ -10,6 +10,7 @@ import CustomTabPanel from 'src/components/workGroup/CustomTabPanel';
 import { WorkGroupSimpleType } from './WorkGroupIndexPage';
 import { useAuthState } from '../../context/AuthProvider';
 import handleRequest, { FetchResultType } from 'src/utils/workGroupHandleRequest';
+import { Typography } from '@mui/material';
 
 type DistributionIndexPageProps = {
     workGroupSimple: WorkGroupSimpleType[];
@@ -115,19 +116,34 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
                 </Box>
             </Grid>
             <Grid xs={10}>
-                <Box sx={{ width: '100%' }}>
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                        <Tabs value={currentTabIndex} onChange={handleChange}>
-                            <Tab label="미배포사용자" />
-                            <Tab label="배포사용자" />
-                        </Tabs>
+                <Box sx={{
+                    width: '100%'
+                }}>
+                    <Box sx={selectedWorkGroup.id === 0 ? {
+                        pointerEvents: 'none', opacity: '0.2'
+                    } : {}}>
+                        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                            <Tabs value={currentTabIndex} onChange={handleChange}>
+                                <Tab label="미배포사용자" />
+                                <Tab label="배포사용자" />
+                            </Tabs>
+                        </Box>
+                        <CustomTabPanel value={currentTabIndex} index={0}>
+                            <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} isDistributed={false} />
+                        </CustomTabPanel>
+                        <CustomTabPanel value={currentTabIndex} index={1}>
+                            <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} isDistributed />
+                        </CustomTabPanel>
                     </Box>
-                    <CustomTabPanel value={currentTabIndex} index={0}>
-                        <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} isDistributed={false} />
-                    </CustomTabPanel>
-                    <CustomTabPanel value={currentTabIndex} index={1}>
-                        <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} isDistributed />
-                    </CustomTabPanel>
+                    {selectedWorkGroup.id === 0 && <Typography sx={{
+                        position: 'absolute',
+                        bottom: '45%',
+                        left: '55%',
+                    }}
+                        variant="h5"
+                    >
+                        근로제를 먼저 선택해주세요.
+                    </Typography>}
                 </Box>
             </Grid>
         </Grid>

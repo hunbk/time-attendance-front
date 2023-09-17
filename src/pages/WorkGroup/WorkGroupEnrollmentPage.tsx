@@ -58,20 +58,17 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
     (timeType: string, index: number, timeRangeByType?: DefaultHour[], isFromAdd?: boolean) => {
       const handleHour = (index: number, startOrEnd: string, timeType: string, value: Dayjs | null) => {
         setHours((draft) => {
-          draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
-        })
-        // console.log(hours[timeType][index].start);
-        // console.log(hours[timeType][index].end);
+          // Capture the current start time from the draft state
+          const currentStartTime = draft[timeType][index].start;
 
-        // if (startOrEnd === "end" && value.isBefore(dayjs(hours[timeType][index].start, 'HH:mm:ss'))) {
-        //   console.log("triggered1");
-        //   enqueueSnackbar(`시작시간보다 종료시간이 빠를 수 없습니다.`, { variant: "error" });
-        // } else {
-        //   console.log("triggered2");
-        //   setHours((draft) => {
-        //     draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
-        //   })
-        // }
+          // Update the state with the new value
+          draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
+
+          // Check the condition using the captured start time
+          if (startOrEnd === "end" && value.isBefore(dayjs(currentStartTime, 'HH:mm:ss'))) {
+            enqueueSnackbar(`시작시간보다 종료시간이 빠를 수 없습니다.`, { variant: "error" });
+          }
+        });
       }
       const renderTimeInputDivs = (timeType: string, index: number, defaultValueStart: Dayjs, defaultValueEnd: Dayjs) => (
         <>
