@@ -71,6 +71,7 @@ export default function NewCompanyModal({ open, onClose, getCompanyList }) {
     onClose();
   };
 
+  // 폼 유효성 검증
   const validateForm = () => {
     let isValid = true;
 

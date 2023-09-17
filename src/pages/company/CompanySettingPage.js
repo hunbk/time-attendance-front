@@ -45,6 +45,8 @@ export default function CompanySettingPage() {
   const [imageAction, setImageAction] = useState('KEEP'); // 회사 로고의 수정 상태 ['DELETE', 'KEEP', 'UPDATE']
   const [authCode, setAuthCode] = useState(''); // 회사 인증코드를 위한 상태 변수
   const [name, setName] = useState(''); // 회사명
+  const [nameError, setNameError] = useState(false); // 회사명 유효성 검사
+  const [nameHelperText, setNameHelperText] = useState(''); // 회사명 유효성 검사 메시지
 
   const { user } = useAuthState();
 
@@ -64,11 +66,6 @@ export default function CompanySettingPage() {
     }
   }, [user.companyId]);
 
-  // 회사 데이터 로딩
-  useEffect(() => {
-    fetchCompanyData();
-  }, [fetchCompanyData]);
-
   // 회사 인증코드 재발급 API
   const handleReissueAuthCode = async () => {
     try {
@@ -82,16 +79,82 @@ export default function CompanySettingPage() {
     }
   };
 
+  // 폼 유효성 검증
+  const validateForm = () => {
+    let isValid = true;
+
+    // 회사명 검증
+    if (!name) {
+      setNameError(true);
+      setNameHelperText('회사명은 공백일 수 없습니다.');
+      isValid = false;
+    }
+    if (name.length > 31) {
+      setNameError(true);
+      setNameHelperText('회사명은 30자를 초과할 수 없습니다.');
+      isValid = false;
+    }
+
+    // 이미지 검증
+    if (file) {
+      const fileSizeInMB = file.size / (1024 * 1024);
+      const validImageTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
+
+      if (!validImageTypes.includes(file.type)) {
+        enqueueSnackbar('이미지 형식이 잘못되었습니다. (jpg, png, svg 만 가능)', { variant: 'error' });
+        isValid = false;
+      }
+
+      if (fileSizeInMB > 10) {
+        enqueueSnackbar('파일 크기가 너무 큽니다. (10MB 이하만 가능)', { variant: 'error' });
+        isValid = false;
+      }
+    }
+
+    return isValid;
+  };
+
   // 회사 정보 수정 요청 API
   const handleSave = async () => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append(
-      'companyUpdateRequest',
-      new Blob([JSON.stringify({ name, imageAction })], { type: 'application/json' })
-    ); // 회사 정보 JSON 객체로 추가
-    await loginAxios.patch(`/api/companies/${user.companyId}`, formData);
-    enqueueSnackbar('저장되었습니다.', { variant: 'success' });
+    if (!validateForm()) {
+      return; // 유효성 검사 실패
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append(
+        'companyUpdateRequest',
+        new Blob([JSON.stringify({ name, imageAction })], { type: 'application/json' })
+      ); // 회사 정보 JSON 객체로 추가
+
+      const response = await loginAxios.patch(`/api/companies/${user.companyId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status === 200) {
+        fetchCompanyData();
+
+        enqueueSnackbar('저장되었습니다.', { variant: 'success' });
+      }
+    } catch (error) {
+      if (error.response && error.response.data) {
+        const { data } = error.response;
+        if (data.errors) {
+          Object.entries(data.errors).forEach(([key, value]) => {
+            if (key === 'name') {
+              setNameError(true);
+              setNameHelperText(value);
+            }
+          });
+        } else if (data.message) {
+          setNameError(true);
+          enqueueSnackbar(data.message, { variant: 'error' });
+        }
+      }
+    }
   };
 
   // 회사 로고 이미지 삭제 함수
@@ -115,7 +178,42 @@ export default function CompanySettingPage() {
   }, []);
 
   // 리액트 dropzone 라이브러리
-  const { getRootProps, getInputProps, open } = useDropzone({ accept: 'image/*', onDrop });
+  // const { getRootProps, getInputProps, open } = useDropzone({ accept: 'image/*', onDrop });
+
+  const maxSize = 10485760; // 10MB
+  const { getRootProps, getInputProps, open, fileRejections } = useDropzone({
+    accept: { 'image/*': ['.jpeg', '.png'] },
+    maxSize,
+    onDrop,
+    multiple: false,
+  });
+
+  // 회사 데이터 로딩
+  useEffect(() => {
+    console.log('mount');
+    fetchCompanyData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    // 파일 검증 실패시 처리
+    if (fileRejections.length > 0) {
+      fileRejections.forEach(({ errors }) => {
+        errors.forEach((error) => {
+          switch (error.code) {
+            case 'file-invalid-type':
+              enqueueSnackbar('이미지 파일만 선택할 수 있습니다.', { variant: 'error' });
+              break;
+            case 'file-too-large':
+              enqueueSnackbar('파일 크기가 너무 큽니다. (10MB 이하만 가능)', { variant: 'error' });
+              break;
+            default:
+              enqueueSnackbar('파일 업로드 중 오류가 발생했습니다.', { variant: 'error' });
+              break;
+          }
+        });
+      });
+    }
+  }, [fileRejections]);
 
   return (
     <>
@@ -189,12 +287,18 @@ export default function CompanySettingPage() {
                 </Grid>
 
                 <TextField
+                  error={nameError}
+                  helperText={nameHelperText}
                   label="회사명"
                   margin="normal"
                   size="small"
                   name="name"
                   value={name}
-                  onChange={(event) => setName(event.target.value)}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                    setNameError(false); // 입력값 변경시 에러 초기화
+                    setNameHelperText(''); // 에러 메시지 초기화
+                  }}
                 />
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', p: 2 }}>

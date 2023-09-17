@@ -4,7 +4,6 @@ import { Helmet } from 'react-helmet-async';
 import Iconify from '../../../components/iconify/Iconify';
 import NewCompanyModal from './NewCompanyModal';
 import CompanyList from './CompanyList';
-import { SnackbarProvider } from 'notistack';
 import loginAxios from '../../../api/loginAxios';
 
 export default function CompanyPage() {
