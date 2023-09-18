@@ -11,6 +11,8 @@ import { WorkGroupSimpleType } from './WorkGroupIndexPage';
 import { useAuthState } from '../../context/AuthProvider';
 import handleRequest, { FetchResultType } from 'src/utils/workGroupHandleRequest';
 import { Typography } from '@mui/material';
+import { useImmer } from 'use-immer';
+import zIndex from '@mui/material/styles/zIndex';
 
 type DistributionIndexPageProps = {
     workGroupSimple: WorkGroupSimpleType[];
@@ -56,6 +58,7 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
         type: "일반",
         numOfMembers: 0
     });
+    const [workGroupSimpleCard, setWorkGroupSimpleCard] = useImmer<WorkGroupSimpleType[]>(workGroupSimple);
     const handleSelectedWorkGroup = (id: number, name: string, type: string, numOfMembers: number) => {
         const tempWorkGroupSimple = {
             id,
@@ -111,7 +114,7 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
             <Grid xs={2}>
                 <Box sx={{ width: '100%' }}>
                     <Stack spacing={2}>
-                        {workGroupSimple.length !== 0 && workGroupSimple.map((item, index) => <WorkGroupCard key={index} id={item.id} name={item.name} type={item.type} numOfMembers={item.numOfMembers} isSelected={item.id === selectedWorkGroup.id} handleSelectedWorkGroup={handleSelectedWorkGroup} />)}
+                        {workGroupSimpleCard.length !== 0 && workGroupSimpleCard.map((item, index) => <WorkGroupCard key={index} id={item.id} name={item.name} type={item.type} numOfMembers={item.numOfMembers} isSelected={item.id === selectedWorkGroup.id} handleSelectedWorkGroup={handleSelectedWorkGroup} />)}
                     </Stack>
                 </Box>
             </Grid>
@@ -129,10 +132,10 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
                             </Tabs>
                         </Box>
                         <CustomTabPanel value={currentTabIndex} index={0}>
-                            <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} isDistributed={false} />
+                            <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} setWorkGroupSimpleCard={setWorkGroupSimpleCard} isDistributed={false} />
                         </CustomTabPanel>
                         <CustomTabPanel value={currentTabIndex} index={1}>
-                            <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} isDistributed />
+                            <DistributionPage userListWrappedD={userListWrappedD} userListWrappedND={userListWrappedND} setUserListWrappedD={setUserListWrappedD} setUserListWrappedND={setUserListWrappedND} workGroupSimple={workGroupSimple} selectedWorkGroup={selectedWorkGroup} setWorkGroupSimpleCard={setWorkGroupSimpleCard} isDistributed />
                         </CustomTabPanel>
                     </Box>
                     {selectedWorkGroup.id === 0 && <Typography sx={{

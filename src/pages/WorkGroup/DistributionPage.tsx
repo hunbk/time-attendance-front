@@ -12,6 +12,7 @@ import { UserResponseDtoWrappedType } from "./DistributionIndexPage";
 import { WorkGroupSimpleType } from "./WorkGroupIndexPage";
 import handleRequest, { FetchResultType } from "src/utils/workGroupHandleRequest";
 import { enqueueSnackbar } from "notistack";
+import { set } from "lodash";
 
 type DistributionPageProps = {
     userListWrappedD: UserResponseDtoWrappedType[];
@@ -20,6 +21,7 @@ type DistributionPageProps = {
     setUserListWrappedND: Dispatch<SetStateAction<UserResponseDtoWrappedType[]>>;
     workGroupSimple: WorkGroupSimpleType[];
     selectedWorkGroup: WorkGroupSimpleType;
+    setWorkGroupSimpleCard: Dispatch<SetStateAction<WorkGroupSimpleType[]>>;
     isDistributed: boolean;
 }
 
@@ -35,7 +37,7 @@ const style = {
     p: 4,
 };
 
-const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userListWrappedND, setUserListWrappedD, setUserListWrappedND, workGroupSimple, selectedWorkGroup, isDistributed }) => {
+const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userListWrappedND, setUserListWrappedD, setUserListWrappedND, workGroupSimple, selectedWorkGroup, setWorkGroupSimpleCard, isDistributed }) => {
     const [isModalOpened, setIsModalOpened] = useState<boolean>(false);
     const [isModification, setIsModification] = useState<boolean>(false);
     const [selectedWorkGroupId, setSelectedWorkGroupId] = useState<number>(0);
@@ -139,16 +141,15 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
 
     useEffect(() => {
         if (isDistributed && selectedWorkGroup.id !== 0) {
-            console.log("filterByWorkGroup triggered");
             filterByWorkGroup(selectedWorkGroup.id, selectedWorkGroup.name);
         }
 
     }, [selectedWorkGroup, isDistributed, filterByWorkGroup]);
 
-    const updateDistribution = async (selectedUserIds: number[], selectedWorkGroupId?: number, applyNow?: boolean) => {
+    const updateDistribution = async (selectedUserIds: number[], workGroupIdChangedInto?: number, applyNow?: boolean) => {
         if (isDistributed) {
             // 배포 해제
-            if (!selectedWorkGroupId) {
+            if (!workGroupIdChangedInto) {
                 setUserListWrappedFiltered(null);
                 setUserListWrappedD(userListWrappedD.filter((user) => !selectedUserIds.includes(user.id)));
                 setUserListWrappedND([...userListWrappedND, ...userListWrappedD.filter((user) => selectedUserIds.includes(user.id))]);
@@ -156,6 +157,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                 const { status, data }: FetchResultType = await handleRequest('delete', `/api/workgroups/distribution/${selectedUserIds}`);
                 if (status === 200) {
                     enqueueSnackbar(`배포해제되었습니다.`, { variant: "success" });
+                    setWorkGroupSimpleCard((draft) => draft.map((item) => item.id === selectedWorkGroup.id ? { ...item, numOfMembers: item.numOfMembers - selectedUserIds.length } : item));
                 } else {
                     console.error(data);
                 }
@@ -164,11 +166,14 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
             else {
                 const { status, data }: FetchResultType = await handleRequest('put', `/api/workgroups/distribution/${applyNow}`, {
                     userIds: selectedUserIds,
-                    workGroupId: selectedWorkGroupId
+                    workGroupId: workGroupIdChangedInto
                 });
                 if (status === 200) {
                     enqueueSnackbar(`근로제 변경되었습니다.`, { variant: "success" });
                     setUserListWrappedFiltered(userListWrappedFiltered.filter((user) => !selectedUserIds.includes(user.id)));
+
+                    // Find the matching item in workGroupSimpleCard and update the numOfMembers property by adding the number of selectedUserIds using immer and update the numOfMembers property of the not matched item by decreasing the number of selectedUserIds using immer.
+                    setWorkGroupSimpleCard((draft) => draft.map((item) => item.id === workGroupIdChangedInto ? { ...item, numOfMembers: item.numOfMembers + selectedUserIds.length } : item.id === selectedWorkGroup.id ? { ...item, numOfMembers: item.numOfMembers - selectedUserIds.length } : item));
                 } else {
                     console.error(data);
                 }
@@ -182,10 +187,11 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
 
             const { status, data }: FetchResultType = await handleRequest('post', '/api/workgroups/distribution', {
                 userIds: selectedUserIds,
-                workGroupId: selectedWorkGroupId
+                workGroupId: workGroupIdChangedInto
             });
             if (status === 200) {
                 enqueueSnackbar(`배포되었습니다.`, { variant: "success" });
+                setWorkGroupSimpleCard((draft) => draft.map((item) => item.id === selectedWorkGroup.id ? { ...item, numOfMembers: item.numOfMembers + selectedUserIds.length } : item));
             } else {
                 console.error(data);
             }

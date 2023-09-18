@@ -61,13 +61,14 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
           // Capture the current start time from the draft state
           const currentStartTime = draft[timeType][index].start;
 
-          // Update the state with the new value
-          draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
-
           // Check the condition using the captured start time
           if (startOrEnd === "end" && value.isBefore(dayjs(currentStartTime, 'HH:mm:ss'))) {
             enqueueSnackbar(`시작시간보다 종료시간이 빠를 수 없습니다.`, { variant: "error" });
+          } else {
+            // Update the state with the new value
+            draft[timeType][index][startOrEnd] = value?.format('HH:mm:ss');
           }
+
         });
       }
       const renderTimeInputDivs = (timeType: string, index: number, defaultValueStart: Dayjs, defaultValueEnd: Dayjs) => (
@@ -439,7 +440,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
           <Card sx={{ marginTop: "10px", marginRight: "10px", backgroundColor: "#fefefe", height: data.type === "일반" ? "150px" : "", width: "450px", padding: "10px" }}>
             <Box sx={{ margin: "10px" }}>
               <Typography variant='subtitle1' sx={{ padding: "9px 0" }} component={'span'}>근무시간</Typography>
-              {data.type === "시차" && <Checkbox onChange={() => handleCheckboxChange("근무")} checked={isChecked.근무} />}
+              <Checkbox onChange={() => handleCheckboxChange("근무")} checked={isChecked.근무} disabled={data.type === "일반"} />
               {isChecked.근무 ? <>
                 {timeInputDivsWork.map((div, index) =>
                   <div key={`${index}`}>{div}</div>
