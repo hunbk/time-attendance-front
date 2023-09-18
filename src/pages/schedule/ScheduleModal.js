@@ -85,6 +85,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
   const [workGroupStartTime, setWorkGroupStartTime] = useState(null);
   const [workGroupEndTime, setWorkGroupEndTime] = useState(null);
 
+
   const handleConfirmEditOpen = () => {
     if (startTime === '-' || endTime === '-') {
       Swal.fire({
@@ -97,7 +98,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       });
     } else {
       Swal.fire({
-        icon: 'info',
+        icon: 'question',
         title: `${userData.name} 사원의 정보를 <br>수정하시겠습니까?`,
         html: '<strong>수정 작업은 중요하며 정확한 시간을 확인하실 것을 권장합니다.</strong>',
         showConfirmButton: true,
@@ -112,14 +113,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       }).then((result) => {
         if (result.isConfirmed) {
           handleConfirmEdit();
-          Swal.fire({
-            icon: 'success',
-            title: '해당 정보가 수정되었습니다!',
-            timer: 1300,
-            customClass: {
-              container: 'custom-swal',
-            },
-          });
+          enqueueSnackbar(`수정이 완료되었습니다!`, { variant: 'success' });
           onClose();
         }
       });
@@ -256,47 +250,48 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       }
     });
 
-    if (isOver) {
-      if (workIndexes.length === 1) {
-        workIndexes.forEach((i) => {
-          if (calWorkStart <= calStartTimes[i]) {
-            startForWorkingTime = calStartTimes[i];
-          } else if (calStartTimes[i] < calWorkStart) {
-            startForWorkingTime = calWorkStart;
-            setWorkState('근태이상');
-          }
-          if (calEndTimes[i] <= calWorkEnd) {
-            endForWorkingTime = calEndTimes[i];
-          } else if (calEndTimes[i] > calWorkEnd) {
-            endForWorkingTime = calWorkEnd;
-            setWorkState('근태이상');
-          }
-        });
-      } else {
-        // 최대 최소 시간 찾기
-        workIndexes.forEach((i) => {
-          if (calStartTimes[minworkIndex] > calStartTimes[i]) {
-            minworkIndex = i;
-          }
-          if (calStartTimes[maxworkIndex] < calStartTimes[i]) {
-            maxworkIndex = i;
-          }
-        });
-        if (calWorkStart < calStartTimes[minworkIndex]) {
-          startForWorkingTime = calStartTimes[minworkIndex];
-        } else {
+    // if (isOver) {
+    if (workIndexes.length === 1) {
+      workIndexes.forEach((i) => {
+        if (calWorkStart <= calStartTimes[i]) {
+          startForWorkingTime = calStartTimes[i];
+        } else if (calStartTimes[i] < calWorkStart) {
           startForWorkingTime = calWorkStart;
+          setWorkState('근태이상');
         }
-        if (startForWorkingTime + fixWorkingTime <= calWorkEnd) {
-          endForWorkingTime = startForWorkingTime + fixWorkingTime;
-        } else {
+        if (calEndTimes[i] <= calWorkEnd) {
+          endForWorkingTime = calEndTimes[i];
+        } else if (calEndTimes[i] > calWorkEnd) {
           endForWorkingTime = calWorkEnd;
           setWorkState('근태이상');
         }
-      }
+      });
     } else {
-      //
+      // 최대 최소 시간 찾기
+      workIndexes.forEach((i) => {
+        if (calStartTimes[minworkIndex] > calStartTimes[i]) {
+          minworkIndex = i;
+        }
+        if (calStartTimes[maxworkIndex] < calStartTimes[i]) {
+          maxworkIndex = i;
+        }
+      });
+      if (calWorkStart < calStartTimes[minworkIndex]) {
+        startForWorkingTime = calStartTimes[minworkIndex];
+      } else {
+        startForWorkingTime = calWorkStart;
+      }
+      if (startForWorkingTime + fixWorkingTime <= calWorkEnd) {
+        endForWorkingTime = startForWorkingTime + fixWorkingTime;
+      } else {
+        endForWorkingTime = calWorkEnd;
+        setWorkState('근태이상');
+      }
     }
+    // } else {
+    //
+    // }
+    console.log(calWorkEnd);
 
     fixWorkingTime -= fixBreakTime;
     console.log(`총 초과 시간 : ${totalOverTimeInMinutes}`);
@@ -331,6 +326,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
         totalOverTimeInMinutes += endapproved + (1440 - startapproved);
         console.log(`초과 시간 2-3 : ${totalOverTimeInMinutes}`);
       } else if (calWorkEnd < startapproved) {
+        console.log(calWorkEnd);
         totalOverTimeInMinutes = 0;
         console.log(`초과 시간 2-4 : ${totalOverTimeInMinutes}`);
       }
@@ -352,6 +348,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
     if (workIndexes.length === 1) {
       groupStart = startTimes[workIndexes[0]][0] * 60 + startTimes[workIndexes[0]][1];
       groupEnd = endTimes[workIndexes[0]][0] * 60 + endTimes[workIndexes[0]][1];
+
     } else {
       if (
         startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] <= calWorkStart &&

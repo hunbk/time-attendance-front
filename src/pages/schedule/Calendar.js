@@ -105,7 +105,7 @@ const Calendar = ({ startDate, endDate, setStartDate, setEndDate }) => {
             onChange={setEndDate}
             closeOnScroll
             minDate={startDate}
-            maxDate={new Date().getTime() - 24 * 60 * 60 * 1000}
+            maxDate={new Date().getTime()}
             slotProps={{
               textField: {
                 size: 'small',

@@ -17,8 +17,6 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
-  Snackbar,
-  Alert,
   Dialog,
   DialogTitle,
   DialogActions,
@@ -126,8 +124,8 @@ export default function SchedulePage() {
   const [filteredUsers, setFilteredUsers] = useState(users);
 
   // 기본적으로 Calendar 숨기고 open하면 Date에 new Date() 설정함
-  const [startDate, setStartDate] = useState(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));
-  const [endDate, setEndDate] = useState(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [isSearched, setIsSearched] = useState(false); // 검색 버튼을 눌렀는지 여부를 저장하는 상태
 
   // 수정 대상 회원의 id를 저장
@@ -241,7 +239,19 @@ export default function SchedulePage() {
   };
 
   const handleOpenModal = () => {
-    setScheduleModalOpen(true);
+    if(userData.workState === '미처리'){
+      Swal.fire({
+        icon:'error',
+        html:'<strong>해당 정산은 직접 수정할 수 없습니다!<br> 서비스 관리자에게 재정산을 요청하세요!</strong>',
+        confirmButtonText:'확인',
+        customClass:{
+          container:'custom-swal',
+        },
+      });
+      handleCloseMenu();
+    }else{
+      setScheduleModalOpen(true);
+    }
   };
 
   const handleCloseModal = () => {
@@ -273,7 +283,6 @@ export default function SchedulePage() {
             정산목록
           </Typography>
         </Stack>
-
         <Card>
           <SettleListToolbar
             numSelected={selected.length}
