@@ -39,13 +39,14 @@ import Scrollbar from '../../components/scrollbar';
 // sections
 import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
 import { enqueueSnackbar } from 'notistack';
+import Swal from 'sweetalert2';
+import './Privilege.css';
 
 // LoginAxios
 import loginAxios from '../../api/loginAxios';
 
 // 유저 상태
 import { useAuthState } from '../../context/AuthProvider';
-import { forEach } from 'lodash';
 // ----------------------------------------------------------------------
 
 const LIST_HEAD = [
@@ -195,13 +196,13 @@ export default function PrivilegeAdd() {
 
   const handleChangeModalRowsPerPage = (event) => {
     setModalPage(0);
-    setRowsModalPerPage(parseInt(event.target.value, 10));
+    setRowsModalPerPage(parseInt(event.target.value, 5));
   };
 
   const handleModalFilterByName = (name) => {
     setModalFilterName(name);
     setModalPage(0);
-    setRowsModalPerPage(10);
+    setRowsModalPerPage(5);
 
     // 검색창에 아무것도 입력하지 않았을 때,
     if (!name) {
@@ -233,7 +234,7 @@ export default function PrivilegeAdd() {
     const searchResult = applySortFilter(users, getComparator(order, orderBy), search);
     setModalFilterName(search);
     setModalPage(0);
-    setRowsModalPerPage(10);
+    setRowsModalPerPage(5);
     setFilteredModalUsers(searchResult);
   };
 
@@ -242,7 +243,41 @@ export default function PrivilegeAdd() {
   };
 
   const handleOpenAdminModal = () => {
-    setOpenAdminModal(true);
+    Swal.fire({
+      icon: 'warning',
+      title: `경고!`,
+      html: '<strong>해당 권한은 신중하게 부여되어야 합니다.<br> 이 권한은 시스템 전체에 영향을 미치며,<br>잘못 사용될 경우 심각한 보안 문제를 유발할 수 있습니다.</strong>',
+      showConfirmButton: true,
+      showCancelButton: true,
+      showDenyButton: false,
+      confirmButtonText: `변경`,
+      cancelButtonText: `취소`,
+      reverseButtons: true,
+      customClass: {
+        container: 'custom-swal', // SweetAlert2 팝업의 컨테이너 클래스 설정
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          icon: 'success',
+          title: '해당 정보가 수정되었습니다!',
+          confirmButtonText:'확인',
+          timer: 1300,
+          customClass: {
+            container: 'custom-swal',
+          },
+        });
+        resetSelectedAdminType();
+        setModalSelected([]);
+        updateAdminType();
+        setSaveConfirmOpen(false);
+      } else if (result.isDenied) {
+        setSaveConfirmOpen(false);
+        handleCloseAdminModal();
+        handleSaveConfirmOpen();
+        handleConfirmEditClose();
+      }
+    });
   };
 
   const handleCloseAdminModal = () => {
@@ -260,7 +295,38 @@ export default function PrivilegeAdd() {
   };
 
   const handleConfirmEditOpen = () => {
-    setConfirmEditOpen(true);
+    Swal.fire({
+      icon:'question',
+      title: '권한 변경 확인',
+      html: (() => {
+        switch (selectedAdminType) {
+          case 'ADMIN':
+            return '<strong><span style="font-size: 17px; color: #FF3D00;">최고 관리자</span></strong>로 권한을 변경하시겠습니까?';
+          case 'MNG':
+            return '<strong><span style="font-size: 17px; color: #1976D2;">총괄 책임자</span></strong>로 권한을 변경하시겠습니까?';
+          case 'HR':
+            return '<strong><span style="font-size: 17px; color: #64DD17;">인사 관리자</span></strong>로 권한을 변경하시겠습니까?';
+          case 'FO':
+            return '<strong><span style="font-size: 17px; color: #FFA500;">재무 관리자</span></strong>로 권한을 변경하시겠습니까?';
+          case 'USER':
+            return '<strong>일반 권한자</strong>로 권한을 변경하시겠습니까?';
+          default:
+            return '일반 권한자로 권한을 변경하시겠습니까?';
+        }
+      })(),
+      showConfirmButton: true,
+      showCancelButton: true,
+      confirmButtonText: '확인',
+      cancelButtonText: '취소',
+      reverseButtons: true,
+      customClass: {
+        container: 'custom-swal',
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleSaveConfirmClose();
+      }
+    });
   };
 
   const handleConfirmEditClose = () => {
@@ -287,17 +353,7 @@ export default function PrivilegeAdd() {
     setFilteredModalUsers(filteredUsers);
   };
 
-  const emptyModalRows = modalPage > 0 ? Math.max(0, (1 + modalPage) * rowsModalPerPage - filterUser.length) : 0;
-
   const isModalNotFound = !filterUser.length && modalFilterName;
-
-  const modalStyle = {
-    // 팝업창의 넓이를 원하는 값으로 지정합니다. 필요에 따라 변경할 수 있습니다.
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  };
-  // ... (필요한 함수들과 상태들을 PrivilegeModal 컴포넌트로 옮길 수 있습니다)
 
   return (
     <>
@@ -447,7 +503,6 @@ export default function PrivilegeAdd() {
                         </TableRow>
                       );
                     })}
-               
                 </TableBody>
 
                 {isModalNotFound && (
@@ -468,7 +523,7 @@ export default function PrivilegeAdd() {
                   </TableBody>
                 )}
 
-                {(filterUser.length === 0) &&(!modalFilterName) && (
+                {filterUser.length === 0 && !modalFilterName && (
                   <TableBody>
                     <TableRow>
                       <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
@@ -476,9 +531,7 @@ export default function PrivilegeAdd() {
                           <Typography variant="h6" paragraph>
                             해당 조건에 대한 결과가 존재하지 않습니다.
                           </Typography>
-                          <Typography variant="body2">
-                            다시 한번 조건을 확인해주세요.
-                          </Typography>
+                          <Typography variant="body2">다시 한번 조건을 확인해주세요.</Typography>
                         </Paper>
                       </TableCell>
                     </TableRow>
@@ -510,7 +563,7 @@ export default function PrivilegeAdd() {
                   resetFilterAndSelection();
                 }}
               >
-                취소
+                선택 취소
               </Button>
 
               <Button
@@ -531,42 +584,6 @@ export default function PrivilegeAdd() {
           </Box>
         </Card>
       </Container>
-
-      <Dialog open={openAdminModal} onClose={handleCloseAdminModal} minWidth="sm">
-        <DialogTitle>경고</DialogTitle>
-        <DialogContent>
-          <Typography>
-            해당 권한은 신중하게 부여되어야 합니다. <br />
-            이 권한은 시스템 전체에 영향을 미치며, <br />
-            잘못 사용될 경우 심각한 보안 문제를 유발할 수 있습니다.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setSaveConfirmOpen(false);
-              handleCloseAdminModal();
-              handleSaveConfirmOpen();
-              handleConfirmEditClose();
-            }}
-          >
-            취소
-          </Button>
-          <Button
-            onClick={() => {
-              resetSelectedAdminType();
-              setModalSelected([]);
-              updateAdminType();
-              setSaveConfirmOpen(false);
-              handleConfirmEditClose();
-              handleCloseAdminModal();
-            }}
-            variant="contained"
-          >
-            확인
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <Dialog
         open={saveConfirmOpen}
@@ -620,7 +637,7 @@ export default function PrivilegeAdd() {
           </Select>
           {modalSelected.length > 0 && (
             <TableContainer>
-              <Table size='small'>
+              <Table size="small">
                 <UserListHead
                   order={order}
                   headLabel={MODAL_HEAD}
@@ -749,35 +766,6 @@ export default function PrivilegeAdd() {
             variant="contained"
           >
             변경
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={confirmEditOpen} onClose={handleConfirmEditClose}>
-        <DialogTitle>권한 변경 확인</DialogTitle>
-        <DialogContent>
-          {(() => {
-            switch (selectedAdminType) {
-              case 'ADMIN':
-                return <DialogContentText>최고 권한자로 권한을 변경하시겠습니까?</DialogContentText>;
-              case 'MNG':
-                return <DialogContentText>총괄 책임자로 권한을 변경하시겠습니까?</DialogContentText>;
-              case 'HR':
-                return <DialogContentText>인사 관리자로 권한을 변경하시겠습니까?</DialogContentText>;
-              case 'FO':
-                return <DialogContentText>재무 관리자로 권한을 변경하시겠습니까?</DialogContentText>;
-              case 'USER':
-                return <DialogContentText>일반 권한자로 권한을 변경하시겠습니까?</DialogContentText>;
-              default:
-                return <DialogContentText>일반 권한자로 권한을 변경하시겠습니까?</DialogContentText>;
-            }
-          })()}
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={handleConfirmEditClose}>취소</Button>
-          <Button onClick={handleSaveConfirmClose} variant="contained">
-            확인
           </Button>
         </DialogActions>
       </Dialog>

@@ -13,6 +13,7 @@ import {
   Stack,
   Box,
   Button,
+  Card,
 } from '@mui/material';
 // component
 import Iconify from '../../../components/iconify';
@@ -24,6 +25,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import Label from '../../../components/label';
+import { ButtonGroup } from 'react-bootstrap';
 
 // ----------------------------------------------------------------------
 
@@ -125,7 +127,7 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName,
   };
 
   // 필터링 버튼 클릭 시 메뉴 열기
-  const handleClick = (event) => {
+  const handleButtonClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -141,16 +143,6 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName,
     setAnchorEl(null);
   };
 
-  const filterButton = (
-    <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-      <Tooltip title="필터링">
-        <IconButton onClick={handleClick}>
-          <Iconify icon="ic:baseline-filter-alt" sx={{ width: 24, height: 24 }} />
-        </IconButton>
-      </Tooltip>
-    </div>
-  );
-
   useEffect(() => {
     onFilterUsers(users);
   }, []);
@@ -165,7 +157,42 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName,
         justifyContent: 'space-between',
       }}
     >
-      <Tooltip title="필터링">{filterButton}</Tooltip>
+      <Card
+        sx={{
+          height: '40px',
+          border: '0.1px solid #ccc',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Button onClick={handleButtonClick}>
+          <Stack display="flex" direction="row" alignItems="center">
+            {selectedFilter ? (
+              <>
+                {filterOptionMappings[selectedFilter.label].icon}
+                <Label color={filterOptionMappings[selectedFilter.label].color}>{selectedFilter.label}</Label>
+              </>
+            ) : (
+              <>
+                {filterOptionMappings['전체 조회'].icon}
+                <Label color={filterOptionMappings['전체 조회'].color}>전체 조회</Label>
+              </>
+            )}
+          </Stack>
+        </Button>
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+          {filterOptions.map((option, index) => (
+            <MenuItem key={index} onClick={() => handleMenuItemClick(option)}>
+              <Stack direction="row" alignItems="center">
+                {filterOptionMappings[option.label].icon}
+                {option.label}
+              </Stack>
+            </MenuItem>
+          ))}
+        </Menu>
+      </Card>
+
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
         {filterOptions.map((option, index) => (
           <MenuItem key={index} selected={option === selectedFilter} onClick={() => handleMenuItemClick(option)}>
@@ -194,11 +221,7 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName,
             }
             size="small"
           />
-          <Button
-            variant="contained"
-            sx={{ height: 40, width: 70, marginLeft: 2 }}
-            onClick={handleSearch}
-          >
+          <Button variant="contained" sx={{ height: 40, width: 70, marginLeft: 2 }} onClick={handleSearch}>
             검색
           </Button>
         </Box>
