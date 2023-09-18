@@ -226,7 +226,15 @@ export default function PrivilegeAdd() {
   };
 
   const handleOpenNullSnackbar = () => {
-    enqueueSnackbar(`사원을 선택해주세요!`, { variant: 'warning' });
+    Swal.fire({
+      icon: 'warning',
+      title: '사원을 선택해주세요!',
+      confirmButtonText: '확인',
+      timer: 1300,
+      customClass: {
+        container: 'custom-swal',
+      },
+    });
   };
 
   const handleModalSearch = (search) => {
@@ -246,7 +254,7 @@ export default function PrivilegeAdd() {
     Swal.fire({
       icon: 'warning',
       title: `경고!`,
-      html: '<strong>해당 권한은 신중하게 부여되어야 합니다.<br> 이 권한은 시스템 전체에 영향을 미치며,<br>잘못 사용될 경우 심각한 보안 문제를 유발할 수 있습니다.</strong>',
+      html: '<strong>해당 권한은 신중하게 부여되어야 합니다.<br> 이 권한은 시스템 전체에 영향을 미치며,<br>잘못 사용될 경우 심각한 보안 문제를<br> 유발할 수 있습니다.</strong>',
       showConfirmButton: true,
       showCancelButton: true,
       showDenyButton: false,
@@ -261,7 +269,7 @@ export default function PrivilegeAdd() {
         Swal.fire({
           icon: 'success',
           title: '해당 정보가 수정되었습니다!',
-          confirmButtonText:'확인',
+          confirmButtonText: '확인',
           timer: 1300,
           customClass: {
             container: 'custom-swal',
@@ -296,7 +304,7 @@ export default function PrivilegeAdd() {
 
   const handleConfirmEditOpen = () => {
     Swal.fire({
-      icon:'question',
+      icon: 'question',
       title: '권한 변경 확인',
       html: (() => {
         switch (selectedAdminType) {
