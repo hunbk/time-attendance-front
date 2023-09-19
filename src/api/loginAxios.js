@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 // 서버로 요청을 보내는것과 서버에서 받은 응답을 화면(컴포넌트)단에서 처리하기전에 추가로직을 넣을수 있는 API
 const loginAxios = axios.create({
@@ -20,14 +21,18 @@ loginAxios.interceptors.request.use(
 // 응답 인터셉터. 응답을 받은 후, 에러 처리.
 loginAxios.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response && error.response.status === 401) {
       // 토큰이 만료되거나 유효하지 않은 경우 로그아웃 로직 처리
       // 토큰, 사용자 정보 제거
       localStorage.removeItem('accessToken');
 
-      // TODO: 알림 방식 개선
-      alert('인증이 만료되었습니다. 다시 로그인해 주세요.');
+      await Swal.fire({
+        title: `인증이 만료되었습니다.</br>다시 로그인해 주세요.`,
+        icon: 'error',
+        confirmButtonText: '확인',
+        confirmButtonColor: '#2065D1',
+      });
 
       // 리다이렉션
       window.location.href = '/login';
