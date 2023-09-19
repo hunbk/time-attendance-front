@@ -9,6 +9,8 @@ import dayjs from 'dayjs';
 import Iconify from '../../components/iconify/Iconify';
 import loginAxios from '../../api/loginAxios';
 
+import Swal from 'sweetalert2';
+
 export default function SignupForm() {
   const navigate = useNavigate();
 
@@ -202,7 +204,30 @@ export default function SignupForm() {
             }
           });
         } else if (data.message) {
-          enqueueSnackbar(data.message, { variant: 'error' });
+          if (data.message === '이미 가입된 이메일입니다.') {
+            setEmailError(true);
+            Swal.fire({
+              title: `${data.message}`,
+              icon: 'error',
+              confirmButtonText: '확인',
+              confirmButtonColor: '#2065D1',
+            });
+          } else if (data.message === '유효하지 않은 회사 인증 코드입니다.') {
+            setCompanyCodeError(true);
+            Swal.fire({
+              title: `${data.message}`,
+              icon: 'error',
+              confirmButtonText: '확인',
+              confirmButtonColor: '#2065D1',
+            });
+          } else {
+            Swal.fire({
+              title: `${data.message}`,
+              icon: 'error',
+              confirmButtonText: '확인',
+              confirmButtonColor: '#2065D1',
+            });
+          }
         }
       } else if (error.request) {
         // 네트워크 통신 실패
