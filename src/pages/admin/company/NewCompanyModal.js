@@ -4,6 +4,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, InputLabel, 
 import PropTypes from 'prop-types';
 import loginAxios from '../../../api/loginAxios';
 import { enqueueSnackbar } from 'notistack';
+import Swal from 'sweetalert2';
 
 NewCompanyModal.propTypes = {
   open: PropTypes.bool,
@@ -139,7 +140,12 @@ export default function NewCompanyModal({ open, onClose, getCompanyList }) {
           });
         } else if (data.message) {
           setNameError(true);
-          enqueueSnackbar(data.message, { variant: 'error' });
+          Swal.fire({
+            title: `${data.message}`,
+            icon: 'error',
+            confirmButtonText: '확인',
+            confirmButtonColor: '#2065D1',
+          });
         }
       }
     }
