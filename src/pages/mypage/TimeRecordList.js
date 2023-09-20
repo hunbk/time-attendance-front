@@ -27,6 +27,14 @@ import dayjs from 'dayjs';
 
 // ----------------------------------------------------------------------
 
+// 요일을 계산하기 위한 함수
+const days = ['일', '월', '화', '수', '목', '금', '토'];
+const formatDateWithDay = (dateString) => {
+  const date = new Date(dateString);
+  const day = days[date.getDay()];
+  return `${day}`;
+};
+
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
     return -1;
@@ -61,6 +69,12 @@ const headCells = [
     numeric: false,
     disablePadding: false,
     label: '일자',
+  },
+  {
+    id: 'day',
+    numeric: false,
+    disablePadding: false,
+    label: '요일',
   },
   {
     id: 'startWork',
@@ -239,12 +253,14 @@ export default function TimeRecordList({
                     key={row.timeRecordId}
                     sx={{ cursor: 'pointer' }}
                   >
-                    {/* 요일 */}
+                    {/* 일자 */}
                     <TableCell align="center">{fDate(row.date, 'yyyy.MM.dd')}</TableCell>
+                    {/* 요일 */}
+                    <TableCell align="center">{formatDateWithDay(row.date)}</TableCell>
                     {/* 출근시각 */}
-                    <TableCell align="center">{fDateTime(row.startWork, 'HH:mm')}</TableCell>
+                    <TableCell align="center">{row.startWork ? fDateTime(row.startWork, 'HH:mm') : '-'}</TableCell>
                     {/* 퇴근시각 */}
-                    <TableCell align="center">{fDateTime(row.leaveWork, 'HH:mm')}</TableCell>
+                    <TableCell align="center">{row.leaveWork ? fDateTime(row.leaveWork, 'HH:mm') : '-'}</TableCell>
                     {/* 총 근무시간 */}
                     <TableCell align="center">{fTime(row.workingTime)}</TableCell>
                     {/* 연장 근무시간 */}
