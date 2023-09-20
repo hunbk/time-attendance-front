@@ -85,13 +85,13 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
   const [workGroupStartTime, setWorkGroupStartTime] = useState(null);
   const [workGroupEndTime, setWorkGroupEndTime] = useState(null);
 
-
   const handleConfirmEditOpen = () => {
     if (startTime === '-' || endTime === '-') {
       Swal.fire({
         icon: 'error',
         title: '근로인정 시간이 선택되지 않았습니다!<br>다시 한 번 확인해주세요.',
         confirmButtonText: '확인',
+        confirmButtonColor:'#2065D1',
         customClass: {
           container: 'custom-swal',
         },
@@ -105,6 +105,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
         showCancelButton: true,
         showDenyButton: false,
         confirmButtonText: `확인`,
+        confirmButtonColor:'#2065D1',
         cancelButtonText: `취소`,
         reverseButtons: true,
         customClass: {
@@ -161,6 +162,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       title: '의무근로시간에 해당되는 범위입니다!<br>다시 한 번 확인해주세요.',
       // timer: 1500,
       confirmButtonText: '확인',
+      confirmButtonColor:'#2065D1',
       customClass: {
         container: 'custom-swal',
       },
@@ -175,7 +177,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
   const breakIndexes = [];
   const workIndexes = [];
   const dutyIndexes = [];
-  let approvedIndex = 0;
+  let approvedIndex = null;
   const startTimes = userData.start.split(', ').map((time) => time.split(':').map(Number));
   const endTimes = userData.end.split(', ').map((time) => time.split(':').map(Number));
   const calStartTimes = [];
@@ -220,8 +222,13 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
     let fixBreakTime = 0;
     const calWorkStart = start[0] * 60 + start[1]; // 출근 시간
     let calWorkEnd = end[0] * 60 + end[1]; // 퇴근 시간
-    const startapproved = startTimes[approvedIndex][0] * 60 + startTimes[approvedIndex][1]; // 승인근로시작
-    let endapproved = endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
+    let startapproved = 0;
+    let endapproved = 0;
+    if (approvedIndex !== null) {
+      startapproved = startTimes[approvedIndex][0] * 60 + startTimes[approvedIndex][1]; // 승인근로시작
+      endapproved = endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
+    }
+
     if (calWorkEnd < calWorkStart) {
       calWorkEnd += 1440; // 하루에 해당하는 분을 더해줌
     }
@@ -229,31 +236,38 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       endapproved += 1440;
     }
 
+    if (breakIndexes.length !== 0 && breakIndexes !== null) {
+      breakIndexes.forEach((i) => {
+        fixBreakTime += calEndTimes[i] - calStartTimes[i];
+        if (calWorkStart <= calStartTimes[i] && calEndTimes[i] <= calWorkEnd) {
+          totalBreakTime += calEndTimes[i] - calStartTimes[i];
+        } else if (
+          (calWorkStart <= calStartTimes[i] && calWorkEnd <= calStartTimes[i]) ||
+          (calEndTimes[i] <= calWorkStart && calEndTimes[i] <= calWorkEnd)
+        ) {
+          totalBreakTime += 0;
+        } else if (calStartTimes[i] < calWorkStart && calEndTimes[i] <= calWorkEnd) {
+          totalBreakTime += calEndTimes[i] - calWorkStart;
+        } else if (calWorkStart <= calStartTimes[i] && calWorkEnd < calEndTimes[i]) {
+          totalBreakTime += calWorkEnd - calStartTimes[i];
+        }
+      });
+    }
     // 휴게 시간 관련 로직
-    breakIndexes.forEach((i) => {
-      fixBreakTime += calEndTimes[i] - calStartTimes[i];
-      if (calWorkStart <= calStartTimes[i] && calEndTimes[i] <= calWorkEnd) {
-        totalBreakTime += calEndTimes[i] - calStartTimes[i];
-      }else if((calWorkStart<=calStartTimes[i] && calWorkEnd<=calStartTimes[i]) || (calEndTimes[i] <= calWorkStart && calEndTimes[i] <= calWorkEnd)){
-        totalBreakTime += 0;
-      } else if (calStartTimes[i] < calWorkStart && calEndTimes[i] <= calWorkEnd) {
-        totalBreakTime += calEndTimes[i] - calWorkStart;
-      } else if (calWorkStart <= calStartTimes[i] && calWorkEnd < calEndTimes[i]) {
-        totalBreakTime += calWorkEnd - calStartTimes[i];
-      } 
-    });
 
     console.log(`휴게시간 : ${totalBreakTime}`);
 
-    // 의무 시간 관련 로직
-    dutyIndexes.forEach((i) => {
-      if (
-        (calStartTimes[i] < calWorkStart && calWorkStart < calEndTimes[i]) ||
-        (calStartTimes[i] < calWorkEnd && calWorkEnd < calEndTimes[i])
-      ) {
-        handleWarningModalOpen();
-      }
-    });
+    if (dutyIndexes.length !== 0 && dutyIndexes !== null) {
+      // 의무 시간 관련 로직
+      dutyIndexes.forEach((i) => {
+        if (
+          (calStartTimes[i] < calWorkStart && calWorkStart < calEndTimes[i]) ||
+          (calStartTimes[i] < calWorkEnd && calWorkEnd < calEndTimes[i])
+        ) {
+          handleWarningModalOpen();
+        }
+      });
+    }
 
     // if (isOver) {
     if (workIndexes.length === 1) {
@@ -300,22 +314,24 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
 
     fixWorkingTime -= fixBreakTime;
     console.log(`총 초과 시간 : ${totalOverTimeInMinutes}`);
-   
-    if (startapproved <= endapproved) {
-      if (startapproved <= calWorkEnd && calWorkEnd <= endapproved) {
-        totalOverTimeInMinutes = calWorkEnd - startapproved;
-        console.log(`초과 시간 1-1 : ${totalOverTimeInMinutes}`);
-      } else if (endapproved < calWorkEnd) {
-        totalOverTimeInMinutes = endapproved - startapproved;
-        console.log(`초과 시간 1-2 : ${totalOverTimeInMinutes}`);
-      } else if (calWorkEnd < startapproved) {
-        totalOverTimeInMinutes = 0;
-        console.log(`초과 시간 1-3 : ${totalOverTimeInMinutes}`);
-      }
 
-      if (startapproved <= calWorkStart && calWorkStart <= endapproved) {
-        totalOverTimeInMinutes -= calWorkStart - startapproved;
-        console.log(`초과 시간 빼기 1: ${totalOverTimeInMinutes}`);
+    if (approvedIndex !== null) {
+      if (startapproved <= endapproved) {
+        if (startapproved <= calWorkEnd && calWorkEnd <= endapproved) {
+          totalOverTimeInMinutes = calWorkEnd - startapproved;
+          console.log(`초과 시간 1-1 : ${totalOverTimeInMinutes}`);
+        } else if (endapproved < calWorkEnd) {
+          totalOverTimeInMinutes = endapproved - startapproved;
+          console.log(`초과 시간 1-2 : ${totalOverTimeInMinutes}`);
+        } else if (calWorkEnd < startapproved) {
+          totalOverTimeInMinutes = 0;
+          console.log(`초과 시간 1-3 : ${totalOverTimeInMinutes}`);
+        }
+
+        if (startapproved <= calWorkStart && calWorkStart <= endapproved) {
+          totalOverTimeInMinutes -= calWorkStart - startapproved;
+          console.log(`초과 시간 빼기 1: ${totalOverTimeInMinutes}`);
+        }
       }
     }
 
@@ -323,7 +339,6 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
     if (workIndexes.length === 1) {
       groupStart = startTimes[workIndexes[0]][0] * 60 + startTimes[workIndexes[0]][1];
       groupEnd = endTimes[workIndexes[0]][0] * 60 + endTimes[workIndexes[0]][1];
-
     } else {
       if (
         startTimes[minworkIndex][0] * 60 + startTimes[minworkIndex][1] <= calWorkStart &&
@@ -343,6 +358,11 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
         groupStart = startTimes[maxworkIndex][0] * 60 + startTimes[maxworkIndex][1];
         groupEnd = endTimes[maxworkIndex][0] * 60 + endTimes[maxworkIndex][1];
       }
+    }
+
+    if (userData.startTime === null && userData.endTime === null) {
+      groupStart = startTimes[workIndexes[0]][0] * 60 + startTimes[workIndexes[0]][1];
+      groupEnd = endTimes[workIndexes[0]][0] * 60 + endTimes[workIndexes[0]][1];
     }
 
     totalWorkingTime = endForWorkingTime - startForWorkingTime - totalBreakTime;
@@ -370,12 +390,10 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       totalOverTimeInMinutes = 0;
       setWorkState('근태이상');
     } else if (totalWorkingTime + totalOverTimeInMinutes >= fixWorkingTime) {
-      if (totalWorkingTime < fixWorkingTime) {
-        setWorkState('근태이상');
-      } else if (totalWorkingTime >= fixWorkingTime) {
-        totalOverTimeInMinutes += totalWorkingTime - fixWorkingTime;
-        totalWorkingTime = fixWorkingTime;
-      }
+      let total = 0;
+      total = totalWorkingTime + totalOverTimeInMinutes;
+      totalOverTimeInMinutes = total - fixWorkingTime;
+      totalWorkingTime = total - totalOverTimeInMinutes;
     }
 
     if (totalOverTimeInMinutes < 0) {
@@ -526,36 +544,42 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
                     <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
                       근무시간 : {workGroupStartTime} ~ {workGroupEndTime}
                     </Typography>
-                    <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
-                      휴식시간 :{' '}
-                      {`${startTimes[breakIndexes[0]][0].toString().padStart(2, '0')}:${startTimes[breakIndexes[0]][1]
-                        .toString()
-                        .padStart(2, '0')}`}{' '}
-                      ~{' '}
-                      {`${endTimes[breakIndexes[0]][0].toString().padStart(2, '0')}:${endTimes[breakIndexes[0]][1]
-                        .toString()
-                        .padStart(2, '0')}`}
-                    </Typography>
-                    <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
-                      의무근로시간 :{' '}
-                      {`${startTimes[dutyIndexes[0]][0].toString().padStart(2, '0')}:${startTimes[dutyIndexes[0]][1]
-                        .toString()
-                        .padStart(2, '0')}`}{' '}
-                      ~{' '}
-                      {`${endTimes[dutyIndexes[0]][0].toString().padStart(2, '0')}:${endTimes[dutyIndexes[0]][1]
-                        .toString()
-                        .padStart(2, '0')}`}
-                    </Typography>
-                    <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
-                      승인근로시간 :{' '}
-                      {`${startTimes[approvedIndex][0].toString().padStart(2, '0')}:${startTimes[approvedIndex][1]
-                        .toString()
-                        .padStart(2, '0')}`}{' '}
-                      ~{' '}
-                      {`${endTimes[approvedIndex][0].toString().padStart(2, '0')}:${endTimes[approvedIndex][1]
-                        .toString()
-                        .padStart(2, '0')}`}
-                    </Typography>
+                    {breakIndexes.length !== 0 && breakIndexes !== null && (
+                      <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
+                        휴식시간 :{' '}
+                        {`${startTimes[breakIndexes[0]][0].toString().padStart(2, '0')}:${startTimes[breakIndexes[0]][1]
+                          .toString()
+                          .padStart(2, '0')}`}{' '}
+                        ~{' '}
+                        {`${endTimes[breakIndexes[0]][0].toString().padStart(2, '0')}:${endTimes[breakIndexes[0]][1]
+                          .toString()
+                          .padStart(2, '0')}`}
+                      </Typography>
+                    )}
+                    {dutyIndexes.length !== 0 && dutyIndexes !== null && (
+                      <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
+                        의무근로시간 :{' '}
+                        {`${startTimes[dutyIndexes[0]][0].toString().padStart(2, '0')}:${startTimes[dutyIndexes[0]][1]
+                          .toString()
+                          .padStart(2, '0')}`}{' '}
+                        ~{' '}
+                        {`${endTimes[dutyIndexes[0]][0].toString().padStart(2, '0')}:${endTimes[dutyIndexes[0]][1]
+                          .toString()
+                          .padStart(2, '0')}`}
+                      </Typography>
+                    )}
+                    {approvedIndex !== null && (
+                      <Typography variant="body2" style={{ fontSize: '13px', marginLeft: '10px' }}>
+                        승인근로시간 :{' '}
+                        {`${startTimes[approvedIndex][0].toString().padStart(2, '0')}:${startTimes[approvedIndex][1]
+                          .toString()
+                          .padStart(2, '0')}`}{' '}
+                        ~{' '}
+                        {`${endTimes[approvedIndex][0].toString().padStart(2, '0')}:${endTimes[approvedIndex][1]
+                          .toString()
+                          .padStart(2, '0')}`}
+                      </Typography>
+                    )}
                   </div>
                 </Card>
               </DialogTitle>

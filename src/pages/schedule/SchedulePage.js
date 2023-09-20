@@ -6,6 +6,7 @@ import {
   Table,
   Stack,
   Paper,
+  Box,
   Button,
   Popover,
   TableRow,
@@ -21,6 +22,7 @@ import {
   DialogTitle,
   DialogActions,
   DialogContent,
+  LinearProgress,
 } from '@mui/material';
 // components
 import { enqueueSnackbar } from 'notistack';
@@ -101,11 +103,14 @@ export default function SchedulePage() {
     const res = await loginAxios.get(`/api/settlements?companyId=${user.companyId}&start=${start}&end=${end}`);
     setUsers(res.data);
     setFilteredUsers(res.data);
+    setLoading(false);
   };
 
   useEffect(() => {
     getUserList();
   }, []);
+
+  const [loading, setLoading] = useState(true);
 
   const [open, setOpen] = useState(null);
 
@@ -161,14 +166,14 @@ export default function SchedulePage() {
 
   const handleDeleteSnackbar = () => {
     enqueueSnackbar(`삭제되었습니다!`, { variant: 'success' });
-
-  }
+  };
 
   const handleDeleteConfirmClose = () => {
     setDeleteConfirmOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    await loginAxios.delete('/api/settlements', settlementIds);
     handleOpenSnackbar();
     handleDeleteConfirmClose();
   };
@@ -236,8 +241,7 @@ export default function SchedulePage() {
   const filterUser = applySortFilter(filteredUsers, getComparator(order, orderBy), filterName);
 
   // Snackbar 열기 함수
-  const handleOpenSnackbar = async () => {
-    await loginAxios.delete('/api/settlements',settlementIds);
+  const handleOpenSnackbar = () => {
     enqueueSnackbar(`삭제되었습니다!`, { variant: 'error' });
   };
 
@@ -247,6 +251,7 @@ export default function SchedulePage() {
         icon: 'error',
         html: '<strong>해당 정산은 직접 수정할 수 없습니다!<br> 서비스 관리자에게 재정산을 요청하세요!</strong>',
         confirmButtonText: '확인',
+        confirmButtonColor:'#2065D1',
         customClass: {
           container: 'custom-swal',
         },
@@ -273,6 +278,15 @@ export default function SchedulePage() {
   useEffect(() => {
     getUserList();
   }, [startDate, endDate]);
+
+  if (loading)
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+        <Box width="50%">
+          <LinearProgress color="primary" />
+        </Box>
+      </Box>
+    );
 
   return (
     <>

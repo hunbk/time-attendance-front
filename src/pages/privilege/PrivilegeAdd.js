@@ -23,7 +23,7 @@ import {
   DialogContent,
   DialogTitle,
   DialogActions,
-  DialogContentText,
+  LinearProgress,
 } from '@mui/material';
 // components
 import PersonIcon from '@mui/icons-material/Person';
@@ -120,14 +120,16 @@ export default function PrivilegeAdd() {
     const filteredData = res.data.filter((userData) => userData.userId !== user.userId);
     setUsers(filteredData);
     setFilteredModalUsers(filteredData);
+    setLoading(false);
   };
 
   useEffect(() => {
     getUserList();
   }, []);
 
+  const [loading, setLoading] = useState(true);
   const [modalPage, setModalPage] = useState(0);
-  const [rowsModalPerPage, setRowsModalPerPage] = useState(5);
+  const [rowsModalPerPage, setRowsModalPerPage] = useState(10);
   const [modalFilterName, setModalFilterName] = useState('');
   const [modalSelected, setModalSelected] = useState([]);
   const [openAdminModal, setOpenAdminModal] = useState(false);
@@ -193,13 +195,13 @@ export default function PrivilegeAdd() {
 
   const handleChangeModalRowsPerPage = (event) => {
     setModalPage(0);
-    setRowsModalPerPage(parseInt(event.target.value, 5));
+    setRowsModalPerPage(parseInt(event.target.value, 10));
   };
 
   const handleModalFilterByName = (name) => {
     setModalFilterName(name);
     setModalPage(0);
-    setRowsModalPerPage(5);
+    setRowsModalPerPage(10);
 
     // 검색창에 아무것도 입력하지 않았을 때,
     if (!name) {
@@ -227,6 +229,7 @@ export default function PrivilegeAdd() {
       icon: 'warning',
       title: '사원을 선택해주세요!',
       confirmButtonText: '확인',
+      confirmButtonColor: '#2065D1',
       timer: 1300,
       customClass: {
         container: 'custom-swal',
@@ -239,7 +242,7 @@ export default function PrivilegeAdd() {
     const searchResult = applySortFilter(users, getComparator(order, orderBy), search);
     setModalFilterName(search);
     setModalPage(0);
-    setRowsModalPerPage(5);
+    setRowsModalPerPage(10);
     setFilteredModalUsers(searchResult);
   };
 
@@ -256,6 +259,7 @@ export default function PrivilegeAdd() {
       showCancelButton: true,
       showDenyButton: false,
       confirmButtonText: `변경`,
+      confirmButtonColor: '#2065D1',
       cancelButtonText: `취소`,
       reverseButtons: true,
       customClass: {
@@ -263,15 +267,6 @@ export default function PrivilegeAdd() {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        Swal.fire({
-          icon: 'success',
-          title: '해당 정보가 수정되었습니다!',
-          confirmButtonText: '확인',
-          timer: 1300,
-          customClass: {
-            container: 'custom-swal',
-          },
-        });
         resetSelectedAdminType();
         setModalSelected([]);
         updateAdminType();
@@ -322,6 +317,7 @@ export default function PrivilegeAdd() {
       showConfirmButton: true,
       showCancelButton: true,
       confirmButtonText: '확인',
+      confirmButtonColor:'#2065D1',
       cancelButtonText: '취소',
       reverseButtons: true,
       customClass: {
@@ -359,6 +355,16 @@ export default function PrivilegeAdd() {
   };
 
   const isModalNotFound = !filterUser.length && modalFilterName;
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
+        <Box width="50%">
+          <LinearProgress color="primary" />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <>
