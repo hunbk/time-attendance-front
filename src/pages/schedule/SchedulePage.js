@@ -123,6 +123,8 @@ export default function SchedulePage() {
 
   const [filteredUsers, setFilteredUsers] = useState(users);
 
+  const [settlementIds, setSettlementIds] = useState(null);
+
   // 기본적으로 Calendar 숨기고 open하면 Date에 new Date() 설정함
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -152,17 +154,15 @@ export default function SchedulePage() {
     }).then((result) => {
       if (result.isDenied) {
         handleCloseMenu();
-        Swal.fire({
-          icon: 'success',
-          title: '삭제되었습니다!',
-          timer: 1300,
-          customClass:{
-            container:'custom-swal',
-          },
-        });
+        handleDeleteSnackbar();
       }
     });
   };
+
+  const handleDeleteSnackbar = () => {
+    enqueueSnackbar(`삭제되었습니다!`, { variant: 'success' });
+
+  }
 
   const handleDeleteConfirmClose = () => {
     setDeleteConfirmOpen(false);
@@ -175,7 +175,9 @@ export default function SchedulePage() {
 
   const handleOpenMenu = (event, row) => {
     setOpen(event.currentTarget);
+    setSettlementIds(row.settlementId);
     console.log(row);
+    console.log(settlementIds);
   };
 
   const handleCloseMenu = () => {
@@ -234,22 +236,23 @@ export default function SchedulePage() {
   const filterUser = applySortFilter(filteredUsers, getComparator(order, orderBy), filterName);
 
   // Snackbar 열기 함수
-  const handleOpenSnackbar = () => {
+  const handleOpenSnackbar = async () => {
+    await loginAxios.delete('/api/settlements',settlementIds);
     enqueueSnackbar(`삭제되었습니다!`, { variant: 'error' });
   };
 
   const handleOpenModal = () => {
-    if(userData.workState === '미처리'){
+    if (userData.workState === '미처리') {
       Swal.fire({
-        icon:'error',
-        html:'<strong>해당 정산은 직접 수정할 수 없습니다!<br> 서비스 관리자에게 재정산을 요청하세요!</strong>',
-        confirmButtonText:'확인',
-        customClass:{
-          container:'custom-swal',
+        icon: 'error',
+        html: '<strong>해당 정산은 직접 수정할 수 없습니다!<br> 서비스 관리자에게 재정산을 요청하세요!</strong>',
+        confirmButtonText: '확인',
+        customClass: {
+          container: 'custom-swal',
         },
       });
       handleCloseMenu();
-    }else{
+    } else {
       setScheduleModalOpen(true);
     }
   };

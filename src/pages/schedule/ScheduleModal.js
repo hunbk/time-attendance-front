@@ -180,14 +180,12 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
   const endTimes = userData.end.split(', ').map((time) => time.split(':').map(Number));
   const calStartTimes = [];
   const calEndTimes = [];
-  let isOver = true;
 
   timeRangeTypes.forEach((type, i) => {
     calStartTimes.push(startTimes[i][0] * 60 + startTimes[i][1]);
     calEndTimes.push(endTimes[i][0] * 60 + endTimes[i][1]);
     if (calStartTimes[i] > calEndTimes[i]) {
       calEndTimes[i] += 1440;
-      isOver = false;
     }
     if (type === '휴게') {
       breakIndexes.push(i);
@@ -223,9 +221,12 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
     const calWorkStart = start[0] * 60 + start[1]; // 출근 시간
     let calWorkEnd = end[0] * 60 + end[1]; // 퇴근 시간
     const startapproved = startTimes[approvedIndex][0] * 60 + startTimes[approvedIndex][1]; // 승인근로시작
-    const endapproved = endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
+    let endapproved = endTimes[approvedIndex][0] * 60 + endTimes[approvedIndex][1];
     if (calWorkEnd < calWorkStart) {
       calWorkEnd += 1440; // 하루에 해당하는 분을 더해줌
+    }
+    if (startapproved > endapproved) {
+      endapproved += 1440;
     }
 
     // 휴게 시간 관련 로직
@@ -233,12 +234,16 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       fixBreakTime += calEndTimes[i] - calStartTimes[i];
       if (calWorkStart <= calStartTimes[i] && calEndTimes[i] <= calWorkEnd) {
         totalBreakTime += calEndTimes[i] - calStartTimes[i];
+      }else if((calWorkStart<=calStartTimes[i] && calWorkEnd<=calStartTimes[i]) || (calEndTimes[i] <= calWorkStart && calEndTimes[i] <= calWorkEnd)){
+        totalBreakTime += 0;
       } else if (calStartTimes[i] < calWorkStart && calEndTimes[i] <= calWorkEnd) {
         totalBreakTime += calEndTimes[i] - calWorkStart;
       } else if (calWorkStart <= calStartTimes[i] && calWorkEnd < calEndTimes[i]) {
         totalBreakTime += calWorkEnd - calStartTimes[i];
-      }
+      } 
     });
+
+    console.log(`휴게시간 : ${totalBreakTime}`);
 
     // 의무 시간 관련 로직
     dutyIndexes.forEach((i) => {
@@ -291,17 +296,17 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
     // } else {
     //
     // }
-    console.log(calWorkEnd);
+    console.log(`근무 종료 시간 : ${calWorkEnd}`);
 
     fixWorkingTime -= fixBreakTime;
     console.log(`총 초과 시간 : ${totalOverTimeInMinutes}`);
-    // 승인 시간 관련 로직
+   
     if (startapproved <= endapproved) {
       if (startapproved <= calWorkEnd && calWorkEnd <= endapproved) {
-        totalOverTimeInMinutes += calWorkEnd - startapproved;
+        totalOverTimeInMinutes = calWorkEnd - startapproved;
         console.log(`초과 시간 1-1 : ${totalOverTimeInMinutes}`);
       } else if (endapproved < calWorkEnd) {
-        totalOverTimeInMinutes += endapproved - startapproved;
+        totalOverTimeInMinutes = endapproved - startapproved;
         console.log(`초과 시간 1-2 : ${totalOverTimeInMinutes}`);
       } else if (calWorkEnd < startapproved) {
         totalOverTimeInMinutes = 0;
@@ -311,36 +316,6 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       if (startapproved <= calWorkStart && calWorkStart <= endapproved) {
         totalOverTimeInMinutes -= calWorkStart - startapproved;
         console.log(`초과 시간 빼기 1: ${totalOverTimeInMinutes}`);
-      }
-    } else {
-      if (!isOver) {
-        calWorkEnd -= 1440;
-      }
-      if (startapproved <= calWorkEnd && calWorkEnd <= 0) {
-        totalOverTimeInMinutes += calWorkEnd - startapproved;
-        console.log(`초과 시간 2-1 : ${totalOverTimeInMinutes}`);
-      } else if (calWorkEnd >= 0 && calWorkEnd <= endapproved) {
-        totalOverTimeInMinutes += calWorkEnd + (1440 - startapproved);
-        console.log(`초과 시간 2-2 : ${totalOverTimeInMinutes}`);
-      } else if (endapproved < calWorkEnd) {
-        totalOverTimeInMinutes += endapproved + (1440 - startapproved);
-        console.log(`초과 시간 2-3 : ${totalOverTimeInMinutes}`);
-      } else if (calWorkEnd < startapproved) {
-        console.log(calWorkEnd);
-        totalOverTimeInMinutes = 0;
-        console.log(`초과 시간 2-4 : ${totalOverTimeInMinutes}`);
-      }
-
-      if (startapproved <= calWorkStart && calWorkStart <= 0) {
-        totalOverTimeInMinutes -= calWorkStart - startapproved;
-        console.log(`초과 시간 빼기 2-1 : ${totalOverTimeInMinutes}`);
-      } else if (calWorkStart >= 0 && calWorkStart <= endapproved) {
-        totalOverTimeInMinutes -= calWorkStart + (1440 - startapproved);
-        console.log(`초과 시간 빼기 2-2 : ${totalOverTimeInMinutes}`);
-      }
-
-      if (!isOver) {
-        calWorkEnd += 1440;
       }
     }
 
