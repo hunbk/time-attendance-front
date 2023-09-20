@@ -12,7 +12,6 @@ import { useAuthState } from '../../context/AuthProvider';
 import handleRequest, { FetchResultType } from 'src/utils/workGroupHandleRequest';
 import { Typography } from '@mui/material';
 import { useImmer } from 'use-immer';
-import zIndex from '@mui/material/styles/zIndex';
 
 type DistributionIndexPageProps = {
     workGroupSimple: WorkGroupSimpleType[];
@@ -113,14 +112,15 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
         <Grid container spacing={2}>
             <Grid xs={2}>
                 <Box sx={{ width: '100%' }}>
-                    <Stack spacing={2}>
+                    <Stack spacing={2} sx={{ display: "flex", alignItems: "center", marginTop: "20px" }}>
                         {workGroupSimpleCard.length !== 0 && workGroupSimpleCard.map((item, index) => <WorkGroupCard key={index} id={item.id} name={item.name} type={item.type} numOfMembers={item.numOfMembers} isSelected={item.id === selectedWorkGroup.id} handleSelectedWorkGroup={handleSelectedWorkGroup} />)}
                     </Stack>
                 </Box>
             </Grid>
             <Grid xs={10}>
                 <Box sx={{
-                    width: '100%'
+                    width: '100%',
+                    display: "relative"
                 }}>
                     <Box sx={selectedWorkGroup.id === 0 ? {
                         pointerEvents: 'none', opacity: '0.2'
@@ -140,7 +140,7 @@ const DistributionIndexPage: FC<DistributionIndexPageProps> = ({ workGroupSimple
                     </Box>
                     {selectedWorkGroup.id === 0 && <Typography sx={{
                         position: 'absolute',
-                        bottom: '45%',
+                        top: '35%',
                         left: '55%',
                     }}
                         variant="h5"

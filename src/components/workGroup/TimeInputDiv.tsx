@@ -20,11 +20,6 @@ const TimeInputDiv: FC<TimeInputDivProps> = ({ index, handleTempHour, startOrEnd
                 setValue(newValue);
                 handleTempHour(index, startOrEnd, timeType, newValue);
             }}
-                slotProps={{
-                    textField: {
-                        required: timeType === "근무" && true,
-                    },
-                }}
                 ampm={false}
                 timeSteps={{ minutes: 15 }}
             />

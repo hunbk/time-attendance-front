@@ -1,4 +1,4 @@
-import { FC, useState, MouseEvent, Dispatch, SetStateAction, useEffect, useCallback } from "react";
+import { FC, useState, MouseEvent, Dispatch, SetStateAction, useEffect, useCallback, useRef } from "react";
 import Grid from '@mui/system/Unstable_Grid';
 import TreeView from '@mui/lab/TreeView'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -12,7 +12,7 @@ import { UserResponseDtoWrappedType } from "./DistributionIndexPage";
 import { WorkGroupSimpleType } from "./WorkGroupIndexPage";
 import handleRequest, { FetchResultType } from "src/utils/workGroupHandleRequest";
 import { enqueueSnackbar } from "notistack";
-import { set } from "lodash";
+import Swal from 'sweetalert2'
 
 type DistributionPageProps = {
     userListWrappedD: UserResponseDtoWrappedType[];
@@ -49,6 +49,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         id: 0,
         name: '',
     });
+    const rowsPerPage = useRef(5);
     const handleModalOpen = (event: MouseEvent<HTMLButtonElement>) => {
         if (event.currentTarget.id === "modification") {
             setIsModification(true);
@@ -56,10 +57,34 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
             setIsModification(false);
         }
 
-        setIsModalOpened(true);
+        if (selectedUserIds.length !== 0) {
+            setIsModalOpened(true);
+        } else {
+            // enqueueSnackbar(`선택된 근로자가 없습니다.`, { variant: "error" });
+            Swal.fire({
+                text: '선택된 근로자가 없습니다.',
+                icon: 'error',
+                confirmButtonText: '확인'
+            })
+        }
+
     };
     const customLocaleText = {
-        noRowsLabel: isDistributed ? '조회할 근로제를 선택해주세요.' : '미배포된 근로자가 없습니다.'
+        noRowsLabel: isDistributed ? '조회할 근로제를 선택해주세요.' : '미배포된 근로자가 없습니다.',
+        MuiTablePagination: {
+            labelRowsPerPage: "페이지당 목록 수: ",
+            labelDisplayedRows: ({ from, to, count, page }) => {
+                const numOfRowsAtCurrentPage = to - from + 1;
+
+                if (page === 0) {
+                    rowsPerPage.current = numOfRowsAtCurrentPage;
+                }
+
+                const totalNumberOfPages = Math.ceil(count / rowsPerPage.current);
+
+                return `현재 페이지: ${page + 1} / 전체 페이지: ${totalNumberOfPages}`;
+            }
+        }
     };
 
     const columns: GridColDef<UserResponseDtoWrappedType>[] = [
@@ -137,6 +162,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         } else {
             console.error(data);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -246,7 +272,7 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                                 defaultExpanded={["-1"]}
                             >
                                 <TreeItem nodeId="-1" label="변경할 근로제를 선택해주세요">
-                                    {workGroupSimple.map((item, index) => <TreeItem key={index} nodeId={`${index}`} label={item.name} onClick={() => {
+                                    {workGroupSimple.map((item, index) => item.id !== selectedWorkGroupId && <TreeItem key={index} nodeId={`${index}`} label={item.name} onClick={() => {
                                         setWorkGroupChangedInto({
                                             id: item.id,
                                             name: item.name,
@@ -256,14 +282,18 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                             </TreeView>
 
                             {workGroupChangedInto.id !== 0 ?
-                                <><Typography variant="body1" component={'div'}>
-                                    {selectedUserNames.map((name, index) => <span key={`a${index}`}>{name}{index !== selectedUserNames.length - 1 ? ', ' : ''}</span>)}님을 <div>{workGroupChangedInto.name}로 변경하시겠습니까?</div>
+                                <><Typography variant="body1" component={'div'} sx={{ textAlign: "center" }}>
+                                    {selectedUserNames.map((name, index) => <strong key={`a${index}`}>{name}{index !== selectedUserNames.length - 1 ? ', ' : ''}</strong>)}님을 <div><strong>{workGroupChangedInto.name}</strong>로 변경하시겠습니까?</div>
                                 </Typography>
 
-                                    <Typography component={"div"} sx={{ display: "flex", flexDirection: "column" }}>
+                                    <Typography component={"div"} sx={{ display: "flex", flexDirection: "column", textAlign: "center" }}>
                                         <Button variant="outlined" onClick={() => {
                                             updateDistribution(selectedUserIds, workGroupChangedInto.id, false);
                                             setIsModalOpened(false);
+                                            setWorkGroupChangedInto({
+                                                id: 0,
+                                                name: '',
+                                            })
                                         }}>변경(정산: 내일부터 적용)</Button>
                                         <Button variant="outlined" onClick={() => {
                                             updateDistribution(selectedUserIds, workGroupChangedInto.id, true);
@@ -272,20 +302,26 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                                         <Button variant="outlined" onClick={() => {
                                             setIsModalOpened(false);
                                             setWorkGroupChangedInto({ id: 0, name: '' });
+                                            setWorkGroupChangedInto({
+                                                id: 0,
+                                                name: '',
+                                            })
                                         }}>취소</Button>
                                     </Typography></> : <></>}
 
                         </Box> : <Box sx={style}>
-                            <Typography variant="body1" component={'div'}>
-                                {selectedUserNames.map((name, index) => <span key={`b${index}`}>{name}{index !== selectedUserNames.length - 1 ? ', ' : ''}</span>)}님을 <div>배포해제하시겠습니까?</div>
-                            </Typography>
-                            <Typography sx={{ mt: 2 }} component={"div"}>
-                                <Button variant="outlined" onClick={() => setIsModalOpened(false)}>취소</Button>
-                                <Button variant="outlined" onClick={() => {
-                                    updateDistribution(selectedUserIds);
-                                    setIsModalOpened(false);
-                                }}>확인</Button>
-                            </Typography>
+                            <Box sx={{ display: "flex", alignContent: "center", flexDirection: "column", textAlign: "center" }}>
+                                <Typography variant="body1" component={'div'}>
+                                    {selectedUserNames.map((name, index) => <strong key={`b${index}`}>{name}{index !== selectedUserNames.length - 1 ? ', ' : ''}</strong>)}님을 <div><strong>배포해제</strong>하시겠습니까?</div>
+                                </Typography>
+                                <Typography sx={{ mt: 2 }} component={"div"}>
+                                    <Button variant="outlined" onClick={() => setIsModalOpened(false)}>취소</Button>
+                                    <Button variant="contained" onClick={() => {
+                                        updateDistribution(selectedUserIds);
+                                        setIsModalOpened(false);
+                                    }} sx={{ marginLeft: "10px" }}>확인</Button>
+                                </Typography>
+                            </Box>
                         </Box>}
                     </Modal></> : <><Button id="distribution" onClick={handleModalOpen} variant="outlined">근로그룹배포</Button>
                     <Modal
@@ -293,18 +329,20 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
                         onClose={() => setIsModalOpened(false)}
                     >
                         <Box sx={style}>
-                            <Typography variant="h6" component="h2">
-                                근로그룹 배포
-                            </Typography>
-                            <Typography sx={{ mt: 2 }} component={'div'}>
-                                {selectedUserNames.map((name, index) => <span key={`b${index}`}>{name}{index !== selectedUserNames.length - 1 ? ', ' : ''}</span>)}님을 <div>{selectedWorkGroup.name}으로 배포하시겠습니까?</div>
+                            <Box sx={{ display: "flex", justifyContent: "center", alignContent: "center", flexDirection: "column", textAlign: "center" }}>
+                                <Typography sx={{ mt: 2 }} component={'div'}>
+                                    {selectedUserNames.map((name, index) => <strong key={`b${index}`}>{name}{index !== selectedUserNames.length - 1 ? ', ' : ''}</strong>)}님을 <div><strong>{selectedWorkGroup.name}</strong>으로 배포하시겠습니까?</div>
 
-                                <Button variant="outlined" onClick={() => setIsModalOpened(false)}>취소</Button>
-                                <Button variant="outlined" onClick={() => {
-                                    updateDistribution(selectedUserIds, selectedWorkGroup.id);
-                                    setIsModalOpened(false);
-                                }}>확인</Button>
-                            </Typography>
+                                    <Box sx={{ marginTop: "10px" }}>
+                                        <Button variant="outlined" onClick={() => setIsModalOpened(false)}>취소</Button>
+                                        <Button variant="contained" onClick={() => {
+                                            updateDistribution(selectedUserIds, selectedWorkGroup.id);
+                                            setIsModalOpened(false);
+                                        }}
+                                            sx={{ marginLeft: "10px" }}>확인</Button>
+                                    </Box>
+                                </Typography>
+                            </Box>
                         </Box>
                     </Modal></>}
             </Grid>
