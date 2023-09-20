@@ -262,15 +262,17 @@ export default function TimeRecordList({
                     {/* 퇴근시각 */}
                     <TableCell align="center">{row.leaveWork ? fDateTime(row.leaveWork, 'HH:mm') : '-'}</TableCell>
                     {/* 총 근무시간 */}
-                    <TableCell align="center">{fTime(row.workingTime)}</TableCell>
+                    <TableCell align="center">{row.workingTime ? fTime(row.workingTime) : '-'}</TableCell>
                     {/* 연장 근무시간 */}
-                    <TableCell align="center">{fTime(row.overTime)}</TableCell>
+                    <TableCell align="center">{row.overTime ? fTime(row.overTime) : '-'}</TableCell>
                     {/* 처리상태 */}
                     <TableCell align="center">
                       {row.workState === '정상처리' ? (
                         <Label color="info">정상처리</Label>
                       ) : row.workState === '근태이상' ? (
                         <Label color="error">근태이상</Label>
+                      ) : row.workState === '미배포' ? (
+                        <Label color="warning">미배포</Label>
                       ) : (
                         <Label color="default">미처리</Label>
                       )}
