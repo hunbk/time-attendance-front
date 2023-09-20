@@ -10,6 +10,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { enqueueSnackbar } from 'notistack';
+import Swal from 'sweetalert2'
 
 type WorkGroupCardListProps = {
     workGroupResponseDto: WorkGroupResponseDtoType;
@@ -28,7 +29,7 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
     const openPopover = Boolean(anchorEl);
     const id = openPopover ? 'simple-popover' : undefined;
 
-    let workHour = '';
+    const workHours = [];
     let approvedHour = '';
     const breakHours = [];
     const compulsoryHours = [];
@@ -40,7 +41,7 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
     for (let i = 0; i < timeRangeTypeArr?.length; i += 1) {
         switch (timeRangeTypeArr[i]) {
             case "근무":
-                workHour = `${startArr[i].substring(0, 5)} ~ ${endArr[i].substring(0, 5)}`;
+                workHours.push(`${startArr[i].substring(0, 5)} ~ ${endArr[i].substring(0, 5)}`);
                 break;
             case "휴게":
                 breakHours.push(`${startArr[i].substring(0, 5)} ~ ${endArr[i].substring(0, 5)}`);
@@ -97,7 +98,7 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
         return totalHours;
     }
 
-    const workHoursTotal = getTotalHours(workHour);
+    const workHoursTotal = getTotalHours(workHours);
     const breakHoursTotal = getTotalHours(breakHours);
     const workDaysArr = workGroupResponseDto.workDays?.split(", ");
     const convertedWorkDays = [];
@@ -136,13 +137,17 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                 </Grid>
                                 <Grid item xs={9}>
                                     <Typography variant="body2" sx={{ marginLeft: "10px" }}>
-                                        {workHour}
+                                        {workGroupResponseDto.type === "시차" && "["}
+                                        {workHours.length !== 0 ? workHours.map((workHour, index) =>
+                                            <span key={index}>{index === workHours.length - 1 ? workHour : `${workHour}, `}</span>) : "없음"
+                                        }
+                                        {workGroupResponseDto.type === "시차" && "]"}
                                     </Typography>
                                 </Grid>
                                 <Box sx={{ position: "absolute", right: "15px" }}>
-                                    <IconButton>
+                                    {/* <IconButton>
                                         <CalendarModal groupName={workGroupResponseDto.name} workHourPerDay={workHoursTotal - breakHoursTotal} convertedWorkDays={convertedWorkDays} />
-                                    </IconButton>
+                                    </IconButton> */}
                                     <IconButton aria-describedby={id} onClick={handleClickPopover}>
                                         <Typography>
                                             <MoreVertIcon fontSize="small" />
@@ -166,7 +171,12 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
 
                                             <Button sx={{ color: "red" }} onClick={() => {
                                                 if (workGroupResponseDto.numOfMembers > 0) {
-                                                    enqueueSnackbar(`배포인원 0명일 때 삭제 가능합니다.`, { variant: "error" });
+                                                    // enqueueSnackbar(`배포인원 0명일 때 삭제 가능합니다.`, { variant: "error" });
+                                                    Swal.fire({
+                                                        text: '배포인원 0명일 때 삭제 가능합니다.',
+                                                        icon: 'error',
+                                                        confirmButtonText: '확인'
+                                                    })
                                                 } else {
                                                     handleDelete(workGroupResponseDto.id);
                                                     enqueueSnackbar(`삭제되었습니다.`, { variant: "success" });
@@ -182,14 +192,14 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                             <Grid container>
                                 <Grid item xs={3}>
                                     <Typography variant="body2">
-                                        휴식시간
+                                        휴게시간
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={9}>
                                     <Typography variant="body2" sx={{ marginLeft: "10px" }}>
-                                        {breakHours.map((breakHour, index) =>
-                                            <span key={index}>{index === breakHours.length - 1 ? breakHour : `${breakHour}, `}</span>
-                                        )}
+                                        {breakHours.length !== 0 ? breakHours.map((breakHour, index) =>
+                                            <span key={index}>{index === breakHours.length - 1 ? breakHour : `${breakHour}, `}</span>) : "없음"
+                                        }
                                     </Typography>
                                 </Grid>
                             </Grid>
@@ -199,9 +209,9 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                 </Grid>
                                 <Grid item xs={9}>
                                     <Typography variant="body2" sx={{ marginLeft: "10px" }}>
-                                        {compulsoryHours.map((compulsoryHour, index) =>
-                                            <span key={index}>{index === compulsoryHours.length - 1 ? compulsoryHour : `${compulsoryHour}, `}</span>
-                                        )}
+                                        {compulsoryHours.length !== 0 ? compulsoryHours.map((compulsoryHour, index) =>
+                                            <span key={index}>{index === compulsoryHours.length - 1 ? compulsoryHour : `${compulsoryHour}, `}</span>) : "없음"
+                                        }
                                     </Typography>
                                 </Grid>
                             </Grid>
@@ -213,7 +223,7 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                 </Grid>
                                 <Grid item xs={7}>
                                     <Typography variant="body2" sx={{ marginLeft: "10px" }}>
-                                        {approvedHour}
+                                        {approvedHour.length !== 0 ? approvedHour : "없음"}
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={2} sx={{ display: "flex", justifyContent: "end" }}>

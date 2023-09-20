@@ -7,6 +7,7 @@ import Grid from '@mui/material/Grid';
 import type { WorkGroupSimpleType } from "./WorkGroupIndexPage";
 import { useAuthState } from '../../context/AuthProvider';
 import handleRequest, { FetchResultType } from "src/utils/workGroupHandleRequest";
+import { enqueueSnackbar } from "notistack";
 
 type WorkGroupListPageProps = {
   setIsWorkGroupListHidden: Dispatch<SetStateAction<boolean>>;
@@ -59,6 +60,19 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
     }
 
     fetchWorkGroups();
+
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    const enrollmentSuccessValue = params.get('enrollmentSuccess');
+    const messageValue = params.get('message');
+
+    if (enrollmentSuccessValue) {
+      enqueueSnackbar(`${messageValue}`, { variant: "success" });
+      params.delete('enrollmentSuccess');
+      params.delete('message');
+      url.search = params.toString();
+      window.history.replaceState({}, '', url.toString());
+    }
   }, [setWorkGroupResponseDtoList, setWorkGroupSimple, user.companyId]);
 
   const alignments: string[] = [];
@@ -67,7 +81,7 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
   const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
   const handleDelete = async (workGroupId: number) => {
-    const { status, data }: FetchResultType = await handleRequest('delete', `/api/workgroups/${workGroupId}`);
+    const { status }: FetchResultType = await handleRequest('delete', `/api/workgroups/${workGroupId}`);
 
     if (status === 200) {
       setWorkGroupResponseDtoList(prevList => prevList.filter((workGroupResponseDto) => workGroupResponseDto.id !== workGroupId))

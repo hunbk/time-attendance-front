@@ -18,23 +18,17 @@ const handleRequest = async (method: "get" | "post" | "put" | "delete", url: str
     }
 };
 
-const redirectAndAlert = (message: string) => {
-    // alert(message);
-    enqueueSnackbar(`${message}`, { variant: "success" });
-    window.location.href = "http://localhost:3000/dashboard/workgroups";
-};
-
 export const handleDataModification = async (dataToBeSent: DataType, dataToBeModifiedId?: number) => {
     const method = dataToBeModifiedId ? 'put' : 'post';
     const url = dataToBeModifiedId ? `/api/workgroups/${dataToBeModifiedId}` : '/api/workgroups';
 
-    const { status, data }: FetchResultType = await handleRequest(method, url, dataToBeSent);
+    const { status }: FetchResultType = await handleRequest(method, url, dataToBeSent);
 
     if (status === 200) {
         const message = method === 'put' ? '수정되었습니다.' : '저장되었습니다.';
-        redirectAndAlert(message);
+        window.location.href = `http://localhost:3000/dashboard/workgroups?enrollmentSuccess=true&message=${message}`;
     } else {
-        console.error(data);
+        enqueueSnackbar("서버통신에러", { variant: "error" });
     }
 };
 
