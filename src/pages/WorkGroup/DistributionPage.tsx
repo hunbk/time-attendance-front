@@ -177,7 +177,8 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         if (isDistributed) {
             // 배포 해제
             if (!workGroupIdChangedInto) {
-                setUserListWrappedFiltered(null);
+                // setUserListWrappedFiltered(null);
+                setUserListWrappedFiltered(userListWrappedFiltered.filter((user) => !selectedUserIds.includes(user.id)));
                 setUserListWrappedD(userListWrappedD.filter((user) => !selectedUserIds.includes(user.id)));
                 setUserListWrappedND([...userListWrappedND, ...userListWrappedD.filter((user) => selectedUserIds.includes(user.id))]);
 
