@@ -92,13 +92,13 @@ const headCells = [
     id: 'workingTime',
     numeric: false,
     disablePadding: false,
-    label: '총 근무시간',
+    label: '소정근로시간',
   },
   {
     id: 'overTime',
     numeric: false,
     disablePadding: false,
-    label: '연장 근무시간',
+    label: '연장근로시간',
   },
   {
     id: 'workState',

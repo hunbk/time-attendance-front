@@ -45,11 +45,11 @@ export default function WeeklyWorkChart({ title, subheader, workData, selectedWe
   const chartData = Array.isArray(workData)
     ? [
         {
-          name: '근무시간',
+          name: '근로시간',
           data: workData.map((item) => convertToHours(item.workingTime)),
         },
         {
-          name: '연장근무',
+          name: '연장근로시간',
           data: workData.map((item) => convertToHours(item.overTime)),
         },
       ]
