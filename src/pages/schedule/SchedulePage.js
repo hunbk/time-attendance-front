@@ -48,10 +48,10 @@ const TABLE_HEAD = [
   { id: 'name', label: '이름' },
   { id: 'position', label: '직급' },
   { id: 'workGroupType', label: '근무제유형' },
-  { id: 'start', label: '근무시작시간' },
-  { id: 'end', label: '근무종료시간' },
-  { id: 'workingTime', label: '소정근무시간' },
-  { id: 'overTime', label: '연장근무시간' },
+  { id: 'start', label: '근무인정시간' },
+  // { id: 'end', label: '근무종료시간' },
+  { id: 'workingTime', label: '소정근로시간' },
+  { id: 'overTime', label: '연장근로시간' },
   { id: 'workState', label: '처리상태' },
   { id: '' },
 ];
@@ -251,7 +251,7 @@ export default function SchedulePage() {
         icon: 'error',
         html: '<strong>해당 정산은 직접 수정할 수 없습니다!<br> 서비스 관리자에게 재정산을 요청하세요!</strong>',
         confirmButtonText: '확인',
-        confirmButtonColor:'#2065D1',
+        confirmButtonColor: '#2065D1',
         customClass: {
           container: 'custom-swal',
         },
@@ -357,9 +357,11 @@ export default function SchedulePage() {
 
                         <TableCell align="left">{workGroupType}</TableCell>
 
-                        <TableCell align="left">{formatTimeToTime(startTime)}</TableCell>
-
-                        <TableCell align="left">{formatTimeToTime(endTime)}</TableCell>
+                        <TableCell align="left" style={{ width: '150px' }}>
+                          {startTime === null && endTime === null
+                            ? '없음'
+                            : `${formatTimeToTime(startTime)} ~ ${formatTimeToTime(endTime)}`}
+                        </TableCell>
 
                         <TableCell align="left">{formatTimeToTime(workingTime)}</TableCell>
 
