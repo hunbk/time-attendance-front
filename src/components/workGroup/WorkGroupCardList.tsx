@@ -173,9 +173,10 @@ const WorkGroupCardList: FC<WorkGroupCardListProps> = ({ workGroupResponseDto, h
                                                 if (workGroupResponseDto.numOfMembers > 0) {
                                                     // enqueueSnackbar(`배포인원 0명일 때 삭제 가능합니다.`, { variant: "error" });
                                                     Swal.fire({
-                                                        text: '배포인원 0명일 때 삭제 가능합니다.',
+                                                        title: '배포인원 0명일 때 삭제 가능합니다.',
                                                         icon: 'error',
-                                                        confirmButtonText: '확인'
+                                                        confirmButtonText: '확인',
+                                                        confirmButtonColor: "#2065D1"
                                                     })
                                                 } else {
                                                     handleDelete(workGroupResponseDto.id);

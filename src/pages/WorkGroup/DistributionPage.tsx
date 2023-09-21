@@ -62,9 +62,10 @@ const DistributionPage: FC<DistributionPageProps> = ({ userListWrappedD, userLis
         } else {
             // enqueueSnackbar(`선택된 근로자가 없습니다.`, { variant: "error" });
             Swal.fire({
-                text: '선택된 근로자가 없습니다.',
+                title: '선택된 근로자가 없습니다.',
                 icon: 'error',
-                confirmButtonText: '확인'
+                confirmButtonText: '확인',
+                confirmButtonColor: "#2065D1"
             })
         }
 
