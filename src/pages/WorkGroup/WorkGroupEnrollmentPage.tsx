@@ -355,7 +355,7 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
         for (let i = 0; i < hours[key].length; i += 1) {
           if (dayjs(hours[key][i].end, 'HH:mm:ss').isBefore(dayjs(hours[key][i].start, 'HH:mm:ss'))) {
             Swal.fire({
-              title: `${key}시작시간보다 종료시간이 빠를 수 없습니다.`,
+              title: `${key}시작시간보다 \n 종료시간이 빠를 수 없습니다.`,
               icon: 'error',
               confirmButtonText: '확인',
               confirmButtonColor: "#2065D1"
