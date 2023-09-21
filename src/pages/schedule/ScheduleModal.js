@@ -498,6 +498,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
         <DialogTitle>
           <Typography variant="h5">근태 기록 수정</Typography>
           <Typography variant="subtitle2">근무일자 : {userData.date}</Typography>
+          <Typography variant='subtitle2'>근무유형 : {userData.dayType === null ? ' ' : userData.dayType}</Typography>
         </DialogTitle>
 
         <DialogContent dividers>
@@ -595,7 +596,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
               }}
             >
               <DialogTitle style={{ textAlign: 'center' }}>
-                소정근무시간
+                소정근로시간
                 <Typography variant="body1">{formatTimetoko(workingTime)}</Typography>
               </DialogTitle>
             </Card>
@@ -609,7 +610,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
               }}
             >
               <DialogTitle style={{ textAlign: 'center' }}>
-                연장근무시간
+                연장근로시간
                 <Typography variant="body1">{formatTimetoko(overTime)}</Typography>
               </DialogTitle>
             </Card>
@@ -623,7 +624,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
               }}
             >
               <DialogTitle style={{ textAlign: 'center' }}>
-                총 근무시간
+                실제근로시간
                 <Typography variant="body1">{formatTimetoko(addTimes(workingTime, overTime))}</Typography>
               </DialogTitle>
             </Card>
@@ -632,7 +633,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
           <Card style={{ marginTop: '15px', minHeight: '100px', boxShadow: '4px 4px 6px rgba(0, 0, 0, 0.1)' }}>
             <DialogTitle sx={{ display: 'flex', alignContent: 'center', height: 30 }}>
               <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', marginRight: '35px' }}>
-                출퇴근 시간
+                출퇴근시간
               </Typography>
             </DialogTitle>
 
@@ -670,7 +671,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
 
             <DialogTitle sx={{ display: 'flex', alignContent: 'center', height: 30 }}>
               <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center' }}>
-                근로인정 시간
+                근로인정시간
               </Typography>
             </DialogTitle>
 
