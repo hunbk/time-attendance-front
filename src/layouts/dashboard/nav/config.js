@@ -35,7 +35,7 @@ const navConfig = [
     roles: ['ADMIN'],
   },
   {
-    title: '근무그룹설정',
+    title: '근로그룹설정',
     path: '/dashboard/workgroups',
     icon: icon('ic_workgroup'),
     roles: ['HR', 'MNG', 'ADMIN'],

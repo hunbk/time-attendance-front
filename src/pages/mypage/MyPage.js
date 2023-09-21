@@ -204,7 +204,7 @@ export default function MyPage() {
               <Grid item xs={12} sm={12} md={8.5}>
                 <WeeklyWorkChart
                   title="주간 근무차트"
-                  subheader={`${user.name}님의 주간 근무시간을 확인합니다.`}
+                  subheader={`${user.name}님의 주간 근로시간을 확인합니다.`}
                   workData={weeklyWorkData}
                   selectedWeek={selectedWeek}
                   updateWeek={updateWeek}
