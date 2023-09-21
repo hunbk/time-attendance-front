@@ -66,9 +66,10 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
           // Check the condition using the captured start time
           if (startOrEnd === "end" && value.isBefore(dayjs(currentStartTime, 'HH:mm:ss'))) {
             Swal.fire({
-              text: '시작시간보다 종료시간이 빠를 수 없습니다.',
+              title: '시작시간보다 종료시간이 \n빠를 수 없습니다.',
               icon: 'error',
-              confirmButtonText: '확인'
+              confirmButtonText: '확인',
+              confirmButtonColor: "#2065D1"
             })
           }
 
@@ -326,9 +327,10 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
 
     if (alignments.length === 0) {
       Swal.fire({
-        text: '근무일은 최소 1일 이상이어야합니다.',
+        title: '근무일은 최소 1일 이상이어야합니다.',
         icon: 'error',
-        confirmButtonText: '확인'
+        confirmButtonText: '확인',
+        confirmButtonColor: "#2065D1"
       })
 
       return;
@@ -336,9 +338,10 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
 
     if (hours["근무"][0].start.length === 0 || hours["근무"][0].end.length === 0) {
       Swal.fire({
-        text: '근무시간 입력은 필수입니다.',
+        title: '근무시간 입력은 필수입니다.',
         icon: 'error',
-        confirmButtonText: '확인'
+        confirmButtonText: '확인',
+        confirmButtonColor: "#2065D1"
       })
 
       return;
@@ -352,9 +355,10 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
         for (let i = 0; i < hours[key].length; i += 1) {
           if (dayjs(hours[key][i].end, 'HH:mm:ss').isBefore(dayjs(hours[key][i].start, 'HH:mm:ss'))) {
             Swal.fire({
-              text: `${key}시작시간보다 종료시간이 빠를 수 없습니다.`,
+              title: `${key}시작시간보다 종료시간이 빠를 수 없습니다.`,
               icon: 'error',
               confirmButtonText: '확인',
+              confirmButtonColor: "#2065D1"
             })
 
             isReturn = true;

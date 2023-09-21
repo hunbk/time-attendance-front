@@ -29,9 +29,10 @@ const SwitchWrapped: FC<SwitchWrappedProps> = ({ id, isOn, numOfMembers }: Switc
         if (checked && numOfMembers > 0) {
             // enqueueSnackbar(`배포된 근로자 해제 후 비활성화 가능합니다.`, { variant: "error" });
             Swal.fire({
-                text: '배포된 근로자 해제 후 비활성화 가능합니다.',
+                title: `배포된 근로자 해제 후 \n비활성화 가능합니다.`,
                 icon: 'error',
-                confirmButtonText: '확인'
+                confirmButtonText: '확인',
+                confirmButtonColor: "#2065D1"
             })
         } else {
             setChecked(!checked);
