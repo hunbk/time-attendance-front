@@ -84,7 +84,8 @@ const WorkGroupListPage: FC<WorkGroupListPageProps> = ({ setIsWorkGroupListHidde
     const { status }: FetchResultType = await handleRequest('delete', `/api/workgroups/${workGroupId}`);
 
     if (status === 200) {
-      setWorkGroupResponseDtoList(prevList => prevList.filter((workGroupResponseDto) => workGroupResponseDto.id !== workGroupId))
+      setWorkGroupResponseDtoList(prevList => prevList.filter((workGroupResponseDto) => workGroupResponseDto.id !== workGroupId));
+      setWorkGroupSimple(prevList => prevList.filter((workGroupSimple) => workGroupSimple.id !== workGroupId));
     }
   }
 
