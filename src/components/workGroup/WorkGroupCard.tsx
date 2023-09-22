@@ -29,8 +29,8 @@ const WorkGroupCard: React.FC<WorkGroupCardProps> = ({ id, name, type, numOfMemb
             <Card
                 sx={{
                     backgroundColor: isSelected ? 'lightblue' : 'white',
-                    minWidth: 150,
-                    maxWidth: 100,
+                    maxWidth: 170,
+                    minWidth: 170,
                     minHeight: 100,
                     cursor: 'pointer',
                 }} onClick={handleCardClick}>
