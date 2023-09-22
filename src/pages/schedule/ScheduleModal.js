@@ -100,7 +100,7 @@ const ScheduleModal = ({ open, onClose, userData, getUserList }) => {
       Swal.fire({
         icon: 'question',
         title: `${userData.name} 사원의 정보를 <br>수정하시겠습니까?`,
-        html: '<strong>수정 작업은 중요하며 정확한 시간을 확인하실 것을 권장합니다.</strong>',
+        html: '<strong>수정 작업은 중요하며 정확한 시각을 입력하실 것을 권장합니다.</strong>',
         showConfirmButton: true,
         showCancelButton: true,
         showDenyButton: false,

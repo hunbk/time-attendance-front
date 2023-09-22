@@ -48,7 +48,7 @@ const TABLE_HEAD = [
   { id: 'name', label: '이름' },
   { id: 'position', label: '직급' },
   { id: 'workGroupType', label: '근무제유형' },
-  { id: 'start', label: '근무인정시간' },
+  { id: 'start', label: '근로인정시간' },
   // { id: 'end', label: '근무종료시간' },
   { id: 'workingTime', label: '소정근로시간' },
   { id: 'overTime', label: '연장근로시간' },
@@ -164,7 +164,8 @@ export default function SchedulePage() {
     });
   };
 
-  const handleDeleteSnackbar = () => {
+  const handleDeleteSnackbar = async () => {
+    await loginAxios.delete(`/api/settlements/${settlementIds}`);
     enqueueSnackbar(`삭제되었습니다!`, { variant: 'success' });
   };
 
@@ -172,16 +173,9 @@ export default function SchedulePage() {
     setDeleteConfirmOpen(false);
   };
 
-  const handleDelete = async () => {
-    await loginAxios.delete('/api/settlements', settlementIds);
-    handleOpenSnackbar();
-    handleDeleteConfirmClose();
-  };
-
   const handleOpenMenu = (event, row) => {
     setOpen(event.currentTarget);
     setSettlementIds(row.settlementId);
-    console.log(row);
     console.log(settlementIds);
   };
 
@@ -249,7 +243,7 @@ export default function SchedulePage() {
     if (userData.workState === '미처리') {
       Swal.fire({
         icon: 'error',
-        html: '<strong>해당 정산은 직접 수정할 수 없습니다!<br> 서비스 관리자에게 재정산을 요청하세요!</strong>',
+        html: '<strong>해당 정산은 직접 수정할 수 없습니다!<br> 서비스 관리자에게 정산을 요청하세요!</strong>',
         confirmButtonText: '확인',
         confirmButtonColor: '#2065D1',
         customClass: {
@@ -498,19 +492,6 @@ export default function SchedulePage() {
         </MenuItem>
       </Popover>
 
-      {/* 삭제 확인 다이얼로그 */}
-      <Dialog open={deleteConfirmOpen} onClose={handleDeleteConfirmClose}>
-        <DialogTitle>삭제 확인</DialogTitle>
-        <DialogContent>선택한 항목을 정말 삭제하시겠습니까?</DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteConfirmClose} color="primary">
-            취소
-          </Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
-            삭제
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 }
