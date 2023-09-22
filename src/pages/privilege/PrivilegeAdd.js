@@ -301,7 +301,7 @@ export default function PrivilegeAdd() {
       html: (() => {
         switch (selectedAdminType) {
           case 'ADMIN':
-            return '<strong><span style="font-size: 17px; color: #FF3D00;">최고 관리자</span></strong>로 권한을 변경하시겠습니까?';
+            return '<strong><span style="font-size: 17px; color: #FF3D00;">최고 권한자</span></strong>로 권한을 변경하시겠습니까?';
           case 'MNG':
             return '<strong><span style="font-size: 17px; color: #1976D2;">총괄 책임자</span></strong>로 권한을 변경하시겠습니까?';
           case 'HR':
