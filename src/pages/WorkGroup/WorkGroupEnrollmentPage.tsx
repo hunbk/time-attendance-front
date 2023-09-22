@@ -365,6 +365,20 @@ const WorkGroupEnrollmentPage: FC<WorkGroupEnrollmentPageProps> = ({ setIsWorkGr
           }
         }
       }
+
+      // If the start time of hours["승인"] is before the end time of hours[], then fire the Swal.
+      if (key === "승인" && hours[key][0].start.length !== 0 && hours["근무"][0].start.length !== 0) {
+        if (dayjs(hours[key][0].start, 'HH:mm:ss').isBefore(dayjs(hours["근무"][0].end, 'HH:mm:ss'))) {
+          Swal.fire({
+            title: '승인시작시간보다 \n 근무종료시간이 빠를 수 없습니다.',
+            icon: 'error',
+            confirmButtonText: '확인',
+            confirmButtonColor: "#2065D1"
+          })
+
+          isReturn = true;
+        }
+      }
     });
 
     if (!isReturn) {
