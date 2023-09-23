@@ -13,22 +13,34 @@ import {
   IconButton,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CalculateOutlinedIcon from '@mui/icons-material/CalculateOutlined';
 import Scrollbar from '../../../components/scrollbar/Scrollbar';
 import CompanyListSearchbar from './CompanyListSearchbar';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import { enqueueSnackbar } from 'notistack';
+import SettlementModal from './SettlementModal';
 
 CompanyList.propTypes = {
   companies: PropTypes.array,
 };
 
 export default function CompanyList({ companies }) {
+  const [showSettlementModal, setShowSettlementModal] = useState(false);
+
   // 페이징
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // 검색어
   const [filterName, setFilterName] = useState('');
+
+  // 회사 아이디
+  const [companyId, setCompanyId] = useState(null);
+
+  const handleClickSettlementButton = (companyId) => {
+    setShowSettlementModal(true);
+    setCompanyId(companyId);
+  };
 
   const handleClickCopyButton = () => {
     enqueueSnackbar('클립보드에 복사되었습니다!', { variant: 'success' });
@@ -65,7 +77,8 @@ export default function CompanyList({ companies }) {
                 <TableCell sx={{ width: '20px' }}>ID</TableCell>
                 <TableCell sx={{ width: '100px' }}>회사 로고</TableCell>
                 <TableCell sx={{ width: '100px' }}>회사명</TableCell>
-                <TableCell sx={{ width: '300px' }}>인증 코드</TableCell>
+                <TableCell sx={{ width: '210px' }}>인증 코드</TableCell>
+                <TableCell sx={{ width: '20px' }}>정산</TableCell>
                 <TableCell sx={{ width: '100px' }}>등록 날짜</TableCell>
                 <TableCell sx={{ width: '100px' }}>최종 수정 날짜</TableCell>
               </TableRow>
@@ -89,13 +102,22 @@ export default function CompanyList({ companies }) {
                     )}
                   </TableCell>
                   <TableCell>{company.name}</TableCell>
-                  <TableCell style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <TableCell>
                     {company.code}
                     <CopyToClipboard text={company.code}>
                       <IconButton size="small" aria-label="copy" onClick={handleClickCopyButton}>
                         <ContentCopyIcon />
                       </IconButton>
                     </CopyToClipboard>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      aria-label="copy"
+                      onClick={() => handleClickSettlementButton(company.companyId)}
+                    >
+                      <CalculateOutlinedIcon />
+                    </IconButton>
                   </TableCell>
                   <TableCell>{company.dateCreated}</TableCell>
                   <TableCell>{company.dateUpdated}</TableCell>
@@ -113,13 +135,12 @@ export default function CompanyList({ companies }) {
                       }}
                     >
                       <Typography variant="h6" paragraph>
-                        검색결과가 없습니다.
+                        {filterName} 회사를 찾지 못했습니다.
                       </Typography>
 
                       <Typography variant="body2">
-                        다음 검색에 대한 결과를 찾을 수 없습니다. &nbsp;
-                        <strong>&quot;{filterName}&quot;</strong>.
-                        <br /> 회사의 이름을 다시 한번 확인해주세요.
+                        {filterName} 회사에 대한 정보가 없습니다. &nbsp;
+                        <br /> 다시 한번 회사의 이름을 확인해주세요.
                       </Typography>
                     </Paper>
                   </TableCell>
@@ -140,6 +161,15 @@ export default function CompanyList({ companies }) {
         onRowsPerPageChange={handleChangeRowsPerPage}
         labelRowsPerPage="페이지당 목록 수 :"
         labelDisplayedRows={({ count }) => `현재 페이지: ${page + 1} / 전체 페이지: ${Math.ceil(count / rowsPerPage)}`}
+      />
+
+      <SettlementModal
+        companyId={companyId}
+        open={showSettlementModal}
+        onClose={() => {
+          setCompanyId(null);
+          setShowSettlementModal(false);
+        }}
       />
     </>
   );
