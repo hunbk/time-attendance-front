@@ -3,7 +3,6 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/
 import PropTypes from 'prop-types';
 import loginAxios from '../../../api/loginAxios';
 import { enqueueSnackbar } from 'notistack';
-import Swal from 'sweetalert2';
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
 
@@ -39,7 +38,7 @@ export default function SettlementModal({ companyId, open, onClose }) {
       <Dialog
         open={open}
         onClose={handleClose}
-        sx={{ '& .MuiDialog-paper': { minWidth: '300px', minHeight: '300px' } }}
+        sx={{ '& .MuiDialog-paper': { minWidth: '200px', minHeight: '150px' } }}
       >
         <DialogTitle>정산 요청</DialogTitle>
         <DialogContent>
@@ -49,10 +48,11 @@ export default function SettlementModal({ companyId, open, onClose }) {
             maxDate={dayjs(new Date())}
             onChange={(date) => setDate(dayjs(date).format('YYYY-MM-DD'))}
             format="YYYY.MM.DD"
-            sx={{ width: '150px' }}
             slotProps={{
               textField: {
+                margin: 'dense',
                 size: 'small',
+                fullWidth: true,
               },
             }}
           />
