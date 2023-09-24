@@ -10,8 +10,8 @@ import loginAxios from '../../api/loginAxios';
 export default function LoginForm() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('user1@email.com'); // 로그인 TEST용 email(나중에 삭제 해야함)
-  const [password, setPassword] = useState('123'); // 로그인 TEST용 password(나중에 삭제 해야함)
+  const [email, setEmail] = useState(''); // 로그인 TEST용 email(나중에 삭제 해야함)
+  const [password, setPassword] = useState(''); // 로그인 TEST용 password(나중에 삭제 해야함)
   const [showPassword, setShowPassword] = useState(false);
 
   const [emailError, setEmailError] = useState(false); // 이메일 유효성 검사
