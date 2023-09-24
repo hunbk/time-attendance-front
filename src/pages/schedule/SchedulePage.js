@@ -240,20 +240,20 @@ export default function SchedulePage() {
   };
 
   const handleOpenModal = () => {
-    if (userData.workState === '미처리') {
-      Swal.fire({
-        icon: 'error',
-        html: '<strong>해당 정산은 직접 수정할 수 없습니다!<br> 서비스 관리자에게 정산을 요청하세요!</strong>',
-        confirmButtonText: '확인',
-        confirmButtonColor: '#2065D1',
-        customClass: {
-          container: 'custom-swal',
-        },
-      });
-      handleCloseMenu();
-    } else {
+    // if (userData.workState === '미처리') {
+    //   Swal.fire({
+    //     icon: 'error',
+    //     html: '<strong>해당 정산은 직접 수정할 수 없습니다!<br> 서비스 관리자에게 정산을 요청하세요!</strong>',
+    //     confirmButtonText: '확인',
+    //     confirmButtonColor: '#2065D1',
+    //     customClass: {
+    //       container: 'custom-swal',
+    //     },
+    //   });
+      // handleCloseMenu();
+    // } else {
       setScheduleModalOpen(true);
-    }
+    // }
   };
 
   const handleCloseModal = () => {
