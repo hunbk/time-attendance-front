@@ -266,7 +266,7 @@ export default function SchedulePage() {
       const [hours, minutes] = time.split(':');
       return `${hours}:${minutes}`;
     }
-    return `-`;
+    return ` `;
   };
 
   useEffect(() => {
@@ -353,7 +353,7 @@ export default function SchedulePage() {
 
                         <TableCell align="left" style={{ width: '150px' }}>
                           {startTime === null && endTime === null
-                            ? '없음'
+                            ? '기록 없음'
                             : `${formatTimeToTime(startTime)} ~ ${formatTimeToTime(endTime)}`}
                         </TableCell>
 

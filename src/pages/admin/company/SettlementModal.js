@@ -24,7 +24,7 @@ export default function SettlementModal({ companyId, open, onClose }) {
     try {
       const response = await loginAxios.post('/api/settlements', { date, companyId });
       if (response.status === 200) {
-        enqueueSnackbar('정산을 요청하였습니다.', { variant: 'success' });
+        enqueueSnackbar('정산을 실행하였습니다.', { variant: 'success' });
         handleClose();
       }
     } catch (error) {
@@ -40,7 +40,7 @@ export default function SettlementModal({ companyId, open, onClose }) {
         onClose={handleClose}
         sx={{ '& .MuiDialog-paper': { minWidth: '200px', minHeight: '150px' } }}
       >
-        <DialogTitle>정산 요청</DialogTitle>
+        <DialogTitle>정산 실행</DialogTitle>
         <DialogContent>
           <DatePicker
             label="정산 날짜"
