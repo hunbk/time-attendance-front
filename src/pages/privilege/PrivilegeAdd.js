@@ -369,7 +369,7 @@ export default function PrivilegeAdd() {
   return (
     <>
       <Helmet>
-        <title>권한 관리</title>
+        <title>권한 설정</title>
       </Helmet>
       <Container maxWidth="xl">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>

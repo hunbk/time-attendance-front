@@ -285,13 +285,13 @@ export default function SchedulePage() {
   return (
     <>
       <Helmet>
-        <title> User | Minimal UI </title>
+        <title> 정산 목록 </title>
       </Helmet>
 
       <Container maxWidth="xl">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            정산목록
+            정산 목록
           </Typography>
         </Stack>
         <Card>

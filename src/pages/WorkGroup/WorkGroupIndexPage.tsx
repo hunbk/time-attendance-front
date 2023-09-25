@@ -6,6 +6,7 @@ import WorkGroupEnrollmentPage from './WorkGroupEnrollmentPage';
 import DistributionIndexPage from './DistributionIndexPage';
 import { useState, SyntheticEvent, FC } from 'react';
 import CustomTabPanel from 'src/components/workGroup/CustomTabPanel';
+import {Helmet} from 'react-helmet-async';
 
 type WorkDayTypeType = {
     mon: "근무" | "유급" | "무급";
@@ -55,6 +56,10 @@ const WorkGroupIndexPage: FC = () => {
     };
 
     return (
+        <>
+        <Helmet>
+            <title>근로그룹설정</title>
+        </Helmet>
         <Box sx={{ width: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={currentTabIndex} onChange={handleChange}>
@@ -69,6 +74,7 @@ const WorkGroupIndexPage: FC = () => {
                 <DistributionIndexPage workGroupSimple={workGroupSimple} />
             </CustomTabPanel>
         </Box>
+        </>
     )
 };
 
