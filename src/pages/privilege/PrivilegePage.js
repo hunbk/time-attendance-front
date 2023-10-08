@@ -23,7 +23,6 @@ import {
   TableContainer,
   TablePagination,
   Snackbar,
-  Alert,
 } from '@mui/material';
 // components
 import PersonIcon from '@mui/icons-material/Person';
