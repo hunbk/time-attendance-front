@@ -5,7 +5,7 @@ import WorkGroupListPage from './WorkGroupListPage';
 import WorkGroupEnrollmentPage from './WorkGroupEnrollmentPage';
 import DistributionIndexPage from './DistributionIndexPage';
 import { useState, SyntheticEvent, FC } from 'react';
-import CustomTabPanel from 'src/components/workGroup/CustomTabPanel';
+import CustomTabPanel from 'src/components/workgroup/CustomTabPanel';
 import {Helmet} from 'react-helmet-async';
 
 type WorkDayTypeType = {

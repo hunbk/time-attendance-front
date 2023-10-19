@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from "react";
 import { Box } from "@mui/material";
 import Button from '@mui/material/Button';
 import { DataToBeModifiedType, DataType } from "./WorkGroupIndexPage";
-import WorkGroupCardList from "src/components/workGroup/WorkGroupCardList";
+import WorkGroupCardList from "src/components/workgroup/WorkGroupCardList";
 import Grid from '@mui/material/Grid';
 import type { WorkGroupSimpleType } from "./WorkGroupIndexPage";
 import { useAuthState } from '../../context/AuthProvider';
