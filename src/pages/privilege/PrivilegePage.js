@@ -22,7 +22,6 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
-  Snackbar,
 } from '@mui/material';
 // components
 import PersonIcon from '@mui/icons-material/Person';
@@ -436,21 +435,6 @@ export default function PrivilegePage() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={deleteSnackbar}
-        autoHideDuration={2000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-        sx={{ width: 400 }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          삭제되었습니다!
-        </Alert>
-      </Snackbar>
     </>
   );
 }
